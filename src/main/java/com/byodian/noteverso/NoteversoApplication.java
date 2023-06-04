@@ -1,4 +1,4 @@
-package com.noteverso;
+package com.byodian.noteverso;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class NoteversoApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(NoteversoApplication.class, args);
+		SpringApplication.run(NoteversoApplication.class, args); 
 	}
 
 }

@@ -1,4 +1,4 @@
-package com.noteverso;
+package com.byodian.noteverso;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
