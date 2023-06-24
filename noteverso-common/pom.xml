@@ -4,23 +4,22 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.noteverso</groupId>
-        <artifactId>noteverso</artifactId>
+        <artifactId>integrated</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>application</artifactId>
-    <name>noteverso application</name>
-    <description>application startup</description>
+    <artifactId>noteverso-common</artifactId>
+    <name>noteverso common</name>
+    <description>common module</description>
 
     <dependencies>
         <dependency>
-            <groupId>com.noteverso</groupId>
-            <artifactId>common</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>com.noteverso</groupId>
-            <artifactId>note</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
         </dependency>
-    </dependencies>
+   </dependencies>
 </project>

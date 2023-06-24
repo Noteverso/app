@@ -10,7 +10,7 @@
 	</parent>
 
 	<groupId>com.noteverso</groupId>
-	<artifactId>noteverso</artifactId>
+	<artifactId>integrated</artifactId>
 	<packaging>pom</packaging>
 	<version>${revision}</version>
 	<name>noteverso</name>
@@ -33,22 +33,22 @@
 			</dependency>
 			<dependency>
 				<groupId>com.noteverso</groupId>
-				<artifactId>common</artifactId>
+				<artifactId>noteverso-common</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.noteverso</groupId>
-				<artifactId>project</artifactId>
+				<artifactId>noteverso-project</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.noteverso</groupId>
-				<artifactId>application</artifactId>
+				<artifactId>noteverso-application</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.noteverso</groupId>
-				<artifactId>note</artifactId>
+				<artifactId>noteverso-note</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
@@ -85,10 +85,10 @@
 	</dependencies>
 
 	<modules>
-		<module>application</module>
-		<module>common</module>
-		<module>note</module>
-		<module>project</module>
+		<module>noteverso-application</module>
+		<module>noteverso-common</module>
+		<module>noteverso-note</module>
+		<module>noteverso-project</module>
 	</modules>
 
 </project>

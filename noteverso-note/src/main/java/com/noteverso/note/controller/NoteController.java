@@ -24,4 +24,9 @@ public class NoteController {
     public HashMap<String, Object> getNote() {
         return noteService.createNote();
     }
+
+    @GetMapping
+    public String sayHello() {
+        return "Hello world";
+    }
 }

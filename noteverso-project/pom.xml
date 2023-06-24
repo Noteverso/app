@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.noteverso</groupId>
-        <artifactId>noteverso</artifactId>
+        <artifactId>integrated</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>note</artifactId>
-    <name>noteverso note</name>
-    <description>note module</description>
+    <artifactId>noteverso-project</artifactId>
+    <name>noteverso project</name>
+    <description>project module</description>
 </project>
