@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 
-@SpringBootApplication(scanBasePackages = {"com.noteverso.note"})
+@SpringBootApplication(scanBasePackages = {"com.noteverso"})
 public class NoteversoApplication {
 
 	public static void main(String[] args) {

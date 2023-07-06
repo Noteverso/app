@@ -6,3 +6,16 @@ spring:
   output:
     ansi:
       enabled: always
+springdoc:
+  swagger-ui:
+    path: /noteverso/swagger
+    tryItOutEnable: true
+    tagsSorter: alpha
+    filter: true
+  api-docs:
+    path: /noteverso/api-docs
+
+noteverso:
+  openapi:
+    dev-url: http://localhost:8080
+    prod-url: http://api.noteverso.com/docs
