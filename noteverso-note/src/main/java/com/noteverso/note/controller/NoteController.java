@@ -1,5 +1,7 @@
 package com.noteverso.note.controller;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.core.util.StatusPrinter;
 import com.noteverso.note.model.Note;
 import com.noteverso.note.request.NoteCreateRequest;
 import com.noteverso.note.service.NoteService;
@@ -9,10 +11,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
-
+import javax.validation.Valid;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -20,6 +23,7 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/api/note")
 @AllArgsConstructor
+@Slf4j
 public class NoteController {
     private NoteService noteService;
 
@@ -29,6 +33,9 @@ public class NoteController {
         tags = { "Post" })
     @PostMapping("/create")
     public HashMap<String, Object> createNote(@Valid @RequestBody NoteCreateRequest request) {
+        log.debug("Hello world.");
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        StatusPrinter.print(lc);
         return noteService.createNote(request);
     }
 
