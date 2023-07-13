@@ -33,9 +33,6 @@ public class NoteController {
         tags = { "Post" })
     @PostMapping("/create")
     public HashMap<String, Object> createNote(@Valid @RequestBody NoteCreateRequest request) {
-        log.debug("Hello world.");
-        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        StatusPrinter.print(lc);
         return noteService.createNote(request);
     }
 

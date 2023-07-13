@@ -15,6 +15,11 @@ springdoc:
   api-docs:
     path: /noteverso/api-docs
 
+logging:
+  path: ./logs
+  level:
+    root: INFO
+
 noteverso:
   openapi:
     dev-url: http://localhost:8080
