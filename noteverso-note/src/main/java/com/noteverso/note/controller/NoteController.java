@@ -1,7 +1,6 @@
 package com.noteverso.note.controller;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.core.util.StatusPrinter;
+import com.noteverso.common.api.ApiResult;
 import com.noteverso.note.model.Note;
 import com.noteverso.note.request.NoteCreateRequest;
 import com.noteverso.note.service.NoteService;
@@ -13,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.Date;
@@ -45,11 +43,12 @@ public class NoteController {
         @ApiResponse(responseCode = "404", content = { @Content(schema = @Schema()) }),
         @ApiResponse(responseCode = "500", content = { @Content(schema = @Schema()) })})
     @GetMapping("/get/{id}")
-    public HashMap<String, Object> getNote(@PathVariable("id") long id) {
+    public ApiResult<HashMap<?, ?>> getNote(@PathVariable("id") long id) {
         NoteCreateRequest request = new NoteCreateRequest();
         request.setName("example");
         request.setAddedAt(new Date());
-        return noteService.createNote(request);
+        HashMap<String, Object> note = noteService.createNote(request);
+        return ApiResult.success(note);
     }
 
     @GetMapping
