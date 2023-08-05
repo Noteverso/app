@@ -1,24 +1,29 @@
 spring:
-  port: 8080
   application:
     name: noteverso
-    version: 0.0.1-SNAPSHOT
+  datasource:
+    url: jdbc:postgresql://localhost:5432/noteverso
+    username: postgres
+    password: byj6696@postgres.14
   output:
     ansi:
       enabled: always
+server:
+  port: 8080
+
 springdoc:
   swagger-ui:
     path: /noteverso/swagger
-    tryItOutEnable: true
     tagsSorter: alpha
     filter: true
   api-docs:
     path: /noteverso/api-docs
 
 logging:
-  path: ./logs
   level:
     root: INFO
+  file:
+    path: ./logs
 
 noteverso:
   openapi:
