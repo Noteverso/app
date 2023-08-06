@@ -24,6 +24,9 @@
             <charset>UTF-8</charset>
         </encoder>
     </appender>
+    <logger name="org.springframework.security" level="trace" additivity="false">
+        <appender-ref ref="Console" />
+    </logger>
 
     <!--根据日志级别分离日志，分别输出到不同的文件-->
     <appender name="InfoLog" class="RollingFileAppender">

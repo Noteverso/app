@@ -1,5 +1,5 @@
 -- create noteverso database
-CREATE DATABASE IF NOT EXISTS noteverso;
+CREATE DATABASE noteverso;
 \c noteverso;
 
 -- create noteverso project table
@@ -23,41 +23,23 @@ CREATE TABLE IF NOT EXISTS noteverso_note (
     updated_at timestamptz DEFAULT NULL,
     PRIMARY KEY (id)
 );
-
-COMMENT ON TABLE noteverso_project IS '项目表，最多支持 500 个项目';
-
-COMMENT ON COLUMN noteverso_project.id IS '项目id';
-COMMENT ON COLUMN noteverso_project.name IS '项目名称';
-COMMENT ON COLUMN noteverso_project.color IS '项目图标颜色，总共 20种颜色';
-COMMENT ON COLUMN noteverso_project.is_favorite IS '是否将项目添加到收藏夹';
-COMMENT ON COLUMN noteverso_project.is_deleted IS '是否删除';
-COMMENT ON COLUMN noteverso_project.is_archived IS '是否归档';
-COMMENT ON COLUMN noteverso_project.is_shared IS '是否分享项目';
-COMMENT ON COLUMN noteverso_project.is_inbox_project IS '是否为收件箱项目，只读';
-COMMENT ON COLUMN noteverso_project.child_order IS '在客户端侧边栏菜单同一父项目中的位置';
-COMMENT ON COLUMN noteverso_project.parent_id IS '父项目id，null 表示此项目为根（父）项目';
-COMMENT ON COLUMN noteverso_project.view_style IS '客户端笔记展示布局方式 list - 列表，board - 看板';
-COMMENT ON COLUMN noteverso_project.url IS '项目链接，在web、移动端应用可通过链接进入项目';
-COMMENT ON COLUMN noteverso_project.collapsed IS '项目菜单是否折叠';
-COMMENT ON COLUMN noteverso_project.added_at IS '添加时间';
-COMMENT ON COLUMN noteverso_project.updated_at IS '更新时间';
-
--- create noteverso note table
-CREATE TABLE IF NOT EXISTS noteverso_label (
-    id bigserial NOT NULL,
-    name varchar(60) NOT NULL,
-    color varchar(20) NOT NULL,
-    is_deleted boolean DEFAULT false,
-    added_at timestamptz DEFAULT NULL,
-    updated_at timestamptz DEFAULT NULL,
-    creator_id bigint NOT NULL,
-    is_favorite boolean DEFAULT false,
-    order_value bigint NOT NULL,
-    PRIMARY KEY (id)
-);
-
 COMMENT ON TABLE noteverso_note IS '笔记表';
-
+COMMENT ON COLUMN noteverso_note.id IS '笔记id';
+COMMENT ON COLUMN noteverso_note.note_type IS '笔记类型，0-普通笔记 1-账户密码 2-待办清单 3-图表 4-日程 5-工具清单 6-记账(订阅信息，可自动更新续费信息)';
+COMMENT ON COLUMN noteverso_note.content IS '笔记内容';
+COMMENT ON COLUMN noteverso_note.is_top IS '是否将项目添加到收藏夹';
+COMMENT ON COLUMN noteverso_note.is_deleted IS '是否删除';
+COMMENT ON COLUMN noteverso_note.is_archived IS '是否归档';
+COMMENT ON COLUMN noteverso_note.comment_count IS '笔记评论数';
+COMMENT ON COLUMN noteverso_note.linked_note_count IS '关联至此的笔记数量';
+COMMENT ON COLUMN noteverso_note.project_id IS '笔记所属的项目id';
+COMMENT ON COLUMN noteverso_note.labels IS '笔记标签，字符串数组';
+COMMENT ON COLUMN noteverso_note.status IS '笔记状态 0 -  待处理，1 - 正在进行，2 - 已完成';
+COMMENT ON COLUMN noteverso_note.creator_id IS '创建人';
+COMMENT ON COLUMN noteverso_note.attachment IS '附件对象，内容包括附件名称、附件类型、附件链接和资源类型';
+COMMENT ON COLUMN noteverso_note.url IS '笔记链接，从 web、移动端应用通过链接进入笔记';
+COMMENT ON COLUMN noteverso_note.added_at IS '添加时间';
+COMMENT ON COLUMN noteverso_note.updated_at IS '更新时间';
 COMMENT ON COLUMN noteverso_note.id IS '笔记id';
 COMMENT ON COLUMN noteverso_note.note_type IS '笔记类型，0-普通笔记 1-账户密码 2-待办清单 3-图表 4-日程 5-工具清单 6-记账(订阅信息，可自动更新续费信息)';
 COMMENT ON COLUMN noteverso_note.content IS '笔记内容';
@@ -75,10 +57,35 @@ COMMENT ON COLUMN noteverso_note.url IS '笔记链接，从 web、移动端应�
 COMMENT ON COLUMN noteverso_note.added_at IS '添加时间';
 COMMENT ON COLUMN noteverso_note.updated_at IS '更新时间';
 
+-- create noteverso note table
+CREATE TABLE IF NOT EXISTS noteverso_label (
+    id bigserial NOT NULL,
+    name varchar(60) NOT NULL,
+    color varchar(20) NOT NULL,
+    is_deleted boolean DEFAULT false,
+    added_at timestamptz DEFAULT NULL,
+    updated_at timestamptz DEFAULT NULL,
+    creator_id bigint NOT NULL,
+    is_favorite boolean DEFAULT false,
+    order_value bigint NOT NULL,
+    PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE noteverso_label IS '标签表';
+COMMENT ON COLUMN noteverso_label.id IS '标签id';
+COMMENT ON COLUMN noteverso_label.name IS '标签名称';
+COMMENT ON COLUMN noteverso_label.color IS '标签图标颜色，总共20种颜色';
+COMMENT ON COLUMN noteverso_label.is_deleted IS '是否删除';
+COMMENT ON COLUMN noteverso_label.added_at IS '添加时间';
+COMMENT ON COLUMN noteverso_label.updated_at IS '更新时间';
+COMMENT ON COLUMN noteverso_label.creator_id IS '创建人';
+COMMENT ON COLUMN noteverso_label.is_favorite IS '是否将标签添加到收藏夹';
+COMMENT ON COLUMN noteverso_label.order_value IS '标签排序';
+
 -- creat noteverso label table
 CREATE TABLE IF NOT EXISTS noteverso_project (
-                                                 id bigserial NOT NULL,
-                                                 name varchar(120) NOT NULL,
+    id bigserial NOT NULL,
+    name varchar(120) NOT NULL,
     color varchar(20) NOT NULL,
     is_favorite boolean NOT NULL,
     is_deleted boolean DEFAULT false,
@@ -92,20 +99,40 @@ CREATE TABLE IF NOT EXISTS noteverso_project (
     collapsed boolean NOT NULL DEFAULT false,
     added_at timestamp with time zone DEFAULT NULL,
     updated_at timestamp with time zone DEFAULT NULL,
-                             PRIMARY KEY (id)
-    );
-
-COMMENT ON TABLE noteverso_label IS '标签表';
-
-COMMENT ON COLUMN noteverso_label.id IS '标签id';
-COMMENT ON COLUMN noteverso_label.name IS '标签名称';
-COMMENT ON COLUMN noteverso_label.color IS '标签图标颜色，总共20种颜色';
-COMMENT ON COLUMN noteverso_label.is_deleted IS '是否删除';
-COMMENT ON COLUMN noteverso_label.added_at IS '添加时间';
-COMMENT ON COLUMN noteverso_label.updated_at IS '更新时间';
-COMMENT ON COLUMN noteverso_label.creator_id IS '创建人';
-COMMENT ON COLUMN noteverso_label.is_favorite IS '是否将标签添加到收藏夹';
-COMMENT ON COLUMN noteverso_label.order_value IS '标签排序';
+    PRIMARY KEY (id)
+);
+COMMENT ON TABLE noteverso_project IS '项目表，最多支持 500 个项目';
+COMMENT ON TABLE noteverso_project IS '项目表，最多支持 500 个项目';
+COMMENT ON COLUMN noteverso_project.id IS '项目id';
+COMMENT ON COLUMN noteverso_project.name IS '项目名称';
+COMMENT ON COLUMN noteverso_project.color IS '项目图标颜色，总共 20种颜色';
+COMMENT ON COLUMN noteverso_project.is_favorite IS '是否将项目添加到收藏夹';
+COMMENT ON COLUMN noteverso_project.is_deleted IS '是否删除';
+COMMENT ON COLUMN noteverso_project.is_archived IS '是否归档';
+COMMENT ON COLUMN noteverso_project.is_shared IS '是否分享项目';
+COMMENT ON COLUMN noteverso_project.is_inbox_project IS '是否为收件箱项目，只读';
+COMMENT ON COLUMN noteverso_project.child_order IS '在客户端侧边栏菜单同一父项目中的位置';
+COMMENT ON COLUMN noteverso_project.parent_id IS '父项目id，null 表示此项目为根（父）项目';
+COMMENT ON COLUMN noteverso_project.view_style IS '客户端笔记展示布局方式 list - 列表，board - 看板';
+COMMENT ON COLUMN noteverso_project.url IS '项目链接，在web、移动端应用可通过链接进入项目';
+COMMENT ON COLUMN noteverso_project.collapsed IS '项目菜单是否折叠';
+COMMENT ON COLUMN noteverso_project.added_at IS '添加时间';
+COMMENT ON COLUMN noteverso_project.updated_at IS '更新时间';
+COMMENT ON COLUMN noteverso_project.id IS '项目id';
+COMMENT ON COLUMN noteverso_project.name IS '项目名称';
+COMMENT ON COLUMN noteverso_project.color IS '项目图标颜色，总共 20种颜色';
+COMMENT ON COLUMN noteverso_project.is_favorite IS '是否将项目添加到收藏夹';
+COMMENT ON COLUMN noteverso_project.is_deleted IS '是否删除';
+COMMENT ON COLUMN noteverso_project.is_archived IS '是否归档';
+COMMENT ON COLUMN noteverso_project.is_shared IS '是否分享项目';
+COMMENT ON COLUMN noteverso_project.is_inbox_project IS '是否为收件箱项目，只读';
+COMMENT ON COLUMN noteverso_project.child_order IS '在客户端侧边栏菜单同一父项目中的位置';
+COMMENT ON COLUMN noteverso_project.parent_id IS '父项目id，null 表示此项目为根（父）项目';
+COMMENT ON COLUMN noteverso_project.view_style IS '客户端笔记展示布局方式 list - 列表，board - 看板';
+COMMENT ON COLUMN noteverso_project.url IS '项目链接，在web、移动端应用可通过链接进入项目';
+COMMENT ON COLUMN noteverso_project.collapsed IS '项目菜单是否折叠';
+COMMENT ON COLUMN noteverso_project.added_at IS '添加时间';
+COMMENT ON COLUMN noteverso_project.updated_at IS '更新时间';
 
 -- create noteverso note_link table
 -- column names are
@@ -121,7 +148,6 @@ CREATE TABLE IF NOT EXISTS noteverso_note_link (
 );
 
 COMMENT ON TABLE noteverso_note_link IS '笔记关联表';
-
 COMMENT ON COLUMN noteverso_note_link.id IS '笔记关联id';
 COMMENT ON COLUMN noteverso_note_link.note_id IS '笔记id';
 COMMENT ON COLUMN noteverso_note_link.linked_note_id IS '关联至此的笔记id';
@@ -153,7 +179,6 @@ CREATE TABLE IF NOT EXISTS noteverso_view_option (
 );
 
 COMMENT ON TABLE noteverso_view_option IS '视图选项表';
-
 COMMENT ON COLUMN noteverso_view_option.id IS '视图选项id';
 COMMENT ON COLUMN noteverso_view_option.type IS '视图选项类型 0 - PROJECT, 1 - LABEL, 2 - UNCOMING, 3 - PAST, 4 - TODAY, 5 - LINKED_NOTE';
 COMMENT ON COLUMN noteverso_view_option.note_id IS '笔记id';
@@ -176,42 +201,48 @@ COMMENT ON COLUMN noteverso_view_option.update_at IS '更新时间';
 -- start_page, theme_id, tz_info, daily_goal, time_format, date_format, is_deleted
 CREATE TABLE IF NOT EXISTS noteverso_user (
     id bigserial NOT NULL,
-    inbox_project_id bigint NOT NULL,
+    inbox_project_id bigint DEFAULT NULL,
     avatar jsonb DEFAULT NULL,
+    username varchar(50) NOT NULL constraint noteverso_username_pk unique,
     email varchar(50) NOT NULL,
     full_name varchar(20) DEFAULT NULL,
-    has_password boolean NOT NULL DEFAULT false,
-    password varchar(80) DEFAULT NULL,
-    token varchar(50) DEFAULT NULL,
+    has_password boolean DEFAULT false,
+    password varchar(80) NOT NULL,
     lang smallint NULL,
-    is_premium boolean NOT NULL DEFAULT false,
-    premium_status smallint NOT NULL,
+    is_premium boolean DEFAULT false,
+    premium_status smallint default 0,
     premium_until timestamptz DEFAULT NULL,
+    authority varchar(20) DEFAULT null,
     joined_at timestamptz NOT NULL,
-    start_page varchar(30) NOT NULL,
+    start_page varchar(30) DEFAULT NULL,
     theme_id smallint DEFAULT NULL,
     tz_info jsonb DEFAULT NULL,
     daily_goal bigint DEFAULT NULL,
-    time_format smallint NOT NULL,
-    date_format smallint NOT NULL,
+    time_format smallint DEFAULT NULL,
+    date_format smallint DEFAULT NULL,
     is_deleted boolean DEFAULT false,
+    created_at timestamptz NOT NULL,
+    updated_at timestamptz NOT NULL,
     PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE noteverso_user IS '用户表';
-
 COMMENT ON COLUMN noteverso_user.id IS '用户id';
 COMMENT ON COLUMN noteverso_user.inbox_project_id IS '收件箱项目id';
 COMMENT ON COLUMN noteverso_user.avatar IS '头像';
+COMMENT ON COLUMN noteverso_user.username IS '用户名称';
+
+comment on constraint noteverso_username_pk on noteverso_user is 'email 唯一';
+
 COMMENT ON COLUMN noteverso_user.email IS '邮箱';
 COMMENT ON COLUMN noteverso_user.full_name IS '昵称';
 COMMENT ON COLUMN noteverso_user.has_password IS '是否有密码';
 COMMENT ON COLUMN noteverso_user.password IS '密码';
-COMMENT ON COLUMN noteverso_user.token IS 'token';
 COMMENT ON COLUMN noteverso_user.lang IS '语言, 0 - zh-cn,1 - en-us';
 COMMENT ON COLUMN noteverso_user.is_premium IS '是否是付费用户';
 COMMENT ON COLUMN noteverso_user.premium_status IS '付费用户状态 0 - not_premium, 1 - premium';
 COMMENT ON COLUMN noteverso_user.premium_until IS '付费用户到期时间';
+COMMENT ON COLUMN noteverso_user.authority IS '权限，premium - 会员，normal - 普通用户';
 COMMENT ON COLUMN noteverso_user.joined_at IS '加入时间';
 COMMENT ON COLUMN noteverso_user.start_page IS '用户首次登陆应用后的定位页面，project?id=${project_id}, upcoming, label?name=${label_name}';
 COMMENT ON COLUMN noteverso_user.theme_id IS '主题id';
@@ -234,7 +265,6 @@ CREATE TABLE IF NOT EXISTS noteverso_setting (
 );
 
 COMMENT ON TABLE noteverso_setting IS '用户设置模块';
-
 COMMENT ON COLUMN noteverso_setting.id IS 'id';
 COMMENT ON COLUMN noteverso_setting.user_id IS '用户id';
 COMMENT ON COLUMN noteverso_setting.note IS '笔记详情展示情况设置';

@@ -52,7 +52,7 @@ public class NoteController {
     }
 
     @GetMapping
-    public String sayHello() {
-        return "Hello world";
+    public ApiResult<String> sayHello() {
+        return ApiResult.success("Hello World!");
     }
 }

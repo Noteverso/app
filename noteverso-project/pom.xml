@@ -11,4 +11,12 @@
     <artifactId>noteverso-project</artifactId>
     <name>noteverso project</name>
     <description>project module</description>
+    <dependencies>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.1.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

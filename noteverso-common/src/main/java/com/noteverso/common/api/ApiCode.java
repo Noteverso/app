@@ -14,7 +14,7 @@ public enum ApiCode {
     /**
      * 操作成功
      */
-    SUCCESS(0, "操作成功"),
+    SUCCESS(0, "成功"),
 
     /**
      * 非法访问，未登录

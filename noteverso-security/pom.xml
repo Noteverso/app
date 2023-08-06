@@ -8,17 +8,23 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>noteverso-common</artifactId>
-    <name>noteverso common</name>
-    <description>common module</description>
-
+    <artifactId>noteverso-security</artifactId>
+    <name>noteverso security</name>
+    <description>security module</description>
     <dependencies>
-
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>8.1.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.noteverso</groupId>
+            <artifactId>noteverso-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.noteverso</groupId>
+            <artifactId>noteverso-user</artifactId>
         </dependency>
     </dependencies>
 </project>

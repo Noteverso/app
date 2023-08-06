@@ -11,17 +11,18 @@ spring:
 server:
   port: 8080
 
-springdoc:
-  swagger-ui:
-    path: /noteverso/swagger
-    tagsSorter: alpha
-    filter: true
-  api-docs:
-    path: /noteverso/api-docs
+#springdoc:
+#  swagger-ui:
+#    path: /noteverso/swagger
+#    tagsSorter: alpha
+#    filter: true
+#  api-docs:
+#    path: /noteverso/api-docs
 
 logging:
   level:
     root: INFO
+    org.springframework.security: trace
   file:
     path: ./logs
 
