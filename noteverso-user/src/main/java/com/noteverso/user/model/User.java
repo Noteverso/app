@@ -8,13 +8,14 @@ import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
-import java.util.Date;
 
 @TableName(value = "noteverso_user", autoResultMap = true)
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class User {
     @TableId(value = "id", type = IdType.AUTO)

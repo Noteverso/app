@@ -11,6 +11,10 @@ spring:
 server:
   port: 8080
 
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
 #springdoc:
 #  swagger-ui:
 #    path: /noteverso/swagger
@@ -21,7 +25,7 @@ server:
 
 logging:
   level:
-    root: INFO
+    root: debug
     org.springframework.security: trace
   file:
     path: ./logs

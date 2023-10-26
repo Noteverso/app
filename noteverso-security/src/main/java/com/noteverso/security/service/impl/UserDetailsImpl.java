@@ -1,5 +1,6 @@
 package com.noteverso.security.service.impl;
 
+import com.noteverso.user.dao.UserMapper;
 import com.noteverso.user.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,7 +17,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(() -> user.getAuthority());
+        return List.of(user::getAuthority);
     }
 
     @Override

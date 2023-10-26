@@ -27,8 +27,8 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/api/note/get/{id:^[0-9]*$}").permitAll()
-                .anyRequest().hasAuthority("premium")
+                .requestMatchers("/api/note/**").hasAuthority("premium")
+                .anyRequest().permitAll()
         );
         http.csrf(AbstractHttpConfigurer::disable);
         http.exceptionHandling().authenticationEntryPoint(authEntryPointJwt);

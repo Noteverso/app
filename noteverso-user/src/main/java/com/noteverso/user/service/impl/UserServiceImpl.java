@@ -21,6 +21,7 @@ public class UserServiceImpl implements IUserService {
             .builder()
             .email(username)
             .username(username)
+            .authority("normal")
             .password(passwordEncoder.encode(password))
             .hasPassword(true)
             .joinedAt(Instant.now())

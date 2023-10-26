@@ -1,9 +1,12 @@
 package com.noteverso.note.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.noteverso.common.api.ApiResult;
 import com.noteverso.note.model.Note;
 import com.noteverso.note.request.NoteCreateRequest;
 import com.noteverso.note.service.NoteService;
+import com.noteverso.user.dao.UserMapper;
+import com.noteverso.user.model.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,6 +27,7 @@ import java.util.HashMap;
 @Slf4j
 public class NoteController {
     private NoteService noteService;
+    private final UserMapper userMapper;
 
     @Operation(
         summary = "Create a Note",
@@ -51,8 +55,17 @@ public class NoteController {
         return ApiResult.success(note);
     }
 
-    @GetMapping
-    public ApiResult<String> sayHello() {
-        return ApiResult.success("Hello World!");
+    @GetMapping("/lambda/{username}")
+    public ApiResult<User> sayHello(@PathVariable String username) {
+        LambdaQueryWrapper<User> qw = new LambdaQueryWrapper<>();
+        qw.eq(User::getUsername, username);
+        User user = userMapper.selectOne(qw);
+        return ApiResult.success(user);
+    }
+
+    @GetMapping("/mapper/{username}")
+    public ApiResult<User> mapper(@PathVariable String username) {
+        User user = userMapper.findUserByUsername(username);
+        return ApiResult.success(user);
     }
 }
