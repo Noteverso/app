@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Optional;
 
 @Tag(name = "Note", description = "Note management APIs")
 @RestController
@@ -64,8 +65,8 @@ public class NoteController {
     }
 
     @GetMapping("/mapper/{username}")
-    public ApiResult<User> mapper(@PathVariable String username) {
-        User user = userMapper.findUserByUsername(username);
+    public ApiResult<Optional<User>> mapper(@PathVariable String username) {
+        var user = userMapper.findUserByUsername(username);
         return ApiResult.success(user);
     }
 }

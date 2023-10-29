@@ -25,12 +25,15 @@ mybatis-plus:
 
 logging:
   level:
-    root: debug
+    root: DEBUG
+    com.noteverso: DEBUG
     org.springframework.security: trace
   file:
     path: ./logs
 
 noteverso:
+  jwtSecret: Hesmg7LdIuhTXGXbq/zEYZP5KY2F4PdByUppPNGMm4f0uHX3GU8ne2WOo2j1SICM
+  jwtExpirationDays: 30
   openapi:
     dev-url: http://localhost:8080
     prod-url: http://api.noteverso.com/docs

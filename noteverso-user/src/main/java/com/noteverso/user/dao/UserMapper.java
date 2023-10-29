@@ -5,9 +5,11 @@ import com.noteverso.user.model.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Optional;
+
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
-    User findUserByUsername(@Param("username") String username);
+    Optional<User> findUserByUsername(@Param("username") String username);
 
     User findUserByEmail(String email);
 }
