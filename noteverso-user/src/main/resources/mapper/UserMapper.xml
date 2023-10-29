@@ -3,10 +3,10 @@
 <mapper namespace="com.noteverso.user.dao.UserMapper">
     <select id="findUserByUsername" resultType="com.noteverso.user.model.User">
         SELECT * from noteverso_user
-        WHERE username = #{username} AND is_deleted = false
+        WHERE username = #{username}
     </select>
     <select id="findUserByEmail" resultType="com.noteverso.user.model.User">
         SELECT * from noteverso_user
-        WHERE email = #{email} AND is_deleted = false
+        WHERE email = #{email}
     </select>
 </mapper>

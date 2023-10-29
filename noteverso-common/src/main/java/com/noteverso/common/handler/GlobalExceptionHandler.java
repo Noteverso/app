@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -105,6 +106,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> servletRequestBindingExceptionHandler(ServletRequestBindingException exception) {
         return requestErrorResponse(ApiCode.PARAMETER_EXCEPTION, exception);
     }
+
+    @ExceptionHandler(value = BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> badCredentialsExceptionHandler(BadCredentialsException exception) {
+        return requestErrorResponse(ApiCode.UNAUTHORIZED, exception, HttpStatus.UNAUTHORIZED);
+    }
+
 
 //    @ExceptionHandler(MethodArgumentNotValidException.class)
 //    public ResponseEntity<?> handlerValidationExceptions(MethodArgumentNotValidException ex) {

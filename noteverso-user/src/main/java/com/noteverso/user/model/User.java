@@ -119,11 +119,6 @@ public class User {
     private Integer dateFormat;
 
     /**
-     * 是否删除
-     */
-    private Boolean isDeleted;
-
-    /**
      * 创建时间
      */
     private Instant createdAt;
