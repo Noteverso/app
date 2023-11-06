@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BindException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -112,15 +113,8 @@ public class GlobalExceptionHandler {
         return requestErrorResponse(ApiCode.UNAUTHORIZED, exception, HttpStatus.UNAUTHORIZED);
     }
 
-
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    public ResponseEntity<?> handlerValidationExceptions(MethodArgumentNotValidException ex) {
-//        List<String> errors = ex.getBindingResult()
-//            .getFieldErrors()
-//            .stream()
-//            .map(FieldError::getDefaultMessage)
-//            .toList();
-//
-//        return ResponseEntity.badRequest().body(errors);
-//    }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handlerValidationExceptions(MethodArgumentNotValidException exception) {
+        return requestErrorResponse(ApiCode.PARAMETER_EXCEPTION, exception, HttpStatus.BAD_REQUEST);
+    }
 }

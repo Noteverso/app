@@ -2,7 +2,6 @@ package com.noteverso.security.service.impl;
 
 import com.noteverso.user.dao.UserMapper;
 import com.noteverso.user.model.User;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

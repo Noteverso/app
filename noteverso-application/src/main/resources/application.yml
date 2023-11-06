@@ -25,7 +25,7 @@ mybatis-plus:
 
 logging:
   level:
-    root: DEBUG
+    root: INFO
     com.noteverso: DEBUG
     org.springframework.security: trace
   file:
