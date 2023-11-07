@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @Tag(name = "Note", description = "Note management APIs")
 @RestController
-@RequestMapping("/api/note")
+@RequestMapping("/api/v1/note")
 @AllArgsConstructor
 @Slf4j
 public class NoteController {
@@ -32,11 +32,12 @@ public class NoteController {
 
     @Operation(
         summary = "Create a Note",
-        description = "Create a Note object by specifying its name and addedAt. The response is Note object with id, name and addedAt.",
+        description = "Create a Note object",
         tags = { "Post" })
-    @PostMapping("/create")
-    public HashMap<String, Object> createNote(@Valid @RequestBody NoteCreateRequest request) {
-        return noteService.createNote(request);
+    @PostMapping("/add")
+    public ApiResult<Void> createNote(@Valid @RequestBody NoteCreateRequest request) {
+        noteService.createNote(request);
+        return ApiResult.success(null);
     }
 
     @Operation(
@@ -48,12 +49,9 @@ public class NoteController {
         @ApiResponse(responseCode = "404", content = { @Content(schema = @Schema()) }),
         @ApiResponse(responseCode = "500", content = { @Content(schema = @Schema()) })})
     @GetMapping("/get/{id}")
-    public ApiResult<HashMap<?, ?>> getNote(@PathVariable("id") long id) {
+    public ApiResult<Void> getNote(@PathVariable("id") long id) {
         NoteCreateRequest request = new NoteCreateRequest();
-        request.setName("example");
-        request.setAddedAt(new Date());
-        HashMap<String, Object> note = noteService.createNote(request);
-        return ApiResult.success(note);
+        return ApiResult.success(null);
     }
 
     @GetMapping("/lambda/{username}")

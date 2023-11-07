@@ -23,7 +23,7 @@ public class UserServiceImpl implements IUserService {
             .username(username)
             .authority("normal")
             .password(passwordEncoder.encode(password))
-            .hasPassword(true)
+            .hasPassword(1)
             .joinedAt(Instant.now())
             .createdAt(Instant.now())
             .updatedAt(Instant.now())

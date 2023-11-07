@@ -50,7 +50,7 @@ public class User {
     /**
      * 是否有密码
      */
-    private Boolean hasPassword;
+    private Integer hasPassword;
 
     /**
      * 密码
@@ -65,7 +65,7 @@ public class User {
     /**
      * 是否是会员
      */
-    private Boolean isPremium;
+    private Integer isPremium;
 
     /**
      * 付费用户状态 0 - not_premium, 1 - premium

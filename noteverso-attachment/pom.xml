@@ -8,21 +8,13 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>noteverso-note</artifactId>
-    <name>noteverso note</name>
-    <description>note module</description>
+    <artifactId>noteverso-attachment</artifactId>
+    <name>noteverso attachment</name>
+    <description>attachment module</description>
     <dependencies>
         <dependency>
             <groupId>com.noteverso</groupId>
-            <artifactId>noteverso-user</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.noteverso</groupId>
             <artifactId>noteverso-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.noteverso</groupId>
-            <artifactId>noteverso-attachment</artifactId>
         </dependency>
     </dependencies>
 </project>

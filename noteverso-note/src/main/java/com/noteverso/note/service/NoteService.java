@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 @Service
 public interface NoteService {
-    HashMap<String, Object> createNote(NoteCreateRequest request);
+    void createNote(NoteCreateRequest request);
 
     String sayHello();
 }
