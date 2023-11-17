@@ -4,10 +4,12 @@ import com.noteverso.attachment.dao.AttachmentMapper;
 import com.noteverso.attachment.dto.AttachmentDTO;
 import com.noteverso.attachment.model.Attachment;
 import com.noteverso.attachment.service.IAttachmentService;
+import com.noteverso.common.context.TenantContext;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -16,25 +18,39 @@ public class AttachmentServiceImpl implements IAttachmentService {
     private final AttachmentMapper attachmentMapper;
 
     public void createAttachment(AttachmentDTO request) {
-        Attachment attachment = Attachment
-                .builder()
-                .name(request.getName())
-                .type(request.getType())
-                .resourceType(request.getResourceType())
-                .url(request.getUrl())
-                .noteId(null != request.getNoteId() ? request.getNoteId() : null)
-                .projectId(null != request.getProjectId() ? request.getProjectId() : null)
-                .commentId(null != request.getCommentId() ? request.getCommentId() : null)
-                .creator(1L)
-                .updater(1L)
-                .addedAt(Instant.now())
-                .updatedAt(Instant.now())
-                .build();
-
+        Long tenantId = TenantContext.getTenantId();
+        Attachment attachment = construcAttachment(request, tenantId);
         attachmentMapper.insert(attachment);
     }
 
     public void createMultipleAttachments(List<AttachmentDTO> request) {
+        Long tenantId = TenantContext.getTenantId();
+        List<Attachment> attachments = new ArrayList<>();
+        for (AttachmentDTO file : request) {
+            Attachment attachment = construcAttachment(file, tenantId);
+            attachments.add(attachment);
+        }
+        if (!attachments.isEmpty()) {
+            attachmentMapper.batchInsert(attachments);
+        }
 
+    }
+
+    private Attachment construcAttachment(AttachmentDTO file, Long tenantId) {
+        return Attachment
+                .builder()
+                .name(file.getName())
+                .type(file.getType())
+                .resourceType(file.getResourceType())
+                .url(file.getUrl())
+                .size(file.getSize())
+                .noteId(null != file.getNoteId() ? file.getNoteId() : null)
+                .projectId(null != file.getProjectId() ? file.getProjectId() : null)
+                .commentId(null != file.getCommentId() ? file.getCommentId() : null)
+                .creator(tenantId)
+                .updater(tenantId)
+                .addedAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
     }
 }

@@ -8,6 +8,4 @@ import java.util.HashMap;
 @Service
 public interface NoteService {
     void createNote(NoteCreateRequest request);
-
-    String sayHello();
 }

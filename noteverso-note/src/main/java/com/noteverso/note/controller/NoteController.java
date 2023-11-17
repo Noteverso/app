@@ -2,6 +2,7 @@ package com.noteverso.note.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.noteverso.common.api.ApiResult;
+import com.noteverso.common.context.TenantContext;
 import com.noteverso.note.model.Note;
 import com.noteverso.note.request.NoteCreateRequest;
 import com.noteverso.note.service.NoteService;
@@ -15,6 +16,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.Date;
@@ -23,7 +26,7 @@ import java.util.Optional;
 
 @Tag(name = "Note", description = "Note management APIs")
 @RestController
-@RequestMapping("/api/v1/note")
+@RequestMapping("/api/v1/notes")
 @AllArgsConstructor
 @Slf4j
 public class NoteController {
@@ -34,7 +37,7 @@ public class NoteController {
         summary = "Create a Note",
         description = "Create a Note object",
         tags = { "Post" })
-    @PostMapping("/add")
+    @PostMapping("")
     public ApiResult<Void> createNote(@Valid @RequestBody NoteCreateRequest request) {
         noteService.createNote(request);
         return ApiResult.success(null);
@@ -64,6 +67,7 @@ public class NoteController {
 
     @GetMapping("/mapper/{username}")
     public ApiResult<Optional<User>> mapper(@PathVariable String username) {
+        log.info("tenantId: {}", TenantContext.getTenantId());
         var user = userMapper.findUserByUsername(username);
         return ApiResult.success(user);
     }

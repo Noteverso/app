@@ -35,7 +35,7 @@ public class Attachment {
     /**
      * 附件大小
      */
-    private Long resourceSize;
+    private Integer size;
 
     /**
      * 笔记id，如果附件属于项目或评论，则为 null

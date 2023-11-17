@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS noteverso_note (
     id bigserial NOT NULL,
     note_id varchar NOT NULL CONSTRAINT noteverso_note_pk UNIQUE,
     note_type smallint DEFAULT 0,
-    content text NOT NULL,
+    content varchar NOT NULL,
     is_top smallint DEFAULT 0,
     is_deleted smallint DEFAULT 0,
     is_archived smallint DEFAULT 0,
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS noteverso_note_map (
     linked_note_id varchar(50) NOT NULL,
     added_at timestamptz DEFAULT NULL,
     updated_at timestamptz DEFAULT NULL,
-    view_style smallint NOT NULL,
+    view_style smallint DEFAULT 0,
     creator bigint NOT NULL,
     updater bigint NOT NULL,
     PRIMARY KEY (id)
@@ -112,7 +112,6 @@ CREATE TABLE IF NOT EXISTS noteverso_project (
     is_shared smallint DEFAULT 0,
     child_order bigint NOT NULL,
     parent_id varchar(50) DEFAULT NULL,
-    view_style smallint NOT NULL,
     url varchar(100) NOT NULL,
     collapsed smallint DEFAULT 0,
     added_at timestamp with time zone DEFAULT NULL,
@@ -132,7 +131,6 @@ COMMENT ON COLUMN noteverso_project.is_archived IS '是否归档,0-否，1-是';
 COMMENT ON COLUMN noteverso_project.is_shared IS '是否分享项目,0-否，1-是';
 COMMENT ON COLUMN noteverso_project.child_order IS '在客户端侧边栏菜单同一父项目中的位置';
 COMMENT ON COLUMN noteverso_project.parent_id IS '父项目id，null 表示此项目为根（父）项目';
-COMMENT ON COLUMN noteverso_project.view_style IS '客户端笔记展示布局方式 0 - list 列表，1 - board 看板';
 COMMENT ON COLUMN noteverso_project.url IS '项目链接，在web、移动端应用可通过链接进入项目';
 COMMENT ON COLUMN noteverso_project.collapsed IS '项目菜单是否折叠,0-否，1-是';
 COMMENT ON COLUMN noteverso_project.added_at IS '添加时间';
@@ -178,6 +176,7 @@ CREATE TABLE IF NOT EXISTS noteverso_attachment (
     name varchar(128) NOT NULL,
     type varchar(25) NOT NULL,
     url varchar(255) NOT NULL,
+    size int4 NOT NULL,
     resource_type smallint NOT NULL,
     note_id varchar(50) DEFAULT NULL,
     project_id varchar(50) DEFAULT NULL,
@@ -193,6 +192,7 @@ COMMENT ON TABLE noteverso_attachment IS '附件表';
 COMMENT ON COLUMN noteverso_attachment.id IS '附件id';
 COMMENT ON COLUMN noteverso_attachment.name IS '附件名称';
 COMMENT ON COLUMN noteverso_attachment.type IS '附件类型，MIME type，如 video/*, audio/*, image/*';
+COMMENT ON COLUMN noteverso_attachment.size IS '附件大小';
 COMMENT ON COLUMN noteverso_attachment.url IS '附件链接';
 COMMENT ON COLUMN noteverso_attachment.resource_type IS '附件资源类型，0 - image - 图片，1 - file - 文件';
 COMMENT ON COLUMN noteverso_attachment.note_id IS '笔记id，如果附件属于项目或评论，则为 null';
@@ -209,11 +209,9 @@ COMMENT ON COLUMN noteverso_attachment.updated_at IS '更新时间';
 -- sort_order, show_archived_notes, filtered_by, added_at, update_at
 CREATE TABLE IF NOT EXISTS noteverso_view_option (
     id bigserial NOT NULL,
-    type smallint NOT NULL,
-    note_id varchar(50) DEFAULT NULL,
+    type smallint DEFAULT 0,
     project_id varchar(50) DEFAULT NULL,
-    label_id varchar(50) DEFAULT NULL,
-    view_mode smallint NOT NULL,
+    view_style smallint DEFAULT 0,
     grouped_by smallint DEFAULT NULL,
     sorted_by smallint NOT NULL DEFAULT 0,
     sort_order smallint NOT NULL DEFAULT 0,
@@ -232,7 +230,7 @@ COMMENT ON COLUMN noteverso_view_option.type IS '视图选项类型 0 - PROJECT,
 COMMENT ON COLUMN noteverso_view_option.note_id IS '笔记id';
 COMMENT ON COLUMN noteverso_view_option.project_id IS '项目id';
 COMMENT ON COLUMN noteverso_view_option.label_id IS '标签id';
-COMMENT ON COLUMN noteverso_view_option.view_mode IS '笔记布局 0 - list 列表，1 - board 看板';
+COMMENT ON COLUMN noteverso_view_option.view_style IS '笔记布局 0 - list 列表，1 - board 看板';
 COMMENT ON COLUMN noteverso_view_option.grouped_by IS '分组方式 0 - NOTE_STATUS,1 - ADDED_DATE,2 - NOTE_LABEL';
 COMMENT ON COLUMN noteverso_view_option.sorted_by IS '排序方式 0 - ADDED_DATE,1 - COMMENT_COUNT,2 - LINKED_NOTE_COUNT';
 COMMENT ON COLUMN noteverso_view_option.sort_order IS '排序规则 0 - ASC, 1 - DESC';

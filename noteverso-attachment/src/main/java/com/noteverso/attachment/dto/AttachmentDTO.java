@@ -28,15 +28,15 @@ public class AttachmentDTO {
      * 附件资源类型，image - 图片，file - 文件
      */
     @NotNull(message = "resourceType is required")
-    @Schema(description = "Attachment resource type", allowableValues = "image, file", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String resourceType;
+    @Schema(description = "Attachment resource type", allowableValues = "0 - image, 1 - file", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Integer resourceType;
 
     /**
      * 附件资源类型，image - 图片，file - 文件
      */
-    @NotNull(message = "resourceSize is required")
+    @NotNull(message = "size is required")
     @Schema(description = "Attachment resource size", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long resourceSize;
+    private Integer size;
 
     /**
      * 笔记id，如果附件属于项目或评论，则为 null

@@ -5,15 +5,18 @@ import lombok.Data;
 
 @Data
 public class AttachmentRequest {
-    @Schema(description = "Name of Attachment")
+    @Schema(description = "Name of Attachment", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
-    @Schema(description = "MIME type of Attachment", example = "image/jpeg, video/mp4")
+    @Schema(description = "MIME type of Attachment", example = "image/jpeg, video/mp4", requiredMode = Schema.RequiredMode.REQUIRED)
     private String type;
 
-    @Schema(description = "OSS url of Attachment")
+    @Schema(description = "OSS url of Attachment", requiredMode = Schema.RequiredMode.REQUIRED)
     private String url;
 
-    @Schema(description = "Resource type of Attachment", allowableValues = "image, file")
-    private String resourceType;
+    @Schema(description = "Resource type of Attachment", allowableValues = "0 - image, 1 - file", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Integer resourceType;
+
+    @Schema(description = "Resource size of Attachment", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Integer size;
 }

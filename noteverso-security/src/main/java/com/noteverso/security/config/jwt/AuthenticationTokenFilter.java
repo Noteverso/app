@@ -1,5 +1,7 @@
 package com.noteverso.security.config.jwt;
 
+import com.noteverso.common.context.TenantContext;
+import com.noteverso.security.service.impl.UserDetailsImpl;
 import com.noteverso.security.service.impl.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -36,7 +38,8 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
             String jwt = parseJwt(httpServletRequest);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 String username = jwtUtils.getUsernameFromJwtToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UserDetailsImpl userDetails = userDetailsService.loadUserByUsername(username);
+                TenantContext.setTenantId(userDetails.getUser().getId());
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                     userDetails,
                     null,
