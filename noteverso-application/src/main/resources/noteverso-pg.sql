@@ -241,59 +241,77 @@ COMMENT ON COLUMN noteverso_view_option.update_at IS '更新时间';
 
 -- create noteverso user
 -- column names are
--- id, inbox_project_id, avatar, email, full_name, has_password, password,
--- token, lang, is_premium, premium_status, premium_until, joined_at,
--- start_page, theme_id, tz_info, daily_goal, time_format, date_format
-CREATE TABLE IF NOT EXISTS noteverso_user (
-    id bigserial NOT NULL,
-    inbox_project_id varchar(50) DEFAULT NULL,
-    avatar jsonb DEFAULT NULL,
-    username varchar(50) NOT NULL constraint noteverso_username_pk unique,
-    email varchar(50) NOT NULL,
-    full_name varchar(20) DEFAULT NULL,
-    has_password smallint DEFAULT 0,
-    password varchar(80) NOT NULL,
-    lang smallint NULL,
-    is_premium smallint DEFAULT 0,
-    premium_status smallint default 0,
-    premium_until timestamptz DEFAULT NULL,
-    authority varchar(20) DEFAULT 'normal',
-    joined_at timestamptz NOT NULL,
-    start_page varchar(30) DEFAULT NULL,
-    theme_id smallint DEFAULT NULL,
-    tz_info jsonb DEFAULT NULL,
-    daily_goal bigint DEFAULT NULL,
-    time_format smallint DEFAULT NULL,
-    date_format smallint DEFAULT NULL,
-    created_at timestamptz NOT NULL,
-    updated_at timestamptz NOT NULL,
+-- id, avatar, email, full_name, has_password, password,
+-- is_premium, premium_status, premium_until, joined_at,
+CREATE TABLE IF NOT EXISTS noteverso_user_info (
+   id               bigserial PRIMARY KEY,
+   avatar           jsonb,
+   username         varchar(50) NOT NULL CONSTRAINT noteverso_username_pk UNIQUE,
+   email            varchar(50) NOT NULL,
+   full_name        varchar(20) DEFAULT NULL::character varying,
+   has_password     smallint DEFAULT 0,
+   password         varchar(80) NOT NULL,
+   is_premium       smallint DEFAULT 0,
+   premium_status   smallint DEFAULT 0,
+   premium_until    timestamp with time zone,
+   authority        varchar(20) DEFAULT 'normal'::character varying,
+   joined_at        timestamp with time zone NOT NULL,
+   created_at       timestamp with time zone NOT NULL,
+   updated_at       timestamp with time zone NOT NULL,
     PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE noteverso_user IS '用户表';
+COMMENT ON TABLE noteverso_user IS '用户基本信息表';
 COMMENT ON COLUMN noteverso_user.id IS '用户id';
-COMMENT ON COLUMN noteverso_user.inbox_project_id IS '收件箱项目id';
 COMMENT ON COLUMN noteverso_user.avatar IS '头像';
 COMMENT ON COLUMN noteverso_user.username IS '用户名称';
-
 COMMENT ON CONSTRAINT noteverso_username_pk ON noteverso_user IS 'email 唯一';
-
 COMMENT ON COLUMN noteverso_user.email IS '邮箱';
 COMMENT ON COLUMN noteverso_user.full_name IS '昵称';
 COMMENT ON COLUMN noteverso_user.has_password IS '是否有密码, 0 - 否, 1 - 是';
 COMMENT ON COLUMN noteverso_user.password IS '密码';
-COMMENT ON COLUMN noteverso_user.lang IS '语言, 0 - zh-cn,1 - en-us';
 COMMENT ON COLUMN noteverso_user.is_premium IS '是否是付费用户, 0 - 否, 1 - 是';
 COMMENT ON COLUMN noteverso_user.premium_status IS '付费用户状态 0 - not_premium, 1 - premium';
 COMMENT ON COLUMN noteverso_user.premium_until IS '付费用户到期时间';
 COMMENT ON COLUMN noteverso_user.authority IS '权限，premium - 会员，normal - 普通用户';
 COMMENT ON COLUMN noteverso_user.joined_at IS '加入时间';
-COMMENT ON COLUMN noteverso_user.start_page IS '用户首次登陆应用后的定位页面，project?id=${project_id}, upcoming, label?name=${label_name}';
-COMMENT ON COLUMN noteverso_user.theme_id IS '主题id';
-COMMENT ON COLUMN noteverso_user.tz_info IS '时区信息 gmt_string, hours, is_dst, minutes, timezone';
-COMMENT ON COLUMN noteverso_user.daily_goal IS '日常目标';
-COMMENT ON COLUMN noteverso_user.time_format IS '时间格式 0 - 13:00，1 - 1:00pm，默认 0';
-COMMENT ON COLUMN noteverso_user.date_format IS '日期格式 0 - YYYY-MM-DD，1 - DD-MM-YYYY，默认 0';
+
+CREATE TABLE noteverso_user_config (
+   id bigserial not null primary key,
+   user_id bigint not null,
+   max_file_size smallint DEFAULT 5,
+   project_quota smallint DEFAULT 20,
+   file_size_quota smallint DEFAULT 100,
+   linked_note_quota smallint DEFAULT 50,
+   inbox_project_id varchar(50) DEFAULT NULL,
+   lang smallint NULL,
+   start_page varchar(30) DEFAULT NULL,
+   theme_id smallint DEFAULT NULL,
+   tz_info jsonb DEFAULT NULL,
+   daily_goal bigint DEFAULT NULL,
+   time_format smallint DEFAULT NULL,
+   date_format smallint DEFAULT NULL,
+   creator bigint DEFAULT NULL,
+   updater bigint DEFAULT NULL,
+   added_at timestamp with time zone DEFAULT NULL,
+   updated_at timestamp with time zone DEFAULT NULL
+);
+
+COMMENT ON TABLE noteverso_user_config IS '用户配置表';
+COMMENT ON COLUMN noteverso_user_config.id IS 'id';
+COMMENT ON COLUMN noteverso_user_config.user_id IS '用户id';
+COMMENT ON COLUMN noteverso_user_config.max_file_size IS '单个文件最大限制，普通用户 5MB，订阅用户 100MB';
+COMMENT ON COLUMN noteverso_user_config.project_quota IS '项目数量配额，普通用户 20，订阅用户 300';
+COMMENT ON COLUMN noteverso_user_config.file_size_quota IS '文件大小总和配额，普通用户 100MB，订阅用户 5GB';
+COMMENT ON COLUMN noteverso_user_config.linked_note_quota IS '链接笔记数量配额，普通用户 50，订阅用户无限';
+COMMENT ON COLUMN noteverso_user_config.inbox_project_id IS '收件箱项目id';
+COMMENT ON COLUMN noteverso_user_config.lang IS '语言, 0 - zh-cn,1 - en-us';
+COMMENT ON COLUMN noteverso_user_config.start_page IS '用户首次登陆应用后的定位页面，project?id=${project_id}, upcoming, label?name=${label_name}';
+COMMENT ON COLUMN noteverso_user_config.theme_id IS '主题id';
+COMMENT ON COLUMN noteverso_user_config.tz_info IS '时区信息 gmt_string, hours, is_dst, minutes, timezone';
+COMMENT ON COLUMN noteverso_user_config.daily_goal IS '日常目标';
+COMMENT ON COLUMN noteverso_user_config.time_format IS '时间格式 0 - 13:00，1 - 1:00pm，默认 0';
+COMMENT ON COLUMN noteverso_user_config.date_format IS '日期格式 0 - YYYY-MM-DD，1 - DD-MM-YYYY，默认 0';
 
 -- create noteverso setting
 -- column names are

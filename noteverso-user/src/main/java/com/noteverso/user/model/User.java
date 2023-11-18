@@ -22,11 +22,6 @@ public class User {
     private Long id;
 
     /**
-     * 收件箱项目id
-     */
-    private Long inboxProjectId;
-
-    /**
      * 头像
      */
     @TableField(typeHandler = JacksonTypeHandler.class)
@@ -58,11 +53,6 @@ public class User {
     private String password;
 
     /**
-     * 语言, 0 - zh-cn,1 - en-us
-     */
-
-    private Integer lang;
-    /**
      * 是否是会员
      */
     private Integer isPremium;
@@ -86,37 +76,6 @@ public class User {
      * 加入时间
      */
     private Instant joinedAt;
-
-    /**
-     * 用户首次登陆应用后的定位页面，project?id=${project_id}, upcoming, label?name=${label_name}
-     */
-    private String startPage;
-
-    /**
-     * 主题id
-     */
-    private Integer themeId;
-
-    /**
-     * 时区信息 gmt_string, hours, is_dst, minutes, timezone
-     */
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private Object tzInfo;
-
-    /**
-     * 每天记录目标数
-     */
-    private Long dailyGoal;
-
-    /**
-     * 时间格式 0 - 13:00，1 - 1:00pm，默认 0
-     */
-    private Integer timeFormat;
-
-    /**
-     * 日期格式 0 - YYYY-MM-DD，1 - DD-MM-YYYY，默认 0
-     */
-    private Integer dateFormat;
 
     /**
      * 创建时间
