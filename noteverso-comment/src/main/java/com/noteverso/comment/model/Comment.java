@@ -24,8 +24,8 @@ public class Comment {
      * 项目id，如果评论属于笔记，则它为 null
      */
     private String projectId;
-    private Long creator;
-    private Long updater;
+    private String creator;
+    private String updater;
     private Instant addedAt;
     private Instant updatedAt;
 }

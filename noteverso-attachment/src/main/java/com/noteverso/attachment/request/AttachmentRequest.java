@@ -18,5 +18,5 @@ public class AttachmentRequest {
     private Integer resourceType;
 
     @Schema(description = "Resource size of Attachment", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Integer size;
+    private Long size;
 }

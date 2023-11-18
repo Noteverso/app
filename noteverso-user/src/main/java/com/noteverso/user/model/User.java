@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
-@TableName(value = "noteverso_user", autoResultMap = true)
+@TableName(value = "noteverso_user_info", autoResultMap = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,6 +20,11 @@ import java.time.Instant;
 public class User {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
+
+    /**
+     * 用户id
+     */
+    private String userId;
 
     /**
      * 头像

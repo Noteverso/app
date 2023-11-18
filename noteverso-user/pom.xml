@@ -16,5 +16,9 @@
             <groupId>com.noteverso</groupId>
             <artifactId>noteverso-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.noteverso</groupId>
+            <artifactId>noteverso-project</artifactId>
+        </dependency>
     </dependencies>
 </project>

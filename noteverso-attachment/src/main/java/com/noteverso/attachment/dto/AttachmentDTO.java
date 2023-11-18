@@ -36,7 +36,7 @@ public class AttachmentDTO {
      */
     @NotNull(message = "size is required")
     @Schema(description = "Attachment resource size", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Integer size;
+    private Long size;
 
     /**
      * 笔记id，如果附件属于项目或评论，则为 null

@@ -21,6 +21,6 @@ public class Label {
     private Long orderValue;
     private Instant addedAt;
     private Instant updatedAt;
-    private Long creator;
-    private Long updater;
+    private String creator;
+    private String updater;
 }

@@ -41,8 +41,8 @@ public class Note {
      * 笔记状态 0 -  待处理，1 - 正在进行，2 - 已完成
      */
     private Integer status;
-    private Long creator;
-    private Long updater;
+    private String creator;
+    private String updater;
     private String url;
     private Instant addedAt;
     private Instant updatedAt;

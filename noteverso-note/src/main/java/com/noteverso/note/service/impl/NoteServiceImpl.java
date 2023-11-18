@@ -1,6 +1,6 @@
 package com.noteverso.note.service.impl;
 
-import static com.noteverso.common.constant.NumberEnum.NUM_31;
+import static com.noteverso.common.constant.NumberConstants.NUM_31;
 
 import com.noteverso.attachment.dto.AttachmentDTO;
 import com.noteverso.attachment.request.AttachmentRequest;
@@ -44,7 +44,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void createNote(NoteCreateRequest request) {
-        long tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContext.getTenantId();
         String projectId = request.getProjectId();
         String noteId = String.valueOf(snowFlakeUtils.nextId());
 
@@ -96,7 +96,7 @@ public class NoteServiceImpl implements NoteService {
         }
     }
 
-    private Note constructNote(String noteId, String projectId, String content, Long tenantId) {
+    private Note constructNote(String noteId, String projectId, String content, String tenantId) {
         return Note.builder()
                 .noteId(noteId)
                 .content(content)
@@ -107,7 +107,7 @@ public class NoteServiceImpl implements NoteService {
                 .updatedAt(Instant.now())
                 .build();
     }
-    private NoteLabelRelation constructNoteLabelRelation(String labelId, String noteId, Long tenantId) {
+    private NoteLabelRelation constructNoteLabelRelation(String labelId, String noteId, String tenantId) {
        return NoteLabelRelation
                .builder()
                .noteId(noteId)
@@ -119,7 +119,7 @@ public class NoteServiceImpl implements NoteService {
                .build();
     }
 
-    private NoteProjectRelation constructNoteProjectRelation(String noteId, String projectId, Long tenantId) {
+    private NoteProjectRelation constructNoteProjectRelation(String noteId, String projectId, String tenantId) {
         return NoteProjectRelation
                 .builder()
                 .noteId(noteId)
@@ -130,7 +130,7 @@ public class NoteServiceImpl implements NoteService {
                 .updatedAt(Instant.now())
                 .build();
     }
-    private NoteRelation constructNoteRelation(String noteId, String linkedNoteId, Long tenantId) {
+    private NoteRelation constructNoteRelation(String noteId, String linkedNoteId, String tenantId) {
         return NoteRelation
                 .builder()
                 .noteId(noteId)

@@ -28,11 +28,16 @@ public class Project {
      * 0 list - 列表, 1 board - 看板
      * */
     private Integer viewStyle;
+    /**
+     * 是否为收件箱项目，0 - 否 1 - 是
+     * 每个用户只能有一个收件箱项目
+     */
+    private Integer isInboxProject;
     private String url;
-    private Integer collapsed;
+    private Integer isCollapsed;
     private Instant addedAt;
     private Instant updatedAt;
-    private Long creator;
-    private Long updater;
+    private String creator;
+    private String updater;
 
 }

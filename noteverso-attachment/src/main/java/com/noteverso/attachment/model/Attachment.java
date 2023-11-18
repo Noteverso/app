@@ -35,7 +35,7 @@ public class Attachment {
     /**
      * 附件大小
      */
-    private Integer size;
+    private Long size;
 
     /**
      * 笔记id，如果附件属于项目或评论，则为 null
@@ -52,9 +52,9 @@ public class Attachment {
      */
     private String commentId;
 
-    private Long creator;
+    private String creator;
 
-    private Long updater;
+    private String updater;
 
     private Instant addedAt;
 

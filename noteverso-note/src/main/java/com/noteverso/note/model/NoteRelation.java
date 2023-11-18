@@ -32,6 +32,6 @@ public class NoteRelation {
     private Integer viewStyle;
     private Instant addedAt;
     private Instant updatedAt;
-    private Long creator;
-    private Long updater;
+    private String creator;
+    private String updater;
 }

@@ -18,13 +18,13 @@ public class AttachmentServiceImpl implements IAttachmentService {
     private final AttachmentMapper attachmentMapper;
 
     public void createAttachment(AttachmentDTO request) {
-        Long tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContext.getTenantId();
         Attachment attachment = construcAttachment(request, tenantId);
         attachmentMapper.insert(attachment);
     }
 
     public void createMultipleAttachments(List<AttachmentDTO> request) {
-        Long tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContext.getTenantId();
         List<Attachment> attachments = new ArrayList<>();
         for (AttachmentDTO file : request) {
             Attachment attachment = construcAttachment(file, tenantId);
@@ -36,7 +36,7 @@ public class AttachmentServiceImpl implements IAttachmentService {
 
     }
 
-    private Attachment construcAttachment(AttachmentDTO file, Long tenantId) {
+    private Attachment construcAttachment(AttachmentDTO file, String tenantId) {
         return Attachment
                 .builder()
                 .name(file.getName())

@@ -1,14 +1,14 @@
 package com.noteverso.common.context;
 
 public final class TenantContext {
-    private static Long tenantId;
+    private static String tenantId;
     public TenantContext() {}
 
-    public static Long getTenantId() {
+    public static String getTenantId() {
         return tenantId;
     }
 
-    public static void setTenantId(Long userId) {
+    public static void setTenantId(String userId) {
         tenantId = userId;
     }
 }

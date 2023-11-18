@@ -21,10 +21,12 @@ public class UserConfig {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
+    private String userId;
+
     /**
      * 收件箱项目id
      */
-    private Long inboxProjectId;
+    private String inboxProjectId;
 
     /**
      * 语言, 0 - zh-cn,1 - en-us
@@ -62,10 +64,7 @@ public class UserConfig {
      * 日期格式 0 - YYYY-MM-DD，1 - DD-MM-YYYY，默认 0
      */
     private Integer dateFormat;
-    /**
-     * 单个最大文件限制，普通用户 5MB，订阅用户 100MB
-     */
-    private Integer maxFileSize;
+    private Long maxFileSize;
     /**
      * 项目数量配额
      */
@@ -73,13 +72,13 @@ public class UserConfig {
     /**
      * 文件大小总和配额
      */
-    private Integer fileSizeQuota;
+    private Long fileSizeQuota;
     /**
      * 链接笔记数量配额
      */
     private Integer linkedNoteQuota;
-    private Long creator;
-    private Long updater;
+    private String creator;
+    private String updater;
     private Instant addedAt;
     private Instant updatedAt;
 }

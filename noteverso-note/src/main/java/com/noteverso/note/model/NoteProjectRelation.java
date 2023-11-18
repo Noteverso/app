@@ -29,7 +29,7 @@ public class NoteProjectRelation {
 
     private Instant updatedAt;
 
-    private Long creator;
+    private String creator;
 
-    private Long updater;
+    private String updater;
 }
