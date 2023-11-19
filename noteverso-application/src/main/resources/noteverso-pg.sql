@@ -206,40 +206,37 @@ COMMENT ON COLUMN noteverso_attachment.added_at IS '添加时间';
 COMMENT ON COLUMN noteverso_attachment.updated_at IS '更新时间';
 
 -- create noteverso view option table
-CREATE TABLE IF NOT EXISTS noteverso_view_option (
-    id bigserial NOT NULL,
-    type smallint DEFAULT 0,
-    project_id varchar(50) DEFAULT NULL,
-    view_style smallint DEFAULT 0,
-    grouped_by smallint DEFAULT NULL,
-    sorted_by smallint NOT NULL DEFAULT 0,
-    sort_order smallint NOT NULL DEFAULT 0,
-    show_archived_notes smallint DEFAULT 0,
-    filtered_by smallint DEFAULT NULL,
-    added_at timestamptz DEFAULT NULL,
-    update_at timestamptz DEFAULT NULL,
-    creator varchar(50) NOT NULL,
-    updater varchar(50) NOT NULL,
-    PRIMARY KEY (id)
+create table noteverso_view_option
+(
+    id bigserial primary key,
+    type                smallint    default 0,
+    user_id             varchar(50) default NULL,
+    project_id          varchar(50) default NULL::character varying,
+    view_style          smallint    default 0,
+    grouped_by          smallint,
+    sorted_by           smallint    default 0 not null,
+    sort_order          smallint    default 0 not null,
+    show_archived_notes smallint    default 0,
+    added_at            timestamp with time zone,
+    update_at           timestamp with time zone
 );
 
-COMMENT ON TABLE noteverso_view_option IS '视图选项表';
-COMMENT ON COLUMN noteverso_view_option.id IS '视图选项id';
-COMMENT ON COLUMN noteverso_view_option.type IS '视图选项类型 0 - PROJECT, 1 - LABEL, 2 - UNCOMING, 3 - PAST, 4 - TODAY, 5 - LINKED_NOTE';
-COMMENT ON COLUMN noteverso_view_option.project_id IS '项目id';
-COMMENT ON COLUMN noteverso_view_option.view_style IS '笔记布局 0 - list 列表，1 - board 看板';
-COMMENT ON COLUMN noteverso_view_option.grouped_by IS '分组方式 0 - NOTE_STATUS,1 - ADDED_DATE,2 - NOTE_LABEL';
-COMMENT ON COLUMN noteverso_view_option.sorted_by IS '排序方式 0 - ADDED_DATE,1 - COMMENT_COUNT,2 - LINKED_NOTE_COUNT';
-COMMENT ON COLUMN noteverso_view_option.sort_order IS '排序规则 0 - ASC, 1 - DESC';
-COMMENT ON COLUMN noteverso_view_option.show_archived_notes IS '是否显示已归档笔记, 0 - 不显示, 1 - 显示';
-COMMENT ON COLUMN noteverso_view_option.filtered_by IS '过滤方式';
-COMMENT ON COLUMN noteverso_view_option.added_at IS '添加时间';
-COMMENT ON COLUMN noteverso_view_option.update_at IS '更新时间';
+comment on table noteverso_view_option is '视图选项表';
+comment on column noteverso_view_option.id is '视图选项id';
+comment on column noteverso_view_option.type is '笔记所属项目类型 0 - 项目类型, 1 - 标签页, 2 - 今天, 3 - 预览 4 - 附件资源';
+comment on column noteverso_view_option.project_id is '项目id';
+comment on column noteverso_view_option.view_style is '笔记布局 0 - list 列表，1 - board 看板';
+comment on column noteverso_view_option.grouped_by is '分组方式 0 - ADDED_DATE 添加日期, 1 - NOTE_LABEL 标签, 2 - NOTE_STATUS 状态';
+comment on column noteverso_view_option.sorted_by is '排序方式 0 - ADDED_DATE 添加日期, 1 - UPDATED_DATE 更新日期, 2 - COMMENT_COUNT 评论数';
+comment on column noteverso_view_option.sort_order is '排序规则 0 - ASC, 1 - DESC';
+comment on column noteverso_view_option.show_archived_notes is '是否显示已归档笔记, 0 - 不显示, 1 - 显示';
+comment on column noteverso_view_option.added_at is '添加时间';
+comment on column noteverso_view_option.update_at is '更新时间';
 
 -- create noteverso user
 CREATE TABLE IF NOT EXISTS noteverso_user_info (
    id               bigserial NOT NULL,
-   user_id          varchar(50) NOT NULL,
+   user_id          varchar(50) NOT NULL CONSTRAINT uq_user_id UNIQUE,
    avatar           jsonb,
    username         varchar(50) NOT NULL CONSTRAINT uq_username UNIQUE,
    email            varchar(50) NOT NULL,
@@ -259,6 +256,7 @@ CREATE TABLE IF NOT EXISTS noteverso_user_info (
 COMMENT ON TABLE noteverso_user_info IS '用户基本信息表';
 COMMENT ON COLUMN noteverso_user_info.id IS 'id';
 COMMENT ON COLUMN noteverso_user_info.user_id IS '用户id';
+COMMENT ON CONSTRAINT uq_user_id ON noteverso_user_info IS 'user_id 唯一';
 COMMENT ON COLUMN noteverso_user_info.avatar IS '头像';
 COMMENT ON COLUMN noteverso_user_info.username IS '用户名称';
 COMMENT ON CONSTRAINT uq_username ON noteverso_user_info IS 'email 唯一';
@@ -274,7 +272,7 @@ COMMENT ON COLUMN noteverso_user_info.joined_at IS '加入时间';
 
 CREATE TABLE noteverso_user_config (
    id bigserial not null,
-   user_id bigint not null,
+   user_id varchar(50) not null,
    max_file_size bigint NOT NULL,
    project_quota smallint NOT NULL,
    file_size_quota bigint NOT NULL,

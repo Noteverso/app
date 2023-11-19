@@ -60,7 +60,6 @@ public class ProjectServiceImpl implements IProjectService {
                 .childOrder(projectDTO.getChildOrder())
                 .parentId(projectDTO.getParentId() != null ? projectDTO.getParentId() : null)
                 .isFavorite(projectDTO.getIsFavorite() != null ? projectDTO.getIsFavorite() : NUM_O)
-                .viewStyle(projectDTO.getViewStyle() != null ? projectDTO.getViewStyle() : NUM_O)
                 .isCollapsed(NUM_O)
                 .isInboxProject(projectDTO.getIsInboxProject() != null ? projectDTO.getIsInboxProject() : NUM_O)
                 .isShared(NUM_O)
