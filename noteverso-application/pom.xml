@@ -23,11 +23,7 @@
         </dependency>
         <dependency>
             <groupId>com.noteverso</groupId>
-            <artifactId>noteverso-project</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.noteverso</groupId>
-            <artifactId>noteverso-user</artifactId>
+            <artifactId>noteverso-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.noteverso</groupId>

@@ -4,7 +4,7 @@ import com.noteverso.common.api.ApiResult;
 import com.noteverso.security.config.jwt.JwtUtils;
 import com.noteverso.security.request.CreateUserRequest;
 import com.noteverso.security.request.LoginRequest;
-import com.noteverso.user.service.IUserService;
+import com.noteverso.core.service.IUserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;

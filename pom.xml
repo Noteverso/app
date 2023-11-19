@@ -20,11 +20,7 @@
 		<module>noteverso-application</module>
 		<module>noteverso-common</module>
 		<module>noteverso-note</module>
-		<module>noteverso-project</module>
-		<module>noteverso-label</module>
-		<module>noteverso-comment</module>
-		<module>noteverso-attachment</module>
-		<module>noteverso-user</module>
+		<module>noteverso-core</module>
 		<module>noteverso-security</module>
 	</modules>
 
@@ -81,11 +77,6 @@
 			</dependency>
 			<dependency>
 				<groupId>com.noteverso</groupId>
-				<artifactId>noteverso-project</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.noteverso</groupId>
 				<artifactId>noteverso-application</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -96,27 +87,12 @@
 			</dependency>
 			<dependency>
 				<groupId>com.noteverso</groupId>
-				<artifactId>noteverso-label</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.noteverso</groupId>
-				<artifactId>noteverso-comment</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.noteverso</groupId>
-				<artifactId>noteverso-attachment</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.noteverso</groupId>
-				<artifactId>noteverso-user</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.noteverso</groupId>
 				<artifactId>noteverso-security</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.noteverso</groupId>
+				<artifactId>noteverso-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

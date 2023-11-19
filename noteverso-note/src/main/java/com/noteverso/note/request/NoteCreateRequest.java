@@ -1,6 +1,6 @@
 package com.noteverso.note.request;
 
-import com.noteverso.attachment.request.AttachmentRequest;
+import com.noteverso.core.request.AttachmentRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

@@ -6,8 +6,8 @@ import com.noteverso.common.context.TenantContext;
 import com.noteverso.note.model.Note;
 import com.noteverso.note.request.NoteCreateRequest;
 import com.noteverso.note.service.NoteService;
-import com.noteverso.user.dao.UserMapper;
-import com.noteverso.user.model.User;
+import com.noteverso.core.dao.UserMapper;
+import com.noteverso.core.model.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,12 +16,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Optional;
 
 @Tag(name = "Note", description = "Note management APIs")

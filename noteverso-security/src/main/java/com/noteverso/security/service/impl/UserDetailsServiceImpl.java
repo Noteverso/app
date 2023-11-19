@@ -1,8 +1,7 @@
 package com.noteverso.security.service.impl;
 
-import com.noteverso.user.dao.UserMapper;
-import com.noteverso.user.model.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.noteverso.core.dao.UserMapper;
+import com.noteverso.core.model.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;

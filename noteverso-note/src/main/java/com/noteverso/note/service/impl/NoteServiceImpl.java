@@ -1,13 +1,13 @@
 package com.noteverso.note.service.impl;
 
-import static com.noteverso.common.constant.NumberConstants.NUM_31;
+import static com.noteverso.common.constant.NumConstants.NUM_31;
 
-import com.noteverso.attachment.dto.AttachmentDTO;
-import com.noteverso.attachment.request.AttachmentRequest;
-import com.noteverso.attachment.service.IAttachmentService;
 import com.noteverso.common.context.TenantContext;
 import com.noteverso.common.util.IPUtils;
 import com.noteverso.common.util.SnowFlakeUtils;
+import com.noteverso.core.dto.AttachmentDTO;
+import com.noteverso.core.request.AttachmentRequest;
+import com.noteverso.core.service.IAttachmentService;
 import com.noteverso.note.dao.NoteLabelRelationMapper;
 import com.noteverso.note.dao.NoteMapper;
 import com.noteverso.note.dao.NoteProjectRelationMapper;

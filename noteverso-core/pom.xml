@@ -8,14 +8,10 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>noteverso-note</artifactId>
-    <name>noteverso note</name>
-    <description>note module</description>
+    <artifactId>noteverso-core</artifactId>
+    <name>noteverso core</name>
+    <description>core module</description>
     <dependencies>
-        <dependency>
-            <groupId>com.noteverso</groupId>
-            <artifactId>noteverso-core</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.noteverso</groupId>
             <artifactId>noteverso-common</artifactId>
