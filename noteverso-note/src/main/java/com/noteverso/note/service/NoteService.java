@@ -11,4 +11,6 @@ public interface NoteService {
     void createNote(NoteCreateRequest request);
 
     void updateNote(String id, NoteUpdateRequest request);
+
+    void deleteNote(String id);
 }

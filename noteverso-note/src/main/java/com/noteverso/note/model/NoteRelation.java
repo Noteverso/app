@@ -30,6 +30,7 @@ public class NoteRelation {
      * 0 list - 列表，1 board - 看板
      */
     private Integer viewStyle;
+    private Integer isDeleted;
     private Instant addedAt;
     private Instant updatedAt;
     private String creator;

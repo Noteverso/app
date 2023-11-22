@@ -20,6 +20,7 @@ public class AttachmentRelation {
     private String noteId;
     private String projectId;
     private String commentId;
+    private Integer isDeleted;
     private String creator;
     private String updater;
     private Instant addedAt;

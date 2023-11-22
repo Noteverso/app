@@ -28,55 +28,30 @@ import java.util.Optional;
 @AllArgsConstructor
 @Slf4j
 public class NoteController {
-    private NoteService noteService;
-    private final UserMapper userMapper;
+    private final NoteService noteService;
 
-    @Operation(
-        summary = "Create a Note",
-        description = "Create a Note object",
-        tags = { "Post" })
+    @Operation(summary = "Create a Note", description = "Create a Note", tags = { "Post" })
     @PostMapping("")
     public ApiResult<Void> createNote(@Valid @RequestBody NoteCreateRequest request) {
         noteService.createNote(request);
         return ApiResult.success(null);
     }
 
-    @Operation(
-            summary = "Update a Note",
-            description = "Update a Note object",
-            tags = { "Post" })
+    @Operation(summary = "Update a Note", description = "Update a Note", tags = { "PATCH" })
     @PatchMapping("/{id}")
     public ApiResult<Void> updateNote(@PathVariable("id") String id, @Valid @RequestBody NoteUpdateRequest request) {
         noteService.updateNote(id, request);
         return ApiResult.success(null);
     }
 
-    @Operation(
-        summary = "Retrieve a Note by Id",
-        description = "Get a Note object by specifying its id. The response is Tutorial object with id, title, description and published status.",
-        tags = { "Get" })
+    @Operation(summary = "Retrieve a Note by Id", description = "Delete a note", tags = { "DELETE" })
     @ApiResponses({
         @ApiResponse(responseCode = "200", content = { @Content(schema = @Schema(implementation = Note.class), mediaType = "application/json")}),
         @ApiResponse(responseCode = "404", content = { @Content(schema = @Schema()) }),
         @ApiResponse(responseCode = "500", content = { @Content(schema = @Schema()) })})
-    @GetMapping("/get/{id}")
-    public ApiResult<Void> getNote(@PathVariable("id") long id) {
-        NoteCreateRequest request = new NoteCreateRequest();
+    @DeleteMapping("/{id}")
+    public ApiResult<Void> deleteNote(@PathVariable("id") String id) {
+        noteService.deleteNote(id);
         return ApiResult.success(null);
-    }
-
-    @GetMapping("/lambda/{username}")
-    public ApiResult<User> sayHello(@PathVariable String username) {
-        LambdaQueryWrapper<User> qw = new LambdaQueryWrapper<>();
-        qw.eq(User::getUsername, username);
-        User user = userMapper.selectOne(qw);
-        return ApiResult.success(user);
-    }
-
-    @GetMapping("/mapper/{username}")
-    public ApiResult<Optional<User>> mapper(@PathVariable String username) {
-        log.info("tenantId: {}", TenantContext.getTenantId());
-        var user = userMapper.findUserByUsername(username);
-        return ApiResult.success(user);
     }
 }

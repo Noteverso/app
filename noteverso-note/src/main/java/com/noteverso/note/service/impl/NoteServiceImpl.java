@@ -1,17 +1,11 @@
 package com.noteverso.note.service.impl;
 
-import static com.noteverso.common.constant.NumConstants.NOTE_DATACENTER_ID;
-import static com.noteverso.common.constant.NumConstants.NUM_31;
-
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.noteverso.common.context.TenantContext;
 import com.noteverso.common.util.IPUtils;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.AttachmentRelationMapper;
-import com.noteverso.core.model.Attachment;
 import com.noteverso.core.model.AttachmentRelation;
-import com.noteverso.core.request.AttachmentDetail;
-import com.noteverso.core.service.IAttachmentService;
 import com.noteverso.note.dao.NoteLabelRelationMapper;
 import com.noteverso.note.dao.NoteRelationMapper;
 import com.noteverso.note.dao.NoteMapper;
@@ -30,6 +24,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.noteverso.common.constant.NumConstants.*;
+
 @Service
 @AllArgsConstructor
 @Slf4j
@@ -37,7 +33,6 @@ public class NoteServiceImpl implements NoteService {
     private final NoteMapper noteMapper;
     private final NoteLabelRelationMapper noteLabelRelationMapper;
     private final NoteRelationMapper noteRelationMapper;
-    private final IAttachmentService attachmentService;
     private final AttachmentRelationMapper attachmentRelationMapper;
 
     private final SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
@@ -212,5 +207,37 @@ public class NoteServiceImpl implements NoteService {
                 .addedAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void deleteNote(String id) {
+        LambdaUpdateWrapper<Note> noteWrapper = new LambdaUpdateWrapper<>();
+        noteWrapper.eq(Note::getNoteId, id);
+        noteWrapper.eq(Note::getIsDeleted, NUM_O);
+        noteWrapper.set(Note::getIsDeleted, NUM_1);
+        noteWrapper.set(Note::getUpdatedAt, Instant.now());
+        noteMapper.update(null, noteWrapper);
+
+        LambdaUpdateWrapper<NoteLabelRelation> noteLabelRelationWrapper = new LambdaUpdateWrapper<>();
+        noteLabelRelationWrapper.eq(NoteLabelRelation::getNoteId, id);
+        noteLabelRelationWrapper.eq(NoteLabelRelation::getIsDeleted, NUM_O);
+        noteLabelRelationWrapper.set(NoteLabelRelation::getIsDeleted, NUM_1);
+        noteLabelRelationWrapper.set(NoteLabelRelation::getUpdatedAt, Instant.now());
+        noteLabelRelationMapper.update(null, noteLabelRelationWrapper);
+
+        LambdaUpdateWrapper<NoteRelation> noteRelationWrapper = new LambdaUpdateWrapper<>();
+        noteRelationWrapper.eq(NoteRelation::getNoteId, id);
+        noteRelationWrapper.eq(NoteRelation::getIsDeleted, NUM_O);
+        noteRelationWrapper.set(NoteRelation::getIsDeleted, NUM_1);
+        noteRelationWrapper.set(NoteRelation::getUpdatedAt, Instant.now());
+        noteRelationMapper.update(null, noteRelationWrapper);
+
+        LambdaUpdateWrapper<AttachmentRelation> attachmentRelationWrapper = new LambdaUpdateWrapper<>();
+        attachmentRelationWrapper.eq(AttachmentRelation::getNoteId, id);
+        attachmentRelationWrapper.eq(AttachmentRelation::getIsDeleted, NUM_O);
+        attachmentRelationWrapper.set(AttachmentRelation::getIsDeleted, NUM_1);
+        attachmentRelationWrapper.set(AttachmentRelation::getUpdatedAt, Instant.now());
+        attachmentRelationMapper.update(null, attachmentRelationWrapper);
     }
 }

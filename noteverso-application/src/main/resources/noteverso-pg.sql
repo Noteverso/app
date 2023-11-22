@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS noteverso_note_map (
     view_style smallint DEFAULT 0,
     creator varchar(50) NOT NULL,
     updater varchar(50) NOT NULL,
+    is_deleted    smallint    default 0 not null,
     PRIMARY KEY (id)
 );
 
@@ -93,6 +94,7 @@ CREATE TABLE IF NOT EXISTS noteverso_note_label_map (
    updated_at timestamptz DEFAULT NULL,
    creator varchar(50) NOT NULL,
    updater varchar(50) NOT NULL,
+   is_deleted    smallint    default 0 not null,
    PRIMARY KEY (id)
 );
 
@@ -137,21 +139,6 @@ COMMENT ON COLUMN noteverso_project.url IS '项目链接，在web、移动端应
 COMMENT ON COLUMN noteverso_project.is_collapsed IS '项目菜单是否折叠,0-否，1-是';
 COMMENT ON COLUMN noteverso_project.added_at IS '添加时间';
 COMMENT ON COLUMN noteverso_project.updated_at IS '更新时间';
-
-CREATE TABLE IF NOT EXISTS noteverso_note_project_map (
-    id bigserial NOT NULL,
-    note_id varchar(50) NOT NULL,
-    project_id varchar(50) NOT NULL,
-    added_at timestamptz DEFAULT NULL,
-    updated_at timestamptz DEFAULT NULL,
-    creator varchar(50) NOT NULL,
-    updater varchar(50) NOT NULL,
-    PRIMARY KEY (id)
-);
-COMMENT ON TABLE noteverso_note_project_map IS '项目关联表';
-COMMENT ON COLUMN noteverso_note_project_map.id IS '项目关联id';
-COMMENT ON COLUMN noteverso_note_project_map.note_id IS '笔记id';
-COMMENT ON COLUMN noteverso_note_project_map.project_id IS '项目id';
 
 CREATE TABLE IF NOT EXISTS noteverso_comment (
     id bigserial NOT NULL,
@@ -212,7 +199,8 @@ create table noteverso_attachment_map
     added_at   timestamp with time zone,
     updated_at timestamp with time zone,
     creator    varchar(50) not null,
-    updater    varchar(50) not null
+    updater    varchar(50) not null,
+    is_deleted    smallint    default 0 not null
 );
 
 comment on table noteverso_attachment_map is '项目附件关联表';
