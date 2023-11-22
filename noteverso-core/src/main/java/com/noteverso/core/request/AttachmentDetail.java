@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-public class AttachmentRequest {
+public class AttachmentDetail {
     @Schema(description = "Name of Attachment", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
@@ -17,6 +17,6 @@ public class AttachmentRequest {
     @Schema(description = "Resource type of Attachment", allowableValues = "0 - image, 1 - file", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer resourceType;
 
-    @Schema(description = "Resource size of Attachment", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Resource size of Attachment, unit MB", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long size;
 }

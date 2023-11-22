@@ -29,7 +29,7 @@ public class UserServiceImpl implements IUserService {
     private final ProjectMapper projectMapper;
     private final UserConfigMapper userConfigMapper;
     private static final SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
-            1L, IPUtils.getHostAddressWithLong() % NUM_31
+            USER_DATACENTER_ID, IPUtils.getHostAddressWithLong() % NUM_31
     );
 
     @Transactional(rollbackFor = Exception.class)

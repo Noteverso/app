@@ -7,5 +7,7 @@ import java.util.List;
 public interface IAttachmentService {
     void createAttachment(AttachmentDTO request);
 
-    void createMultipleAttachments(List<AttachmentDTO> request);
+    void createAttachments(List<AttachmentDTO> request);
+
+    void deleteAttachments(String attachmentId);
 }

@@ -23,7 +23,7 @@ public class AttachmentServiceImpl implements IAttachmentService {
         attachmentMapper.insert(attachment);
     }
 
-    public void createMultipleAttachments(List<AttachmentDTO> request) {
+    public void createAttachments(List<AttachmentDTO> request) {
         String tenantId = TenantContext.getTenantId();
         List<Attachment> attachments = new ArrayList<>();
         for (AttachmentDTO file : request) {
@@ -44,13 +44,13 @@ public class AttachmentServiceImpl implements IAttachmentService {
                 .resourceType(file.getResourceType())
                 .url(file.getUrl())
                 .size(file.getSize())
-                .noteId(null != file.getNoteId() ? file.getNoteId() : null)
-                .projectId(null != file.getProjectId() ? file.getProjectId() : null)
-                .commentId(null != file.getCommentId() ? file.getCommentId() : null)
+                .attachmentId(file.getAttachmentId())
                 .creator(tenantId)
                 .updater(tenantId)
                 .addedAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
     }
+
+    public void deleteAttachments(String attachmentId) {};
 }

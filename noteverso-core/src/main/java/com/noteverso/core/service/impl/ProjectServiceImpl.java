@@ -20,7 +20,7 @@ import static com.noteverso.common.constant.NumConstants.*;
 public class ProjectServiceImpl implements IProjectService {
     private final ProjectMapper projectMapper;
     private final static SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
-            1L, IPUtils.getHostAddressWithLong() % NUM_31
+            PROJECT_DATACENTER_ID, IPUtils.getHostAddressWithLong() % NUM_31
     );
 
     @Override

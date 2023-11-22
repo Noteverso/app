@@ -1,22 +1,25 @@
 package com.noteverso.note.service.impl;
 
+import static com.noteverso.common.constant.NumConstants.NOTE_DATACENTER_ID;
 import static com.noteverso.common.constant.NumConstants.NUM_31;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.noteverso.common.context.TenantContext;
 import com.noteverso.common.util.IPUtils;
 import com.noteverso.common.util.SnowFlakeUtils;
-import com.noteverso.core.dto.AttachmentDTO;
-import com.noteverso.core.request.AttachmentRequest;
+import com.noteverso.core.dao.AttachmentRelationMapper;
+import com.noteverso.core.model.Attachment;
+import com.noteverso.core.model.AttachmentRelation;
+import com.noteverso.core.request.AttachmentDetail;
 import com.noteverso.core.service.IAttachmentService;
 import com.noteverso.note.dao.NoteLabelRelationMapper;
-import com.noteverso.note.dao.NoteMapper;
-import com.noteverso.note.dao.NoteProjectRelationMapper;
 import com.noteverso.note.dao.NoteRelationMapper;
+import com.noteverso.note.dao.NoteMapper;
 import com.noteverso.note.model.Note;
 import com.noteverso.note.model.NoteLabelRelation;
-import com.noteverso.note.model.NoteProjectRelation;
 import com.noteverso.note.model.NoteRelation;
 import com.noteverso.note.request.NoteCreateRequest;
+import com.noteverso.note.request.NoteUpdateRequest;
 import com.noteverso.note.service.NoteService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,12 +36,12 @@ import java.util.List;
 public class NoteServiceImpl implements NoteService {
     private final NoteMapper noteMapper;
     private final NoteLabelRelationMapper noteLabelRelationMapper;
-    private final NoteProjectRelationMapper noteProjectRelationMapper;
     private final NoteRelationMapper noteRelationMapper;
     private final IAttachmentService attachmentService;
+    private final AttachmentRelationMapper attachmentRelationMapper;
 
     private final SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
-            1L, IPUtils.getHostAddressWithLong() % NUM_31
+            NOTE_DATACENTER_ID, IPUtils.getHostAddressWithLong() % NUM_31
     );
 
     @Override
@@ -52,48 +55,115 @@ public class NoteServiceImpl implements NoteService {
         Note note = constructNote(noteId, projectId, request.getContent(), tenantId);
         noteMapper.insert(note);
 
-        // create the relation with a project
-        NoteProjectRelation noteProjectRelation = constructNoteProjectRelation(noteId, projectId, tenantId);
-        noteProjectRelationMapper.insert(noteProjectRelation);
-
         // create the relation with labels
-        List<String> labels = request.getLabels();
-        if (labels != null && !labels.isEmpty()) {
-            List<NoteLabelRelation> noteLabelRelations = new ArrayList<>();
-            for(String label : labels) {
-                NoteLabelRelation noteLabelRelation = constructNoteLabelRelation(label, noteId, tenantId);
-                noteLabelRelations.add(noteLabelRelation);
-            }
-           noteLabelRelationMapper.batchInsert(noteLabelRelations);
-        }
+        insertNoteLabelRelation(request.getLabels(), noteId, tenantId);
 
         // create the relation with the other notes
-        List<String> likedNotes = request.getLinkedNotes();
-        if (likedNotes != null && !likedNotes.isEmpty()) {
-            List<NoteRelation> noteRelations = new ArrayList<>();
-            for (String linkedNote : likedNotes) {
-                NoteRelation noteRelation = constructNoteRelation(noteId, linkedNote, tenantId);
-                noteRelations.add(noteRelation);
-            }
-            noteRelationMapper.batchInsert(noteRelations);
-        }
+        insertNoteRelation(request.getLinkedNotes(), noteId, tenantId);
 
         //  create the relation with attachments
-        List<AttachmentRequest> files = request.getFiles();
-        if (files != null && !files.isEmpty()) {
-            List<AttachmentDTO> attachmentDTOS = new ArrayList<>();
-            for(AttachmentRequest file : files) {
-                AttachmentDTO attachmentDTO = new AttachmentDTO();
-                attachmentDTO.setNoteId(noteId);
-                attachmentDTO.setSize(file.getSize());
-                attachmentDTO.setType(file.getType());
-                attachmentDTO.setName(file.getName());
-                attachmentDTO.setUrl(file.getUrl());
-                attachmentDTO.setResourceType(file.getResourceType());
-                attachmentDTOS.add(attachmentDTO);
-            }
-            attachmentService.createMultipleAttachments(attachmentDTOS);
+        insertNoteAttachmentRelation(request.getFiles(), noteId, tenantId);
+    }
+
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void updateNote(String noteId, NoteUpdateRequest request) {
+        String tenantId = TenantContext.getTenantId();
+        LambdaUpdateWrapper<Note> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(Note::getNoteId, noteId);
+        wrapper.set(Note::getContent, request.getContent());
+        wrapper.set(Note::getUpdatedAt, Instant.now());
+
+        if (null != request.getProjectId()) {
+            wrapper.set(Note::getProjectId, request.getProjectId());
         }
+
+        noteMapper.update(null, wrapper);
+
+        // update the relation with labels
+        updateNoteLabelRelation(request.getLabels(), noteId, tenantId);
+
+        // update the relation with the other notes
+        updateNoteRelation(request.getLinkedNotes(), noteId, tenantId);
+
+        // update the relation with the attachments
+        updateNoteAttachment(request.getFiles(), noteId, tenantId);
+    }
+
+    private void insertNoteLabelRelation(List<String> labels, String noteId, String tenantId) {
+        if (labels == null || labels.isEmpty()) {
+            return;
+        }
+
+        List<NoteLabelRelation> noteLabelRelations = new ArrayList<>();
+        for(String label : labels) {
+            NoteLabelRelation noteLabelRelation = constructNoteLabelRelation(label, noteId, tenantId);
+            noteLabelRelations.add(noteLabelRelation);
+        }
+
+        noteLabelRelationMapper.batchInsert(noteLabelRelations);
+    }
+
+    private void insertNoteAttachmentRelation(List<String> attachments, String noteId, String tenantId) {
+        if (attachments == null || attachments.isEmpty()) {
+            return;
+        }
+
+        List<AttachmentRelation> attachmentRelations = new ArrayList<>();
+        for(String attachmentId : attachments) {
+            AttachmentRelation attachmentRelation = constructAttachmentRelation(attachmentId, noteId, tenantId);
+            attachmentRelations.add(attachmentRelation);
+        }
+
+        attachmentRelationMapper.batchInsert(attachmentRelations);
+    }
+
+    private void insertNoteRelation(List<String> linkedNotes, String noteId, String tenantId) {
+        if (linkedNotes == null || linkedNotes.isEmpty()) {
+            return;
+        }
+
+        List<NoteRelation> noteRelations = new ArrayList<>();
+        for (String linkedNote : linkedNotes) {
+            NoteRelation noteRelation = constructNoteRelation(noteId, linkedNote, tenantId);
+            noteRelations.add(noteRelation);
+        }
+        noteRelationMapper.batchInsert(noteRelations);
+    }
+
+    private void updateNoteRelation(List<String> linkedNotes, String noteId, String tenantId) {
+        if (linkedNotes == null || linkedNotes.isEmpty()) {
+            return;
+        }
+        LambdaUpdateWrapper<NoteRelation> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(NoteRelation::getNoteId, noteId);
+        noteRelationMapper.delete(updateWrapper);
+
+        insertNoteRelation(linkedNotes, noteId, tenantId);
+    }
+
+    private void updateNoteLabelRelation(List<String> labels, String noteId, String tenantId) {
+        if (labels == null || labels.isEmpty()) {
+            return;
+        }
+        LambdaUpdateWrapper<NoteLabelRelation> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(NoteLabelRelation::getNoteId, noteId);
+        noteLabelRelationMapper.delete(updateWrapper);
+
+        insertNoteLabelRelation(labels, noteId, tenantId);
+    }
+
+    private void updateNoteAttachment(List<String> attachmentIds, String noteId, String tenantId) {
+        if (attachmentIds == null || attachmentIds.isEmpty()) {
+            return;
+        }
+
+        LambdaUpdateWrapper<AttachmentRelation> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(AttachmentRelation::getNoteId, noteId);
+        attachmentRelationMapper.delete(updateWrapper);
+
+        insertNoteAttachmentRelation(attachmentIds, noteId, tenantId);
     }
 
     private Note constructNote(String noteId, String projectId, String content, String tenantId) {
@@ -119,23 +189,24 @@ public class NoteServiceImpl implements NoteService {
                .build();
     }
 
-    private NoteProjectRelation constructNoteProjectRelation(String noteId, String projectId, String tenantId) {
-        return NoteProjectRelation
-                .builder()
-                .noteId(noteId)
-                .projectId(projectId)
-                .creator(tenantId)
-                .updater(tenantId)
-                .addedAt(Instant.now())
-                .updatedAt(Instant.now())
-                .build();
-    }
     private NoteRelation constructNoteRelation(String noteId, String linkedNoteId, String tenantId) {
         return NoteRelation
                 .builder()
                 .noteId(noteId)
                 .linkedNoteId(linkedNoteId)
                 .viewStyle(0)
+                .creator(tenantId)
+                .updater(tenantId)
+                .addedAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+    }
+
+    private AttachmentRelation constructAttachmentRelation(String attachmentId, String noteId, String tenantId) {
+        return AttachmentRelation
+                .builder()
+                .attachmentId(attachmentId)
+                .noteId(noteId)
                 .creator(tenantId)
                 .updater(tenantId)
                 .addedAt(Instant.now())

@@ -180,9 +180,7 @@ CREATE TABLE IF NOT EXISTS noteverso_attachment (
     url varchar(255) NOT NULL,
     size bigint NOT NULL,
     resource_type smallint NOT NULL,
-    note_id varchar(50) DEFAULT NULL,
-    project_id varchar(50) DEFAULT NULL,
-    comment_id varchar(50) DEFAULT NULL,
+    attachment_id varchar(50) not null constraint uq_attachment_id unique,
     creator varchar(50) DEFAULT NULL,
     updater varchar(50) DEFAULT NULL,
     added_at timestamptz DEFAULT NULL,
@@ -192,18 +190,41 @@ CREATE TABLE IF NOT EXISTS noteverso_attachment (
 
 COMMENT ON TABLE noteverso_attachment IS '附件表';
 COMMENT ON COLUMN noteverso_attachment.id IS '附件id';
+COMMENT ON COLUMN noteverso_attachment.attachment_id IS '附件唯一标识，snowFlake id';
+comment on constraint uq_attachment_id on noteverso_attachment is '附件唯一id';
 COMMENT ON COLUMN noteverso_attachment.name IS '附件名称';
 COMMENT ON COLUMN noteverso_attachment.type IS '附件类型，MIME type，如 video/*, audio/*, image/*';
 COMMENT ON COLUMN noteverso_attachment.size IS '附件大小，单位bytes';
 COMMENT ON COLUMN noteverso_attachment.url IS '附件链接';
 COMMENT ON COLUMN noteverso_attachment.resource_type IS '附件资源类型，0 - image - 图片，1 - file - 文件';
-COMMENT ON COLUMN noteverso_attachment.note_id IS '笔记id，如果附件属于项目或评论，则为 null';
-COMMENT ON COLUMN noteverso_attachment.project_id IS '项目id，如果附件属于笔记或评论，则它为 null';
-COMMENT ON COLUMN noteverso_attachment.comment_id IS '评论id，如果附件属于笔记或项目，则它为 null';
 COMMENT ON COLUMN noteverso_attachment.creator IS '创建人';
 COMMENT ON COLUMN noteverso_attachment.updater IS '更新人';
 COMMENT ON COLUMN noteverso_attachment.added_at IS '添加时间';
 COMMENT ON COLUMN noteverso_attachment.updated_at IS '更新时间';
+
+create table noteverso_attachment_map
+(
+    id bigserial primary key,
+    attachment_id varchar(50) not null ,
+    note_id    varchar(50) default null,
+    project_id varchar(50) default null,
+    comment_id varchar(50) default null,
+    added_at   timestamp with time zone,
+    updated_at timestamp with time zone,
+    creator    varchar(50) not null,
+    updater    varchar(50) not null
+);
+
+comment on table noteverso_attachment_map is '项目附件关联表';
+comment on column noteverso_attachment_map.id is '项目关联id';
+comment on column noteverso_attachment_map.note_id is '笔记id';
+comment on column noteverso_attachment_map.project_id is '项目id';
+comment on column noteverso_attachment_map.attachment_id is '附件id';
+comment on column noteverso_attachment_map.comment_id is '评论id';
+
+alter table noteverso_attachment_map
+    owner to postgres;
+
 
 -- create noteverso view option table
 create table noteverso_view_option

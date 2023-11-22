@@ -5,6 +5,7 @@ import com.noteverso.common.api.ApiResult;
 import com.noteverso.common.context.TenantContext;
 import com.noteverso.note.model.Note;
 import com.noteverso.note.request.NoteCreateRequest;
+import com.noteverso.note.request.NoteUpdateRequest;
 import com.noteverso.note.service.NoteService;
 import com.noteverso.core.dao.UserMapper;
 import com.noteverso.core.model.User;
@@ -16,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.Optional;
@@ -36,6 +38,16 @@ public class NoteController {
     @PostMapping("")
     public ApiResult<Void> createNote(@Valid @RequestBody NoteCreateRequest request) {
         noteService.createNote(request);
+        return ApiResult.success(null);
+    }
+
+    @Operation(
+            summary = "Update a Note",
+            description = "Update a Note object",
+            tags = { "Post" })
+    @PatchMapping("/{id}")
+    public ApiResult<Void> updateNote(@PathVariable("id") String id, @Valid @RequestBody NoteUpdateRequest request) {
+        noteService.updateNote(id, request);
         return ApiResult.success(null);
     }
 

@@ -39,20 +39,10 @@ public class AttachmentDTO {
     private Long size;
 
     /**
-     * 笔记id，如果附件属于项目或评论，则为 null
+     *
+     * 附件id
      */
-    @Schema(description = "Note id")
-    private String noteId;
-
-    /**
-     * 项目id，如果附件属于笔记或评论，则它为 null
-     */
-    @Schema(description = "Project id")
-    private String projectId;
-
-    /**
-     * 评论id，如果附件属于笔记或项目，则它为 null
-     */
-    @Schema(description = "Comment id")
-    private String commentId;
+    @NotNull(message = "attachmentId is required")
+    @Schema(description = "attachment id", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String attachmentId;
 }
