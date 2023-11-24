@@ -33,9 +33,10 @@ public class Note {
      */
     private Integer noteType;
     private String content;
-    private Integer isTop;
+    private Integer isPin;
     private Integer isDeleted;
     private Integer isArchived;
+    private Integer isFavorite;
     private String projectId;
     /**
      * 笔记状态 0 -  待处理，1 - 正在进行，2 - 已完成

@@ -8,9 +8,10 @@ CREATE TABLE IF NOT EXISTS noteverso_note (
     note_id varchar NOT NULL CONSTRAINT noteverso_note_pk UNIQUE,
     note_type smallint DEFAULT 0,
     content varchar NOT NULL,
-    is_top smallint DEFAULT 0,
+    is_pin smallint DEFAULT 0,
     is_deleted smallint DEFAULT 0,
     is_archived smallint DEFAULT 0,
+    is_favorite smallint DEFAULT 0,
     project_id varchar(50) NOT NULL,
     status smallint DEFAULT 1,
     creator varchar(50) NOT NULL,
@@ -26,7 +27,8 @@ COMMENT ON COLUMN noteverso_note.note_id IS '笔记唯一标识，snowFlake id';
 COMMENT ON CONSTRAINT noteverso_note_pk ON noteverso_note IS 'UNIQUE (note_id)';
 COMMENT ON COLUMN noteverso_note.note_type IS '笔记类型，0-普通笔记 1-账户密码 2-待办清单 3-图表 4-日程 5-工具清单 6-记账(订阅信息，可自动更新续费信息)';
 COMMENT ON COLUMN noteverso_note.content IS '笔记内容';
-COMMENT ON COLUMN noteverso_note.is_top IS '是否将项目添加到收藏夹,0-否，1-是';
+COMMENT ON COLUMN noteverso_note.is_pin IS '是否将项目置顶,0-否，1-是';
+COMMENT ON COLUMN noteverso_note.is_favorite IS '是否收藏项目, 0-否，1-是';
 COMMENT ON COLUMN noteverso_note.is_deleted IS '是否删除,0-否，1-是';
 COMMENT ON COLUMN noteverso_note.is_archived IS '是否归档,0-否，1-是';
 COMMENT ON COLUMN noteverso_note.project_id IS '笔记所属的项目id';

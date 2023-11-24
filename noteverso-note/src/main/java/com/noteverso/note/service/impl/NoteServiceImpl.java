@@ -209,35 +209,73 @@ public class NoteServiceImpl implements NoteService {
                 .build();
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
-    public void deleteNote(String id) {
+    public void toggleVisibility(String id, Boolean toggle) {
+        LambdaUpdateWrapper<Note> noteWrapper = new LambdaUpdateWrapper<>();
+        noteWrapper.eq(Note::getNoteId, id);
+
+        if (toggle) {
+            noteWrapper.set(Note::getIsDeleted, NUM_O);
+        } else {
+            noteWrapper.set(Note::getIsDeleted, NUM_1);
+        }
+
+        noteWrapper.set(Note::getUpdatedAt, Instant.now());
+        noteMapper.update(null, noteWrapper);
+    }
+
+    @Override
+    public void toggleArchive(String id, Boolean toggle) {
         LambdaUpdateWrapper<Note> noteWrapper = new LambdaUpdateWrapper<>();
         noteWrapper.eq(Note::getNoteId, id);
         noteWrapper.eq(Note::getIsDeleted, NUM_O);
-        noteWrapper.set(Note::getIsDeleted, NUM_1);
+        if (toggle) {
+            noteWrapper.set(Note::getIsArchived, NUM_1);
+        } else {
+            noteWrapper.set(Note::getIsArchived, NUM_O);
+        }
         noteWrapper.set(Note::getUpdatedAt, Instant.now());
         noteMapper.update(null, noteWrapper);
 
-        LambdaUpdateWrapper<NoteLabelRelation> noteLabelRelationWrapper = new LambdaUpdateWrapper<>();
-        noteLabelRelationWrapper.eq(NoteLabelRelation::getNoteId, id);
-        noteLabelRelationWrapper.eq(NoteLabelRelation::getIsDeleted, NUM_O);
-        noteLabelRelationWrapper.set(NoteLabelRelation::getIsDeleted, NUM_1);
-        noteLabelRelationWrapper.set(NoteLabelRelation::getUpdatedAt, Instant.now());
-        noteLabelRelationMapper.update(null, noteLabelRelationWrapper);
+    };
 
-        LambdaUpdateWrapper<NoteRelation> noteRelationWrapper = new LambdaUpdateWrapper<>();
-        noteRelationWrapper.eq(NoteRelation::getNoteId, id);
-        noteRelationWrapper.eq(NoteRelation::getIsDeleted, NUM_O);
-        noteRelationWrapper.set(NoteRelation::getIsDeleted, NUM_1);
-        noteRelationWrapper.set(NoteRelation::getUpdatedAt, Instant.now());
-        noteRelationMapper.update(null, noteRelationWrapper);
+    @Override
+    public void toggleFavorite(String id, Boolean toggle) {
+        LambdaUpdateWrapper<Note> noteWrapper = new LambdaUpdateWrapper<>();
+        noteWrapper.eq(Note::getNoteId, id);
+        noteWrapper.eq(Note::getIsDeleted, NUM_O);
+        if (toggle) {
+            noteWrapper.set(Note::getIsFavorite, NUM_1);
+        } else {
+            noteWrapper.set(Note::getIsFavorite, NUM_O);
+        }
+        noteWrapper.set(Note::getUpdatedAt, Instant.now());
+        noteMapper.update(null, noteWrapper);
+    };
 
-        LambdaUpdateWrapper<AttachmentRelation> attachmentRelationWrapper = new LambdaUpdateWrapper<>();
-        attachmentRelationWrapper.eq(AttachmentRelation::getNoteId, id);
-        attachmentRelationWrapper.eq(AttachmentRelation::getIsDeleted, NUM_O);
-        attachmentRelationWrapper.set(AttachmentRelation::getIsDeleted, NUM_1);
-        attachmentRelationWrapper.set(AttachmentRelation::getUpdatedAt, Instant.now());
-        attachmentRelationMapper.update(null, attachmentRelationWrapper);
+    @Override
+    public void togglePin(String id, Boolean toggle) {
+        LambdaUpdateWrapper<Note> noteWrapper = new LambdaUpdateWrapper<>();
+        noteWrapper.eq(Note::getNoteId, id);
+        noteWrapper.eq(Note::getIsDeleted, NUM_O);
+        if (toggle) {
+            noteWrapper.set(Note::getIsPin, NUM_1);
+        } else {
+            noteWrapper.set(Note::getIsPin, NUM_O);
+        }
+        noteWrapper.set(Note::getUpdatedAt, Instant.now());
+        noteMapper.update(null, noteWrapper);
+    }
+
+    @Override
+    public void moveNote(String id, String projectId) {
+        LambdaUpdateWrapper<Note> noteWrapper = new LambdaUpdateWrapper<>();
+        noteWrapper.eq(Note::getNoteId, id);
+        noteWrapper.eq(Note::getIsDeleted, NUM_O);
+        // TODO
+        // check project
+        noteWrapper.set(Note::getProjectId, projectId);
+        noteWrapper.set(Note::getUpdatedAt, Instant.now());
+        noteMapper.update(null, noteWrapper);
     }
 }
