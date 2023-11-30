@@ -15,7 +15,6 @@ public class ProjectDTO {
     private Integer isShared;
     private Integer childOrder;
     private String parentId;
-    private Integer viewStyle;
     private Integer isInboxProject;
     private String url;
     private Integer isCollapsed;

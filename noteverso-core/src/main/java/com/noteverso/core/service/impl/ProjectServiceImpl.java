@@ -1,15 +1,20 @@
 package com.noteverso.core.service.impl;
 
-import com.noteverso.common.context.TenantContext;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.noteverso.common.util.IPUtils;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.ProjectMapper;
 import com.noteverso.core.dto.ProjectDTO;
+import com.noteverso.core.enums.ObjectViewTypeEnum;
 import com.noteverso.core.model.Project;
+import com.noteverso.core.model.UserConfig;
 import com.noteverso.core.request.ProjectCreateRequest;
-import com.noteverso.core.service.IProjectService;
+import com.noteverso.core.request.ViewOptionCreate;
+import com.noteverso.core.service.ProjectService;
+import com.noteverso.core.service.ViewOptionService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
@@ -17,31 +22,47 @@ import static com.noteverso.common.constant.NumConstants.*;
 
 @Service
 @AllArgsConstructor
-public class ProjectServiceImpl implements IProjectService {
+public class ProjectServiceImpl implements ProjectService {
     private final ProjectMapper projectMapper;
+    private final ViewOptionService viewOptionService;
+
     private final static SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
             PROJECT_DATACENTER_ID, IPUtils.getHostAddressWithLong() % NUM_31
     );
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
-    public void createProject(ProjectCreateRequest request) {
+    public void createProject(ProjectCreateRequest request, String tenantId) {
+        LambdaQueryWrapper<UserConfig> userConfigQw = new LambdaQueryWrapper<>();
+        userConfigQw.eq(UserConfig::getUserId, tenantId);
+
+        String projectId = String.valueOf(snowFlakeUtils.nextId());
+
         ProjectDTO projectDTO = new ProjectDTO();
+        projectDTO.setProjectId(projectId);
         projectDTO.setName(request.getName());
         projectDTO.setColor(request.getColor());
         projectDTO.setChildOrder(request.getChildOrder());
         projectDTO.setParentId(request.getParentId());
-        projectDTO.setIsFavorite(request.getIsFavorite());
-        projectDTO.setViewStyle(request.getViewStyle());
-        projectDTO.setTenantId(TenantContext.getTenantId());
+        projectDTO.setIsFavorite(null != request.getIsFavorite() ? request.getIsFavorite() : 0);
+        projectDTO.setTenantId(tenantId);
         Project project = constructProject(projectDTO);
         projectMapper.insert(project);
-    };
+
+        ViewOptionCreate viewOptionCreate = new ViewOptionCreate();
+        viewOptionCreate.setObjectId(projectId);
+        viewOptionCreate.setViewType(ObjectViewTypeEnum.PROJECT.getValue());
+        viewOptionService.createViewOption(viewOptionCreate, tenantId);
+    }
 
     @Override
     public Project constructInboxProject(String userId) {
+        String projectId = String.valueOf(snowFlakeUtils.nextId());
+
         ProjectDTO projectDTO = new ProjectDTO();
+        projectDTO.setProjectId(projectId);
         projectDTO.setIsInboxProject(NUM_1);
-        projectDTO.setName("收件箱");
+        projectDTO.setName("Inbox");
         projectDTO.setColor("white");
         projectDTO.setChildOrder(NUM_O);
         projectDTO.setTenantId(userId);
@@ -51,10 +72,9 @@ public class ProjectServiceImpl implements IProjectService {
 
     @Override
     public Project constructProject(ProjectDTO projectDTO) {
-        String projectId = String.valueOf(snowFlakeUtils.nextId());
         return Project
                 .builder()
-                .projectId(projectId)
+                .projectId(projectDTO.getProjectId())
                 .name(projectDTO.getName())
                 .color(projectDTO.getColor())
                 .childOrder(projectDTO.getChildOrder())

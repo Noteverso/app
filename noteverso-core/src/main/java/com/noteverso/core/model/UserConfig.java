@@ -68,15 +68,15 @@ public class UserConfig {
     /**
      * 项目数量配额
      */
-    private Integer projectQuota;
+    private Integer projectsQuota;
     /**
      * 文件大小总和配额
      */
-    private Long fileSizeQuota;
+    private Long filesSizeQuota;
     /**
      * 链接笔记数量配额
      */
-    private Integer linkedNoteQuota;
+    private Integer linkedNotesQuota;
     private String creator;
     private String updater;
     private Instant addedAt;

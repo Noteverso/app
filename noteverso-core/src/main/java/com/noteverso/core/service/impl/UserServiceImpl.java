@@ -8,8 +8,8 @@ import com.noteverso.core.dao.UserConfigMapper;
 import com.noteverso.core.dao.UserMapper;
 import com.noteverso.core.model.User;
 import com.noteverso.core.model.UserConfig;
-import com.noteverso.core.service.IProjectService;
-import com.noteverso.core.service.IUserService;
+import com.noteverso.core.service.ProjectService;
+import com.noteverso.core.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,10 +22,10 @@ import static com.noteverso.core.constant.NumConstants.*;
 
 @Service
 @AllArgsConstructor
-public class UserServiceImpl implements IUserService {
+public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final IProjectService projectService;
+    private final ProjectService projectService;
     private final ProjectMapper projectMapper;
     private final UserConfigMapper userConfigMapper;
     private static final SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
@@ -73,9 +73,9 @@ public class UserServiceImpl implements IUserService {
                 .themeId(NUM_O)
                 .creator(userId)
                 .maxFileSize(MAX_FILE_SIZE_NORMAL)
-                .fileSizeQuota(FILE_SIZE_QUOTA_NORMAL)
-                .projectQuota(PROJECT_QUOTA_NORMAL)
-                .linkedNoteQuota(LINKED_NOTE_QUOTA_NORMAL)
+                .filesSizeQuota(FILE_SIZE_QUOTA_NORMAL)
+                .projectsQuota(PROJECT_QUOTA_NORMAL)
+                .linkedNotesQuota(LINKED_NOTE_QUOTA_NORMAL)
                 .updater(userId)
                 .addedAt(Instant.now())
                 .updatedAt(Instant.now())

@@ -1,8 +1,8 @@
 -- create noteverso database
 -- CREATE DATABASE noteverso;
--- \c noteverso;
 
 -- create noteverso project table
+-- \c noteverso;
 CREATE TABLE IF NOT EXISTS noteverso_note (
     id bigserial NOT NULL,
     note_id varchar NOT NULL CONSTRAINT noteverso_note_pk UNIQUE,
@@ -70,7 +70,6 @@ CREATE TABLE IF NOT EXISTS noteverso_label (
     creator varchar(50) NOT NULL,
     updater varchar(50) NOT NULL,
     is_favorite smallint DEFAULT 0,
-    order_value bigint NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -85,7 +84,6 @@ COMMENT ON COLUMN noteverso_label.added_at IS '添加时间';
 COMMENT ON COLUMN noteverso_label.updated_at IS '更新时间';
 COMMENT ON COLUMN noteverso_label.creator IS '创建人';
 COMMENT ON COLUMN noteverso_label.is_favorite IS '是否将标签添加到收藏夹, 0-否，1-是';
-COMMENT ON COLUMN noteverso_label.order_value IS '标签排序';
 
 
 CREATE TABLE IF NOT EXISTS noteverso_note_label_map (
@@ -145,9 +143,8 @@ COMMENT ON COLUMN noteverso_project.updated_at IS '更新时间';
 CREATE TABLE IF NOT EXISTS noteverso_comment (
     id bigserial NOT NULL,
     comment_id varchar(50) NOT NULL CONSTRAINT uq_comment_id UNIQUE,
-    content text DEFAULT NULL,
-    note_id varchar(50) DEFAULT NULL,
-    project_id varchar(50) DEFAULT NULL,
+    content varchar NOT NULL,
+    object_id varchar(50) NOT NULL,
     creator varchar(50) DEFAULT NULL,
     updater varchar(50) DEFAULT NULL,
     added_at timestamptz DEFAULT NULL,
@@ -159,8 +156,7 @@ COMMENT ON COLUMN noteverso_comment.id IS 'id';
 COMMENT ON COLUMN noteverso_comment.comment_id IS '评论唯一标识，snowFlake id';
 COMMENT ON CONSTRAINT uq_comment_id ON noteverso_comment IS 'UNIQUE (comment_id)';
 COMMENT ON COLUMN noteverso_comment.content IS '评论内容，可以为空';
-COMMENT ON COLUMN noteverso_comment.note_id IS '笔记id，如果评论属于项目，则为 null';
-COMMENT ON COLUMN noteverso_comment.project_id IS '项目id，如果评论属于笔记，则它为 null';
+COMMENT ON COLUMN noteverso_comment.object_id IS '对象id，包括项目和笔记';
 
 CREATE TABLE IF NOT EXISTS noteverso_attachment (
     id bigserial NOT NULL,
@@ -194,55 +190,53 @@ COMMENT ON COLUMN noteverso_attachment.updated_at IS '更新时间';
 create table noteverso_attachment_map
 (
     id bigserial primary key,
-    attachment_id varchar(50) not null ,
-    note_id    varchar(50) default null,
-    project_id varchar(50) default null,
-    comment_id varchar(50) default null,
-    added_at   timestamp with time zone,
-    updated_at timestamp with time zone,
-    creator    varchar(50) not null,
-    updater    varchar(50) not null,
+    attachment_id varchar(50) not null,
+    object_id     varchar(50) default NULL::character varying,
+    added_at      timestamp with time zone,
+    updated_at    timestamp with time zone,
+    creator       varchar(50)           not null,
+    updater       varchar(50)           not null,
     is_deleted    smallint    default 0 not null
 );
 
 comment on table noteverso_attachment_map is '项目附件关联表';
 comment on column noteverso_attachment_map.id is '项目关联id';
-comment on column noteverso_attachment_map.note_id is '笔记id';
-comment on column noteverso_attachment_map.project_id is '项目id';
 comment on column noteverso_attachment_map.attachment_id is '附件id';
-comment on column noteverso_attachment_map.comment_id is '评论id';
-
-alter table noteverso_attachment_map
-    owner to postgres;
-
+comment on column noteverso_attachment_map.object_id is '对象id，包括项目、评论和笔记';
+comment on column noteverso_attachment_map.is_deleted is '0 - 否，1 - 是';
 
 -- create noteverso view option table
 create table noteverso_view_option
 (
     id bigserial primary key,
-    type                smallint    default 0,
-    user_id             varchar(50) default NULL,
-    project_id          varchar(50) default NULL::character varying,
-    view_style          smallint    default 0,
+    view_type           smallint    default 0,
+    object_id           varchar(50) default NULL::character varying,
+    view_mode           smallint    default 0,
     grouped_by          smallint,
-    sorted_by           smallint    default 0 not null,
-    sort_order          smallint    default 0 not null,
+    ordered_by          smallint    default 0 not null,
+    order_value         smallint    default 0 not null,
     show_archived_notes smallint    default 0,
+    filtered_by         smallint,
     added_at            timestamp with time zone,
-    update_at           timestamp with time zone
+    update_at           timestamp with time zone,
+    creator             varchar(50)           not null,
+    updater             varchar(50)           not null,
+    filter_value        varchar(50)
 );
 
 comment on table noteverso_view_option is '视图选项表';
 comment on column noteverso_view_option.id is '视图选项id';
-comment on column noteverso_view_option.type is '笔记所属项目类型 0 - 项目类型, 1 - 标签页, 2 - 今天, 3 - 预览 4 - 附件资源';
-comment on column noteverso_view_option.project_id is '项目id';
-comment on column noteverso_view_option.view_style is '笔记布局 0 - list 列表，1 - board 看板';
-comment on column noteverso_view_option.grouped_by is '分组方式 0 - ADDED_DATE 添加日期, 1 - NOTE_LABEL 标签, 2 - NOTE_STATUS 状态';
-comment on column noteverso_view_option.sorted_by is '排序方式 0 - ADDED_DATE 添加日期, 1 - UPDATED_DATE 更新日期, 2 - COMMENT_COUNT 评论数';
-comment on column noteverso_view_option.sort_order is '排序规则 0 - ASC, 1 - DESC';
+comment on column noteverso_view_option.view_type is '视图选项类型 0 - PROJECT, 1 - UPCOMING, 2 - TODAY, 3 - PAST, 4 - ATTACHMENT';
+comment on column noteverso_view_option.object_id is '对象id，包括默认为空，如果对象是项目，则为项目id';
+comment on column noteverso_view_option.view_mode is '布局 0 - list 列表，1 - board 看板';
+comment on column noteverso_view_option.grouped_by is '分组方式 0 - ADDED_AT, 1 - NOTE_STATUS, 2 - NOTE_LABEL';
+comment on column noteverso_view_option.ordered_by is '排序方式 0 - ADDED_AT,1 - COMMENT_COUNT,2 - LINKED_NOTE_COUNT';
+comment on column noteverso_view_option.order_value is '排序规则 0 - ASC, 1 - DESC';
 comment on column noteverso_view_option.show_archived_notes is '是否显示已归档笔记, 0 - 不显示, 1 - 显示';
+comment on column noteverso_view_option.filtered_by is '过滤方式';
 comment on column noteverso_view_option.added_at is '添加时间';
 comment on column noteverso_view_option.update_at is '更新时间';
+comment on column noteverso_view_option.filter_value is '过滤值';
 
 -- create noteverso user
 CREATE TABLE IF NOT EXISTS noteverso_user_info (
@@ -285,9 +279,9 @@ CREATE TABLE noteverso_user_config (
    id bigserial not null,
    user_id varchar(50) not null,
    max_file_size bigint NOT NULL,
-   project_quota smallint NOT NULL,
-   file_size_quota bigint NOT NULL,
-   linked_note_quota smallint NOT NULL ,
+   projects_quota smallint NOT NULL,
+   files_size_quota bigint NOT NULL,
+   linked_notes_quota smallint NOT NULL ,
    inbox_project_id varchar(50) DEFAULT NULL,
    lang smallint NULL,
    start_page varchar(30) DEFAULT NULL,
@@ -307,9 +301,9 @@ COMMENT ON TABLE noteverso_user_config IS '用户配置表';
 COMMENT ON COLUMN noteverso_user_config.id IS 'id';
 COMMENT ON COLUMN noteverso_user_config.user_id IS '用户id';
 COMMENT ON COLUMN noteverso_user_config.max_file_size IS '单个文件最大限制，单位bytes';
-COMMENT ON COLUMN noteverso_user_config.project_quota IS '项目数量配额';
-COMMENT ON COLUMN noteverso_user_config.file_size_quota IS '文件大小总和配额，单位bytes';
-COMMENT ON COLUMN noteverso_user_config.linked_note_quota IS '链接笔记数量配额';
+COMMENT ON COLUMN noteverso_user_config.projects_quota IS '项目数量配额';
+COMMENT ON COLUMN noteverso_user_config.files_size_quota IS '文件大小总和配额，单位bytes';
+COMMENT ON COLUMN noteverso_user_config.linked_notes_quota IS '链接笔记数量配额';
 COMMENT ON COLUMN noteverso_user_config.inbox_project_id IS '收件箱项目id';
 COMMENT ON COLUMN noteverso_user_config.lang IS '语言, 0 - zh-cn,1 - en-us';
 COMMENT ON COLUMN noteverso_user_config.start_page IS '用户首次登陆应用后的定位页面';

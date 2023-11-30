@@ -5,21 +5,21 @@ import lombok.Data;
 
 @Data
 public class ProjectCreateRequest {
-    @Schema(description = "Name of Project", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Name of project", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
-    @Schema(description = "Color of Project", example = "red", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Color of project", example = "red", requiredMode = Schema.RequiredMode.REQUIRED)
     private String color;
 
-    @Schema(description = "order of Project, beginning with 1", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Order of project, beginning with 1", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer childOrder;
 
-    @Schema(description = "parent id of Project", defaultValue = "null")
+    @Schema(description = "Parent id of project", defaultValue = "null")
     private String parentId;
 
-    @Schema(description = "favorite of Project 0 - no, 1 - yes", defaultValue = "0")
+    @Schema(description = "Favorite of project 0 - no, 1 - yes", defaultValue = "0")
     private Integer isFavorite;
 
-    @Schema(description = "the notes view style of Project，0 - list, 1 - board", defaultValue = "0")
-    private Integer viewStyle;
+    @Schema(description = "Notes view mode of project，0 - list, 1 - board", defaultValue = "0")
+    private Integer viewMode;
 }

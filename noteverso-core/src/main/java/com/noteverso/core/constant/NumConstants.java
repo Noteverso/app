@@ -23,7 +23,7 @@ public class NumConstants {
     /**
      * 项目数量配额
      */
-    public static final Integer PROJECT_QUOTA_NORMAL = 20;
+    public static final Integer PROJECT_QUOTA_NORMAL = 5;
 
     /**
      * 项目数量配额

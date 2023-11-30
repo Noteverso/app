@@ -8,19 +8,28 @@ import lombok.Data;
 
 import java.time.Instant;
 
+/**
+ * Note-Project Relation
+ * @author byodian
+ * @since 2023-11-07
+ */
 
+@TableName(value = "noteverso_note_project_map")
 @Data
-@TableName(value = "noteverso_attachment_map")
 @Builder
-public class AttachmentRelation {
+public class NoteProjectRelation {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    private String attachmentId;
-    private String objectId;
-    private Integer isDeleted;
-    private String creator;
-    private String updater;
+    private String noteId;
+
+    private String projectId;
+
     private Instant addedAt;
+
     private Instant updatedAt;
+
+    private String creator;
+
+    private String updater;
 }

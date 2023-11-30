@@ -1,10 +1,9 @@
 package com.noteverso.core.service.impl;
 
-import com.noteverso.common.context.TenantContext;
 import com.noteverso.core.dao.AttachmentMapper;
 import com.noteverso.core.dto.AttachmentDTO;
 import com.noteverso.core.model.Attachment;
-import com.noteverso.core.service.IAttachmentService;
+import com.noteverso.core.service.AttachmentService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,17 +13,17 @@ import java.util.List;
 
 @Service
 @AllArgsConstructor
-public class AttachmentServiceImpl implements IAttachmentService {
+public class AttachmentServiceImpl implements AttachmentService {
     private final AttachmentMapper attachmentMapper;
 
-    public void createAttachment(AttachmentDTO request) {
-        String tenantId = TenantContext.getTenantId();
+    @Override
+    public void createAttachment(AttachmentDTO request, String tenantId ) {
         Attachment attachment = construcAttachment(request, tenantId);
         attachmentMapper.insert(attachment);
     }
 
-    public void createAttachments(List<AttachmentDTO> request) {
-        String tenantId = TenantContext.getTenantId();
+    @Override
+    public void createAttachments(List<AttachmentDTO> request, String tenantId) {
         List<Attachment> attachments = new ArrayList<>();
         for (AttachmentDTO file : request) {
             Attachment attachment = construcAttachment(file, tenantId);

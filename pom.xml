@@ -19,9 +19,7 @@
 	<modules>
 		<module>noteverso-application</module>
 		<module>noteverso-common</module>
-		<module>noteverso-note</module>
 		<module>noteverso-core</module>
-		<module>noteverso-security</module>
 	</modules>
 
 	<properties>
@@ -78,16 +76,6 @@
 			<dependency>
 				<groupId>com.noteverso</groupId>
 				<artifactId>noteverso-application</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.noteverso</groupId>
-				<artifactId>noteverso-note</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.noteverso</groupId>
-				<artifactId>noteverso-security</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
