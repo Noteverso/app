@@ -6,4 +6,5 @@ import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface NoteMapper extends BaseMapper<Note> {
+    Note selectByNoteId(String noteId);
 }

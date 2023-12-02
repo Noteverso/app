@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.noteverso.core.dao.NoteMapper">
+    <select id="selectByNoteId" resultType="com.noteverso.core.model.Note">
+        SELECT * FROM noteverso_note WHERE note_id = #{noteId} AND is_deleted = 0
+    </select>
 </mapper>

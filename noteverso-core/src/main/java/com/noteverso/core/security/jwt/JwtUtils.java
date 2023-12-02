@@ -1,6 +1,6 @@
 package com.noteverso.core.security.jwt;
 
-import com.noteverso.common.config.NoteversoProperties;
+import com.noteverso.core.config.NoteversoProperties;
 import com.noteverso.core.security.service.UserDetailsImpl;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

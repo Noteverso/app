@@ -2,9 +2,7 @@ package com.noteverso.core.service;
 
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
-import org.springframework.stereotype.Service;
 
-@Service
 public interface NoteService {
     void createNote(NoteCreateRequest request, String tenantId);
 
@@ -39,4 +37,5 @@ public interface NoteService {
     void togglePin(String id, Boolean toggle);
 
     void moveNote(String id, String projectId);
+    boolean containsSwearWords(String comment);
 }

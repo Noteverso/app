@@ -1,4 +1,4 @@
-package com.noteverso.common.handler;
+package com.noteverso.core.handler;
 
 import com.noteverso.common.api.ApiCode;
 import com.noteverso.common.api.model.ErrorDetail;

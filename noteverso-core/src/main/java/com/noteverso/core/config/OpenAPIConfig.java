@@ -1,4 +1,4 @@
-package com.noteverso.common.config;
+package com.noteverso.core.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;

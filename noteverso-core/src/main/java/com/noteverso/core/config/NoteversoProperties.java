@@ -1,4 +1,4 @@
-package com.noteverso.common.config;
+package com.noteverso.core.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

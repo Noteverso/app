@@ -1,6 +1,7 @@
 package com.noteverso.core.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.noteverso.common.exceptions.BaseException;
 import com.noteverso.common.util.IPUtils;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.AttachmentRelationMapper;
@@ -274,5 +275,12 @@ public class NoteServiceImpl implements NoteService {
         noteWrapper.set(Note::getProjectId, projectId);
         noteWrapper.set(Note::getUpdatedAt, Instant.now());
         noteMapper.update(null, noteWrapper);
+    }
+
+    public boolean containsSwearWords(String comment) {
+        if (comment.contains("shit")) {
+            throw new BaseException("Comments contains unacceptable language");
+        }
+        return false;
     }
 }
