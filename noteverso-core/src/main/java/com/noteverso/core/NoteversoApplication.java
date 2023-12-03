@@ -1,11 +1,11 @@
-package com.noteverso.application;
+package com.noteverso.core;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 
-@SpringBootApplication(scanBasePackages = {"com.noteverso"})
+@SpringBootApplication
 @MapperScan("com.noteverso.*.dao")
 public class NoteversoApplication {
 

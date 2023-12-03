@@ -11,4 +11,8 @@ public class NoteversoProperties {
     private String jwtSecret;
 
     private int jwtExpirationDays;
+
+    private String devUrl;
+
+    private String prodUrl;
 }

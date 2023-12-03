@@ -17,7 +17,6 @@
 	<description>Integrated noteverso</description>
 
 	<modules>
-		<module>noteverso-application</module>
 		<module>noteverso-common</module>
 		<module>noteverso-core</module>
 	</modules>
@@ -72,11 +71,6 @@
 			<dependency>
 				<groupId>com.noteverso</groupId>
 				<artifactId>noteverso-common</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.noteverso</groupId>
-				<artifactId>noteverso-application</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

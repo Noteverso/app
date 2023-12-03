@@ -5,7 +5,6 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,20 +12,15 @@ import java.util.List;
 
 @Configuration
 public class OpenAPIConfig {
-    @Value("${noteverso.openapi.dev-url}")
-    private String devUrl;
-
-    @Value("${noteverso.openapi.prod-url}")
-    private String prodUrl;
 
     @Bean
-    public OpenAPI myOpenAPI() {
+    public OpenAPI myOpenAPI(NoteversoProperties noteversoProperties) {
         Server devServer = new Server();
-        devServer.setUrl(devUrl);
+        devServer.setUrl(noteversoProperties.getDevUrl());
         devServer.setDescription("Server URL in Development environment");
 
         Server prodServer = new Server();
-        prodServer.setUrl(prodUrl);
+        prodServer.setUrl(noteversoProperties.getProdUrl());
         prodServer.setDescription("Server URL in Production environment");
 
         Contact contact = new Contact();
