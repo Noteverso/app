@@ -1,6 +1,8 @@
 package com.noteverso.core.controller;
 
 import com.noteverso.common.api.ApiResult;
+import com.noteverso.common.util.IPUtils;
+import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.model.Note;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
@@ -17,6 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
+
+import static com.noteverso.common.constant.NumConstants.NOTE_DATACENTER_ID;
+import static com.noteverso.common.constant.NumConstants.NUM_31;
 
 @Tag(name = "Note", description = "Note management APIs")
 @RestController
