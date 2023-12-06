@@ -37,5 +37,4 @@ public interface NoteService {
     void togglePin(String id, Boolean toggle);
 
     void moveNote(String id, String projectId);
-    boolean containsSwearWords(String comment);
 }
