@@ -23,20 +23,20 @@ public class NumConstants {
     /**
      * 项目数量配额
      */
-    public static final Integer PROJECT_QUOTA_NORMAL = 5;
+    public static final Long PROJECT_QUOTA_NORMAL = 5L;
 
     /**
      * 项目数量配额
      */
-    public static final Integer PROJECT_QUOTA_PREMIUM = 100;
+    public static final Long PROJECT_QUOTA_PREMIUM = 100L;
 
     /**
      * 笔记链接数配额
      */
-    public static final Integer LINKED_NOTE_QUOTA_NORMAL = 50;
+    public static final Long LINKED_NOTE_QUOTA_NORMAL = 50L;
 
     /**
      * 笔记链接数配额
      */
-    public static final Integer LINKED_NOTE_QUOTA_PREMIUM = 10000;
+    public static final Long LINKED_NOTE_QUOTA_PREMIUM = 10000L;
 }

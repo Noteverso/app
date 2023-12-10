@@ -16,7 +16,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+//@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ExtendWith(MockitoExtension.class)
 class NoteServiceTest {
     @Mock

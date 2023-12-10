@@ -18,7 +18,7 @@ public class UserDTO {
     private String inboxProjectId;
     private String startPage;
     private Long maxFileSize;
-    private Integer projectsQuota;
+    private Long projectsQuota;
     private Long filesSizeQuota;
-    private Integer linkedNotesQuota;
+    private Long linkedNotesQuota;
 }

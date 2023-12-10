@@ -35,13 +35,16 @@ public class UserServiceImpl implements UserService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void createUser(String username, String password) {
+        // Create user
         String userId = String.valueOf(snowFlakeUtils.nextId());
         var user = constructUser(userId, username, password);
         userMapper.insert(user);
 
+        // Create default project - inbox
         var project = projectService.constructInboxProject(userId);
         projectMapper.insert(project);
 
+        // Create user config - project quota and other
         var userConfig = constructUserConfig(userId, project.getProjectId());
         userConfigMapper.insert(userConfig);
     }
