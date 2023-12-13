@@ -23,14 +23,14 @@ public class RelationServiceImpl implements RelationService {
     private final AttachmentRelationMapper attachmentRelationMapper;
 
     @Override
-    public void insertNoteLabelRelation(List<String> labels, String noteId, String tenantId) {
+    public void insertNoteLabelRelation(List<String> labels, String noteId, String userId) {
         if (labels == null || labels.isEmpty()) {
             return;
         }
 
         List<NoteLabelRelation> noteLabelRelations = new ArrayList<>();
         for(String label : labels) {
-            NoteLabelRelation noteLabelRelation = constructNoteLabelRelation(label, noteId, tenantId);
+            NoteLabelRelation noteLabelRelation = constructNoteLabelRelation(label, noteId, userId);
             noteLabelRelations.add(noteLabelRelation);
         }
 
@@ -38,14 +38,14 @@ public class RelationServiceImpl implements RelationService {
     }
 
     @Override
-    public void insertNoteAttachmentRelation(List<String> attachments, String noteId, String tenantId) {
+    public void insertNoteAttachmentRelation(List<String> attachments, String noteId, String userId) {
         if (attachments == null || attachments.isEmpty()) {
             return;
         }
 
         List<AttachmentRelation> attachmentRelations = new ArrayList<>();
         for(String attachmentId : attachments) {
-            AttachmentRelation attachmentRelation = constructAttachmentRelation(attachmentId, noteId, tenantId);
+            AttachmentRelation attachmentRelation = constructAttachmentRelation(attachmentId, noteId, userId);
             attachmentRelations.add(attachmentRelation);
         }
 
@@ -53,21 +53,21 @@ public class RelationServiceImpl implements RelationService {
     }
 
     @Override
-    public void insertNoteRelation(List<String> linkedNotes, String noteId, String tenantId) {
+    public void insertNoteRelation(List<String> linkedNotes, String noteId, String userId) {
         if (linkedNotes == null || linkedNotes.isEmpty()) {
             return;
         }
 
         List<NoteRelation> noteRelations = new ArrayList<>();
         for (String linkedNote : linkedNotes) {
-            NoteRelation noteRelation = constructNoteRelation(noteId, linkedNote, tenantId);
+            NoteRelation noteRelation = constructNoteRelation(noteId, linkedNote, userId);
             noteRelations.add(noteRelation);
         }
         noteRelationMapper.batchInsert(noteRelations);
     }
 
     @Override
-    public void updateNoteRelation(List<String> linkedNotes, String noteId, String tenantId) {
+    public void updateNoteRelation(List<String> linkedNotes, String noteId, String userId) {
         if (linkedNotes == null || linkedNotes.isEmpty()) {
             return;
         }
@@ -75,11 +75,11 @@ public class RelationServiceImpl implements RelationService {
         updateWrapper.eq(NoteRelation::getNoteId, noteId);
         noteRelationMapper.delete(updateWrapper);
 
-        insertNoteRelation(linkedNotes, noteId, tenantId);
+        insertNoteRelation(linkedNotes, noteId, userId);
     }
 
     @Override
-    public void updateNoteLabelRelation(List<String> labels, String noteId, String tenantId) {
+    public void updateNoteLabelRelation(List<String> labels, String noteId, String userId) {
         if (labels == null || labels.isEmpty()) {
             return;
         }
@@ -87,11 +87,11 @@ public class RelationServiceImpl implements RelationService {
         updateWrapper.eq(NoteLabelRelation::getNoteId, noteId);
         noteLabelRelationMapper.delete(updateWrapper);
 
-        insertNoteLabelRelation(labels, noteId, tenantId);
+        insertNoteLabelRelation(labels, noteId, userId);
     }
 
     @Override
-    public void updateNoteAttachment(List<String> attachmentIds, String noteId, String tenantId) {
+    public void updateNoteAttachment(List<String> attachmentIds, String noteId, String userId) {
         if (attachmentIds == null || attachmentIds.isEmpty()) {
             return;
         }
@@ -100,41 +100,41 @@ public class RelationServiceImpl implements RelationService {
         updateWrapper.eq(AttachmentRelation::getObjectId, noteId);
         attachmentRelationMapper.delete(updateWrapper);
 
-        insertNoteAttachmentRelation(attachmentIds, noteId, tenantId);
+        insertNoteAttachmentRelation(attachmentIds, noteId, userId);
     }
 
-    private NoteLabelRelation constructNoteLabelRelation(String labelId, String noteId, String tenantId) {
+    private NoteLabelRelation constructNoteLabelRelation(String labelId, String noteId, String userId) {
         return NoteLabelRelation
                 .builder()
                 .noteId(noteId)
                 .labelId(labelId)
-                .updater(tenantId)
-                .creator(tenantId)
+                .updater(userId)
+                .creator(userId)
                 .addedAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
     }
 
-    private NoteRelation constructNoteRelation(String noteId, String linkedNoteId, String tenantId) {
+    private NoteRelation constructNoteRelation(String noteId, String linkedNoteId, String userId) {
         return NoteRelation
                 .builder()
                 .noteId(noteId)
                 .linkedNoteId(linkedNoteId)
                 .viewStyle(0)
-                .creator(tenantId)
-                .updater(tenantId)
+                .creator(userId)
+                .updater(userId)
                 .addedAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
     }
 
-    private AttachmentRelation constructAttachmentRelation(String attachmentId, String noteId, String tenantId) {
+    private AttachmentRelation constructAttachmentRelation(String attachmentId, String noteId, String userId) {
         return AttachmentRelation
                 .builder()
                 .attachmentId(attachmentId)
                 .objectId(noteId)
-                .creator(tenantId)
-                .updater(tenantId)
+                .creator(userId)
+                .updater(userId)
                 .addedAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();

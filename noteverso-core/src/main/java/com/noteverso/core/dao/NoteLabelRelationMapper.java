@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
+
 @Mapper
 public interface NoteLabelRelationMapper extends BaseMapper<NoteLabelRelation> {
     void batchInsert(@Param("noteLabelRelations") List<NoteLabelRelation> noteLabelRelations);

@@ -18,5 +18,5 @@ public class ProjectDTO {
     private Integer isInboxProject;
     private String url;
     private Integer isCollapsed;
-    private String tenantId;
+    private String userId;
 }

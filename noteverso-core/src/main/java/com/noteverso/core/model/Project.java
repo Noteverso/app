@@ -3,13 +3,17 @@ package com.noteverso.core.model;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
 @TableName(value = "noteverso_project", autoResultMap = true)
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class Project {
     @TableId(value = "id", type = IdType.AUTO)

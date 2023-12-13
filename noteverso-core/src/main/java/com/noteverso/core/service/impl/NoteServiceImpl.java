@@ -31,28 +31,28 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void createNote(NoteCreateRequest request, String tenantId) {
+    public void createNote(NoteCreateRequest request, String userId) {
         String projectId = request.getProjectId();
         String noteId = String.valueOf(snowFlakeUtils.nextId());
 
         // Create a note
-        Note note = constructNote(noteId, projectId, request.getContent(), tenantId);
+        Note note = constructNote(noteId, projectId, request.getContent(), userId);
         noteMapper.insert(note);
 
         // create the relation with labels
-        relationService.insertNoteLabelRelation(request.getLabels(), noteId, tenantId);
+        relationService.insertNoteLabelRelation(request.getLabels(), noteId, userId);
 
         // create the relation with the other notes
-        relationService.insertNoteRelation(request.getLinkedNotes(), noteId, tenantId);
+        relationService.insertNoteRelation(request.getLinkedNotes(), noteId, userId);
 
         //  create the relation with attachments
-        relationService.insertNoteAttachmentRelation(request.getFiles(), noteId, tenantId);
+        relationService.insertNoteAttachmentRelation(request.getFiles(), noteId, userId);
     }
 
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void updateNote(String noteId, String tenantId, NoteUpdateRequest request) {
+    public void updateNote(String noteId, String userId, NoteUpdateRequest request) {
         LambdaUpdateWrapper<Note> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(Note::getNoteId, noteId);
         wrapper.set(Note::getContent, request.getContent());
@@ -66,21 +66,21 @@ public class NoteServiceImpl implements NoteService {
 
         // update the relation with labels
 
-        relationService.updateNoteLabelRelation(request.getLabels(), noteId, tenantId);
+        relationService.updateNoteLabelRelation(request.getLabels(), noteId, userId);
         // update the relation with the other notes
-        relationService.updateNoteRelation(request.getLinkedNotes(), noteId, tenantId);
+        relationService.updateNoteRelation(request.getLinkedNotes(), noteId, userId);
 
         // update the relation with the attachments
-        relationService.updateNoteAttachment(request.getFiles(), noteId, tenantId);
+        relationService.updateNoteAttachment(request.getFiles(), noteId, userId);
     }
 
-    public Note constructNote(String noteId, String projectId, String content, String tenantId) {
+    public Note constructNote(String noteId, String projectId, String content, String userId) {
         return Note.builder()
                 .noteId(noteId)
                 .content(content)
                 .projectId(projectId)
-                .creator(tenantId)
-                .updater(tenantId)
+                .creator(userId)
+                .updater(userId)
                 .addedAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();

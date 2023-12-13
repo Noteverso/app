@@ -17,16 +17,16 @@ public class AttachmentServiceImpl implements AttachmentService {
     private final AttachmentMapper attachmentMapper;
 
     @Override
-    public void createAttachment(AttachmentDTO request, String tenantId ) {
-        Attachment attachment = construcAttachment(request, tenantId);
+    public void createAttachment(AttachmentDTO request, String userId ) {
+        Attachment attachment = construcAttachment(request, userId);
         attachmentMapper.insert(attachment);
     }
 
     @Override
-    public void createAttachments(List<AttachmentDTO> request, String tenantId) {
+    public void createAttachments(List<AttachmentDTO> request, String userId) {
         List<Attachment> attachments = new ArrayList<>();
         for (AttachmentDTO file : request) {
-            Attachment attachment = construcAttachment(file, tenantId);
+            Attachment attachment = construcAttachment(file, userId);
             attachments.add(attachment);
         }
         if (!attachments.isEmpty()) {
@@ -35,7 +35,7 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     }
 
-    private Attachment construcAttachment(AttachmentDTO file, String tenantId) {
+    private Attachment construcAttachment(AttachmentDTO file, String userId) {
         return Attachment
                 .builder()
                 .name(file.getName())
@@ -44,8 +44,8 @@ public class AttachmentServiceImpl implements AttachmentService {
                 .url(file.getUrl())
                 .size(file.getSize())
                 .attachmentId(file.getAttachmentId())
-                .creator(tenantId)
-                .updater(tenantId)
+                .creator(userId)
+                .updater(userId)
                 .addedAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();

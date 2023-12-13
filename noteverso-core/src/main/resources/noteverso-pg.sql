@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS noteverso_note (
     is_deleted smallint DEFAULT 0,
     is_archived smallint DEFAULT 0,
     is_favorite smallint DEFAULT 0,
-    project_id varchar(50) NOT NULL,
+    project_id varchar(50) default NULL,
     status smallint DEFAULT 1,
     creator varchar(50) NOT NULL,
     updater varchar(50) NOT NULL,

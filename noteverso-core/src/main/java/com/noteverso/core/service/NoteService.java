@@ -4,9 +4,9 @@ import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
 
 public interface NoteService {
-    void createNote(NoteCreateRequest request, String tenantId);
+    void createNote(NoteCreateRequest request, String userId);
 
-    void updateNote(String id, String tenantId, NoteUpdateRequest request);
+    void updateNote(String id, String userId, NoteUpdateRequest request);
 
     /**
      * Delete/Restore a note

@@ -2,6 +2,18 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.noteverso.core.dao.NoteMapper">
     <select id="selectByNoteId" resultType="com.noteverso.core.model.Note">
-        SELECT * FROM noteverso_note WHERE note_id = #{noteId} AND is_deleted = 0
+        SELECT * FROM noteverso_note WHERE note_id = #{noteId} AND is_deleted = #{isDeleted}
     </select>
+
+    <update id="updateNoteIsArchivedByProject">
+        UPDATE noteverso_note
+        SET is_archived = #{isArchived}, updated_at = NOW()
+        WHERE project_id = #{projectId} AND creator=#{userId}
+    </update>
+
+    <update id="updateNotesIsDeletedByProject">
+        UPDATE noteverso_note
+        SET is_deleted = 1, updated_at = NOW(), project_id = null
+        WHERE project_id = #{projectId} AND creator=#{userId}
+    </update>
 </mapper>

@@ -21,7 +21,7 @@ public class ViewOptionServiceImpl implements ViewOptionService {
     private final ViewOptionMapper viewOptionMapper;
 
     @Override
-    public void createViewOption(ViewOptionCreate request, String tenantId) {
+    public void createViewOption(ViewOptionCreate request, String userId) {
         var viewOption = new ViewOption();
         viewOption.setObjectId(request.getObjectId());
         viewOption.setViewType(request.getViewType());
@@ -32,8 +32,8 @@ public class ViewOptionServiceImpl implements ViewOptionService {
         viewOption.setShowArchivedNotes(null != request.getShowArchivedNotes() ? request.getShowArchivedNotes() : NUM_O);
         viewOption.setAddedAt(Instant.now());
         viewOption.setUpdateAt(Instant.now());
-        viewOption.setCreator(tenantId);
-        viewOption.setUpdater(tenantId);
+        viewOption.setCreator(userId);
+        viewOption.setUpdater(userId);
         viewOptionMapper.insert(viewOption);
     }
 }

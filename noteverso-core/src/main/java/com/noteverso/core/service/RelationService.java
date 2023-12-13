@@ -9,15 +9,15 @@ import java.util.List;
  */
 
 public interface RelationService {
-    void insertNoteLabelRelation(List<String> labels, String noteId, String tenantId);
+    void insertNoteLabelRelation(List<String> labels, String noteId, String userId);
 
-    void insertNoteAttachmentRelation(List<String> attachments, String noteId, String tenantId);
+    void insertNoteAttachmentRelation(List<String> attachments, String noteId, String userId);
 
-    void insertNoteRelation(List<String> linkedNotes, String noteId, String tenantId);
+    void insertNoteRelation(List<String> linkedNotes, String noteId, String userId);
 
-    void updateNoteRelation(List<String> linkedNotes, String noteId, String tenantId);
+    void updateNoteRelation(List<String> linkedNotes, String noteId, String userId);
 
-    void updateNoteLabelRelation(List<String> labels, String noteId, String tenantId);
+    void updateNoteLabelRelation(List<String> labels, String noteId, String userId);
 
-    void updateNoteAttachment(List<String> attachmentIds, String noteId, String tenantId);
+    void updateNoteAttachment(List<String> attachmentIds, String noteId, String userId);
 }
