@@ -5,7 +5,6 @@ import com.noteverso.core.manager.AuthManager;
 import com.noteverso.core.manager.impl.AuthManagerImpl;
 import com.noteverso.core.request.ProjectCreateRequest;
 import com.noteverso.core.request.ProjectUpdateRequest;
-import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.ProjectService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

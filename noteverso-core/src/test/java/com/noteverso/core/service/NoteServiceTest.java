@@ -1,10 +1,13 @@
 package com.noteverso.core.service;
 
+import com.noteverso.common.exceptions.NoSuchDataException;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.NoteMapper;
+import com.noteverso.core.dao.ProjectMapper;
 import com.noteverso.core.model.Note;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.service.impl.NoteServiceImpl;
+import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -13,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,6 +31,9 @@ class NoteServiceTest {
 
     @Mock
     RelationService relationService;
+
+    @Mock
+    ProjectMapper projectMapper;
 
     @InjectMocks
     NoteServiceImpl noteService;
@@ -47,5 +54,34 @@ class NoteServiceTest {
         verify(noteMapper).insert(noteCaptor.capture());
         Note captureedNote = noteCaptor.getValue();
         assertThat(captureedNote.getContent()).isEqualTo(noteCreateRequest.getContent());
+    }
+
+    @Test
+    void deleteNote_shouldThrowException_whenNoteIsNotFound() {
+        // Arrange
+        String noteId = "1";
+        String userId = "test";
+        when(noteMapper.delete(any())).thenReturn(0);
+
+        // Act
+        ThrowableAssert.ThrowingCallable callable = () -> noteService.deleteNote(noteId, userId);
+
+        // Assert
+        assertThatThrownBy(callable).isInstanceOf(NoSuchDataException.class).hasMessage("Note not found");
+    }
+
+    @Test
+    void moveNote_shouldThrowException_whenProjectIsNotFound() {
+        // Arrange
+        String noteId = "1";
+        String projectId = "1";
+        String userId = "test";
+        when(projectMapper.selectByProjectId(projectId, userId)).thenReturn(null);
+
+        // Act
+        ThrowableAssert.ThrowingCallable callable = () -> noteService.moveNote(noteId, projectId, userId);
+
+        // Assert
+        assertThatThrownBy(callable).isInstanceOf(NoSuchDataException.class).hasMessage("Project not found");
     }
 }

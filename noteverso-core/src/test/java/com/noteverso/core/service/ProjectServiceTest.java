@@ -64,7 +64,7 @@ class ProjectServiceTest {
     }
 
     @Test
-    void should_throwException_whenProjectQuotaIsReached() {
+    void createProject_shouldThrowException_whenProjectQuotaIsReached() {
         // Arrange
         String userId = "test";
         ProjectCreateRequest request = new ProjectCreateRequest();
@@ -133,7 +133,7 @@ class ProjectServiceTest {
     }
 
     @Test
-    void should_throwNoSuchDataException_when_updateProjectIsArchived() {
+    void updateProjectIsArchived_shouldThrowNoSuchDataException_whenProjectIsNotFound() {
         // Arrange
         String projectId = "123";
         String userId = "123";

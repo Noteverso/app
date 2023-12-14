@@ -9,11 +9,16 @@ public interface NoteService {
     void updateNote(String id, String userId, NoteUpdateRequest request);
 
     /**
-     * Delete/Restore a note
+     * move a note to trash
      * @param id
-     * @param toggle true - restore false - delete
      */
-    void toggleVisibility(String id, Boolean toggle);
+    void moveNoteToTrash(String id);
+
+    /**
+     * Restore a note from trash
+     * @param id
+     */
+    void restoreNote(String id, String userId);
 
     /**
      * Archive/Unarchive a note
@@ -36,5 +41,7 @@ public interface NoteService {
      */
     void togglePin(String id, Boolean toggle);
 
-    void moveNote(String id, String projectId);
+    void moveNote(String id, String projectId, String userId);
+
+    void deleteNote(String id, String userId);
 }

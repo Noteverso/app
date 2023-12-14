@@ -1,8 +1,8 @@
 package com.noteverso.core.controller;
 
 import com.noteverso.common.api.ApiResult;
-import com.noteverso.common.util.IPUtils;
-import com.noteverso.common.util.SnowFlakeUtils;
+import com.noteverso.core.manager.AuthManager;
+import com.noteverso.core.manager.impl.AuthManagerImpl;
 import com.noteverso.core.model.Note;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
@@ -20,9 +20,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
-import static com.noteverso.common.constant.NumConstants.NOTE_DATACENTER_ID;
-import static com.noteverso.common.constant.NumConstants.NUM_31;
-
 @Tag(name = "Note", description = "Note management APIs")
 @RestController
 @RequestMapping("/api/v1/notes")
@@ -30,6 +27,7 @@ import static com.noteverso.common.constant.NumConstants.NUM_31;
 @Slf4j
 public class NoteController {
     private final NoteService noteService;
+    private static final AuthManager authManager = new AuthManagerImpl();
 
     @Operation(summary = "Create a Note", description = "Create a Note", tags = { "Post" })
     @PostMapping("")
@@ -47,21 +45,21 @@ public class NoteController {
         return ApiResult.success(null);
     }
 
-    @Operation(summary = "Delete a Note", description = "Delete a note", tags = { "DELETE" })
+    @Operation(summary = "Move a Note to Trash", description = "Move a Note to Trash", tags = { "DELETE" })
     @ApiResponses({
         @ApiResponse(responseCode = "200", content = { @Content(schema = @Schema(implementation = Note.class), mediaType = "application/json")}),
         @ApiResponse(responseCode = "404", content = { @Content(schema = @Schema()) }),
         @ApiResponse(responseCode = "500", content = { @Content(schema = @Schema()) })})
     @DeleteMapping("/{id}")
-    public ApiResult<Void> deleteNote(@PathVariable("id") String id) {
-        noteService.toggleVisibility(id, false);
+    public ApiResult<Void> moveNoteToTrash(@PathVariable("id") String id) {
+        noteService.moveNoteToTrash(id);
         return ApiResult.success(null);
     }
 
     @Operation(summary = "Restore a Note", description = "Restore a note", tags = { "PATCH" })
     @PatchMapping("/{id}/restore")
-    public ApiResult<Void> restoreNote(@PathVariable("id") String id) {
-        noteService.toggleVisibility(id, true);
+    public ApiResult<Void> restoreNote(Authentication authentication, @PathVariable("id") String id) {
+        noteService.restoreNote(id, authManager.getPrincipal(authentication).getUserId());
         return ApiResult.success(null);
     }
 
@@ -89,8 +87,15 @@ public class NoteController {
 
     @Operation(summary = "Move a note", description = "Move a note", tags = { "PATCH" })
     @PatchMapping("/{id}/move")
-    public ApiResult<Void> moveNote(@PathVariable("id") String id, @RequestParam String projectId) {
-        noteService.moveNote(id, projectId);
+    public ApiResult<Void> moveNote(Authentication authentication, @PathVariable("id") String id, @RequestParam String projectId) {
+        noteService.moveNote(id, projectId, authManager.getPrincipal(authentication).getUserId());
+        return ApiResult.success(null);
+    }
+
+    @Operation(summary = "Delete a note permanently", description = "Delete a note permanently", tags = { "DELETE" })
+    @DeleteMapping("/{id}/permanent")
+    public ApiResult<Void> deleteNotePermanent(Authentication authentication, @PathVariable("id") String id) {
+        noteService.deleteNote(id, authManager.getPrincipal(authentication).getUserId());
         return ApiResult.success(null);
     }
 }

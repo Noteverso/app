@@ -1,10 +1,15 @@
 package com.noteverso.core.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.noteverso.common.exceptions.NoSuchDataException;
 import com.noteverso.common.util.IPUtils;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.NoteMapper;
+import com.noteverso.core.dao.ProjectMapper;
+import com.noteverso.core.manager.UserConfigManager;
 import com.noteverso.core.model.Note;
+import com.noteverso.core.model.Project;
+import com.noteverso.core.model.UserConfig;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
 import com.noteverso.core.service.RelationService;
@@ -17,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 
 import static com.noteverso.common.constant.NumConstants.*;
+import static com.noteverso.core.constant.ExceptionConstants.NOTE_NOT_FOUND;
+import static com.noteverso.core.constant.ExceptionConstants.PROJECT_NOT_FOUND;
 
 @Service
 @AllArgsConstructor
@@ -24,6 +31,8 @@ import static com.noteverso.common.constant.NumConstants.*;
 public class NoteServiceImpl implements NoteService {
     private final NoteMapper noteMapper;
     private final RelationService relationService;
+    private final ProjectMapper projectMapper;
+    private final UserConfigManager userConfigManager;
 
     private final SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
             NOTE_DATACENTER_ID, IPUtils.getHostAddressWithLong() % NUM_31
@@ -87,16 +96,37 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    public void toggleVisibility(String id, Boolean toggle) {
-        LambdaUpdateWrapper<Note> noteWrapper = new LambdaUpdateWrapper<>();
-        noteWrapper.eq(Note::getNoteId, id);
+    public void restoreNote(String id, String userId) {
+        LambdaUpdateWrapper<Note> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(Note::getNoteId, id);
+        updateWrapper.eq(Note::getIsDeleted, NUM_1);
+        Note note = noteMapper.selectOne(updateWrapper);
 
-        if (toggle) {
-            noteWrapper.set(Note::getIsDeleted, NUM_O);
-        } else {
-            noteWrapper.set(Note::getIsDeleted, NUM_1);
+        if (null == note) {
+            throw new NoSuchDataException(NOTE_NOT_FOUND);
         }
 
+        Note newNote = new Note();
+        newNote.setIsDeleted(NUM_O);
+        newNote.setUpdatedAt(Instant.now());
+        if (note.getProjectId() == null) {
+            UserConfig userConfig = userConfigManager.getUserConfig(userId);
+            if (userConfig == null || userConfig.getInboxProjectId() == null) {
+                log.error("User config: {}", userConfig);
+                throw new NoSuchDataException(PROJECT_NOT_FOUND);
+            }
+            newNote.setProjectId(note.getProjectId());
+        }
+
+        noteMapper.update(newNote, updateWrapper);
+    }
+
+    @Override
+    public void moveNoteToTrash(String id) {
+        LambdaUpdateWrapper<Note> noteWrapper = new LambdaUpdateWrapper<>();
+        noteWrapper.eq(Note::getNoteId, id);
+        noteWrapper.eq(Note::getIsDeleted, NUM_O);
+        noteWrapper.set(Note::getIsDeleted, NUM_1);
         noteWrapper.set(Note::getUpdatedAt, Instant.now());
         noteMapper.update(null, noteWrapper);
     }
@@ -145,14 +175,31 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    public void moveNote(String id, String projectId) {
+    public void moveNote(String id, String projectId, String userId) {
+        Project project = projectMapper.selectByProjectId(projectId, userId);
+        if (null == project) {
+            throw new NoSuchDataException(PROJECT_NOT_FOUND);
+        }
+
         LambdaUpdateWrapper<Note> noteWrapper = new LambdaUpdateWrapper<>();
         noteWrapper.eq(Note::getNoteId, id);
         noteWrapper.eq(Note::getIsDeleted, NUM_O);
-        // TODO
-        // check project
+
         noteWrapper.set(Note::getProjectId, projectId);
         noteWrapper.set(Note::getUpdatedAt, Instant.now());
         noteMapper.update(null, noteWrapper);
     }
+
+    @Override
+    public void deleteNote(String id, String userId) {
+        LambdaUpdateWrapper<Note> qw = new LambdaUpdateWrapper<>();
+        qw.eq(Note::getNoteId, id);
+        qw.eq(Note::getCreator, userId);
+        qw.eq(Note::getIsDeleted, NUM_1);
+
+        int result = noteMapper.delete(qw);
+        if (result == 0) {
+            throw new NoSuchDataException(NOTE_NOT_FOUND);
+        }
+    };
 }
