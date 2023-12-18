@@ -69,7 +69,7 @@ class ProjectControllerTest {
     }
 
     @Test
-    void should_throwException_whenProjectCreateRequestIsInvalid() throws Exception {
+    void createProject_shouldThrowException_whenRequestIsInvalid() throws Exception {
         // Arrange
         ProjectCreateRequest projectCreateRequest = new ProjectCreateRequest();
         projectCreateRequest.setColor("red");

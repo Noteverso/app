@@ -80,6 +80,11 @@ public class GlobalExceptionHandler {
         return serverErrorResponse(ApiCode.DAO_EXCEPTION, exception);
     }
 
+    @ExceptionHandler(value = DuplicateRecordException.class)
+    public ResponseEntity<ErrorResponse> duplicateRecordExceptionHandler(DuplicateRecordException exception) {
+        return requestErrorResponse(ApiCode.DUPLICATE_RECORD, exception);
+    }
+
     @ExceptionHandler(value = NoPermissionException.class)
     public ResponseEntity<ErrorResponse> noPermissionExceptionHandler(NoPermissionException exception) {
         return requestErrorResponse(ApiCode.FORBIDDEN, exception, HttpStatus.FORBIDDEN);
