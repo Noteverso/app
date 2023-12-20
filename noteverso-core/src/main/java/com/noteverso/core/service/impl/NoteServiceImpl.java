@@ -6,6 +6,7 @@ import com.noteverso.common.util.IPUtils;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
+import com.noteverso.core.dto.NoteDTO;
 import com.noteverso.core.manager.UserConfigManager;
 import com.noteverso.core.model.Note;
 import com.noteverso.core.model.Project;
@@ -190,6 +191,7 @@ public class NoteServiceImpl implements NoteService {
         noteMapper.update(null, noteWrapper);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void deleteNote(String id, String userId) {
         LambdaUpdateWrapper<Note> qw = new LambdaUpdateWrapper<>();
@@ -198,8 +200,20 @@ public class NoteServiceImpl implements NoteService {
         qw.eq(Note::getIsDeleted, NUM_1);
 
         int result = noteMapper.delete(qw);
-        if (result == 0) {
+        if (result > 0) {
+            log.info("Delete note successfully: {}", id);
+            relationService.deleteNoteRelation(id, userId);
+            relationService.deleteNoteLabelRelation(id, userId);
+            relationService.deleteNoteAttachmentRelation(id, userId);
+        } else {
             throw new NoSuchDataException(NOTE_NOT_FOUND);
         }
-    };
+    }
+
+
+    @Override
+    public NoteDTO getNoteDetail(String noteId, String userId) {
+        // TODO
+        return null;
+    }
 }

@@ -1,5 +1,6 @@
 package com.noteverso.core.service;
 
+import com.noteverso.core.dto.NoteDTO;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
 
@@ -44,4 +45,6 @@ public interface NoteService {
     void moveNote(String id, String projectId, String userId);
 
     void deleteNote(String id, String userId);
+
+    NoteDTO getNoteDetail(String noteId, String userId);
 }

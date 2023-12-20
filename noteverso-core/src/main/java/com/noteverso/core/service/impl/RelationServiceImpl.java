@@ -103,6 +103,34 @@ public class RelationServiceImpl implements RelationService {
         insertNoteAttachmentRelation(attachmentIds, noteId, userId);
     }
 
+
+    @Override
+    public void deleteNoteRelation(String noteId, String userId) {
+        LambdaUpdateWrapper<NoteRelation> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper
+                .eq(NoteRelation::getNoteId, noteId)
+                .or()
+                .eq(NoteRelation::getLinkedNoteId, noteId);
+        updateWrapper.eq(NoteRelation::getCreator, userId);
+        noteRelationMapper.delete(updateWrapper);
+    }
+
+    @Override
+    public void deleteNoteLabelRelation(String noteId, String userId) {
+        LambdaUpdateWrapper<NoteLabelRelation>  updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(NoteLabelRelation::getNoteId, noteId);
+        updateWrapper.eq(NoteLabelRelation::getCreator, userId);
+        noteLabelRelationMapper.delete(updateWrapper);
+    }
+
+    @Override
+    public void deleteNoteAttachmentRelation(String noteId, String userId) {
+        LambdaUpdateWrapper<AttachmentRelation> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(AttachmentRelation::getObjectId, noteId);
+        updateWrapper.eq(AttachmentRelation::getCreator, userId);
+        attachmentRelationMapper.delete(updateWrapper);
+    }
+
     private NoteLabelRelation constructNoteLabelRelation(String labelId, String noteId, String userId) {
         return NoteLabelRelation
                 .builder()

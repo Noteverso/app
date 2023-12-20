@@ -4,6 +4,7 @@ import com.noteverso.common.exceptions.NoSuchDataException;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
+import com.noteverso.core.dto.NoteDTO;
 import com.noteverso.core.model.Note;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.service.impl.NoteServiceImpl;
@@ -57,6 +58,20 @@ class NoteServiceTest {
     }
 
     @Test
+    void should_deleteNoteSuccessfully() {
+        // Arrange
+        String noteId = "1";
+        String userId = "test";
+        when(noteMapper.delete(any())).thenReturn(1);
+
+        // Act
+        noteService.deleteNote(noteId, userId);
+
+        // Assert
+        verify(relationService, times(1)).deleteNoteRelation(noteId, userId);
+    }
+
+    @Test
     void deleteNote_shouldThrowException_whenNoteIsNotFound() {
         // Arrange
         String noteId = "1";
@@ -83,5 +98,21 @@ class NoteServiceTest {
 
         // Assert
         assertThatThrownBy(callable).isInstanceOf(NoSuchDataException.class).hasMessage("Project not found");
+    }
+
+    @Test
+    void should_returnNoteDetail_whenGetNoteDetail() {
+        // Arrange
+        String noteId = "1";
+        String userId = "test";
+
+        // Act
+        NoteDTO noteDTO = noteService.getNoteDetail(noteId, userId);
+
+        // Assert
+        // TODO
+        // 1. NoteLabelRelation
+        // 2. AttachmentRelation
+        // 3. NoteRelation
     }
 }

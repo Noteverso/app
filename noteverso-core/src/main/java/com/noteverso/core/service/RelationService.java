@@ -20,4 +20,10 @@ public interface RelationService {
     void updateNoteLabelRelation(List<String> labels, String noteId, String userId);
 
     void updateNoteAttachment(List<String> attachmentIds, String noteId, String userId);
+
+    void deleteNoteRelation(String noteId, String userId);
+
+    void deleteNoteLabelRelation(String noteId, String userId);
+
+    void deleteNoteAttachmentRelation(String noteId, String userId);
 }
