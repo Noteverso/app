@@ -22,7 +22,6 @@ public class NoteLabelRelation {
     private Long id;
     private String noteId;
     private String labelId;
-    private Integer isDeleted;
     private Instant addedAt;
     private Instant updatedAt;
     private String creator;

@@ -18,5 +18,5 @@ public class PageRequest implements Serializable {
 
     @NotNull(message = "page index is required")
     @Schema(description = "page index", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long pageIndex = 1L;
+   private Long pageIndex = 1L;
 }

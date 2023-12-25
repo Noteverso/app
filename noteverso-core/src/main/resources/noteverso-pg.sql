@@ -5,10 +5,10 @@
 -- \c noteverso;
 CREATE TABLE IF NOT EXISTS noteverso_note (
     id bigserial NOT NULL,
-    note_id varchar NOT NULL CONSTRAINT noteverso_note_pk UNIQUE,
+    note_id varchar not null constraint uq_note_id unique,
     note_type smallint DEFAULT 0,
     content varchar NOT NULL,
-    is_pin smallint DEFAULT 0,
+    is_pinned smallint DEFAULT 0,
     is_deleted smallint DEFAULT 0,
     is_archived smallint DEFAULT 0,
     is_favorite smallint DEFAULT 0,
@@ -24,11 +24,11 @@ CREATE TABLE IF NOT EXISTS noteverso_note (
 COMMENT ON TABLE noteverso_note IS '笔记表';
 COMMENT ON COLUMN noteverso_note.id IS 'id';
 COMMENT ON COLUMN noteverso_note.note_id IS '笔记唯一标识，snowFlake id';
-COMMENT ON CONSTRAINT noteverso_note_pk ON noteverso_note IS 'UNIQUE (note_id)';
+COMMENT ON CONSTRAINT uq_note_id ON noteverso_note IS 'UNIQUE (note_id)';
 COMMENT ON COLUMN noteverso_note.note_type IS '笔记类型，0-普通笔记 1-账户密码 2-待办清单 3-图表 4-日程 5-工具清单 6-记账(订阅信息，可自动更新续费信息)';
 COMMENT ON COLUMN noteverso_note.content IS '笔记内容';
-COMMENT ON COLUMN noteverso_note.is_pin IS '是否将项目置顶,0-否，1-是';
-COMMENT ON COLUMN noteverso_note.is_favorite IS '是否收藏项目, 0-否，1-是';
+COMMENT ON COLUMN noteverso_note.is_pinned IS '是否将笔记置顶,0-否，1-是';
+COMMENT ON COLUMN noteverso_note.is_favorite IS '是否收藏笔记, 0-否，1-是';
 COMMENT ON COLUMN noteverso_note.is_deleted IS '是否删除,0-否，1-是';
 COMMENT ON COLUMN noteverso_note.is_archived IS '是否归档,0-否，1-是';
 COMMENT ON COLUMN noteverso_note.project_id IS '笔记所属的项目id';
@@ -38,6 +38,9 @@ COMMENT ON COLUMN noteverso_note.updater IS '更新人';
 COMMENT ON COLUMN noteverso_note.url IS '笔记链接，从 web、移动端应用通过链接进入笔记';
 COMMENT ON COLUMN noteverso_note.added_at IS '添加时间';
 COMMENT ON COLUMN noteverso_note.updated_at IS '更新时间';
+
+create index index_project_id on noteverso_note (project_id);
+create index index_creator on noteverso_note (creator);
 
 CREATE TABLE IF NOT EXISTS noteverso_note_map (
     id bigserial NOT NULL,
@@ -54,8 +57,8 @@ CREATE TABLE IF NOT EXISTS noteverso_note_map (
 
 COMMENT ON TABLE noteverso_note_map IS '笔记关联表';
 COMMENT ON COLUMN noteverso_note_map.id IS 'id';
-COMMENT ON COLUMN noteverso_note_map.note_id IS '笔记id';
-COMMENT ON COLUMN noteverso_note_map.linked_note_id IS '关联至此的笔记id';
+comment on column noteverso_note_map.note_id is '笔记id，此笔记拥有指向其他笔记的链接或引用';
+comment on column noteverso_note_map.linked_note_id is '被链接的笔记id，也称为被关联的笔记';
 COMMENT ON COLUMN noteverso_note_map.added_at IS '添加时间';
 COMMENT ON COLUMN noteverso_note_map.view_style IS '关联笔记UI布局方式 0 - list 列表，1 - board - 看板';
 
@@ -94,7 +97,6 @@ CREATE TABLE IF NOT EXISTS noteverso_note_label_map (
    updated_at timestamptz DEFAULT NULL,
    creator varchar(50) NOT NULL,
    updater varchar(50) NOT NULL,
-   is_deleted    smallint    default 0 not null,
    PRIMARY KEY (id)
 );
 
@@ -113,7 +115,7 @@ CREATE TABLE IF NOT EXISTS noteverso_project (
     is_archived smallint DEFAULT 0,
     is_shared smallint DEFAULT 0,
     is_inbox_project smallint DEFAULT 0,
-    child_order bigint NOT NULL,
+    child_order bigint DEFAULT NULL,
     parent_id varchar(50) DEFAULT NULL,
     url varchar(100) DEFAULT NULL,
     is_collapsed smallint DEFAULT 0,
@@ -206,22 +208,28 @@ comment on column noteverso_attachment_map.object_id is '对象id，包括项目
 comment on column noteverso_attachment_map.is_deleted is '0 - 否，1 - 是';
 
 -- create noteverso view option table
-create table noteverso_view_option
-(
-    id bigserial primary key,
-    view_type           smallint    default 0,
-    object_id           varchar(50) default NULL::character varying,
-    view_mode           smallint    default 0,
-    grouped_by          smallint,
-    ordered_by          smallint    default 0 not null,
-    order_value         smallint    default 0 not null,
-    show_archived_notes smallint    default 0,
-    filtered_by         smallint,
-    added_at            timestamp with time zone,
-    update_at           timestamp with time zone,
-    creator             varchar(50)           not null,
-    updater             varchar(50)           not null,
-    filter_value        varchar(50)
+create table noteverso_view_option (
+    id                       bigserial
+        primary key,
+    view_type                smallint    default 0,
+    object_id                varchar(50) default NULL::character varying,
+    view_mode                smallint    default 0,
+    grouped_by               smallint,
+    ordered_by               smallint    default 0 not null,
+    order_value              smallint    default 0 not null,
+    show_archived            smallint    default 0,
+    filtered_by              smallint,
+    added_at                 timestamp with time zone,
+    update_at                timestamp with time zone,
+    creator                  varchar(50)           not null,
+    updater                  varchar(50)           not null,
+    filter_value             varchar(50),
+    show_pinned              integer,
+    show_deleted             integer,
+    show_comment_count       integer,
+    show_relation_note_count integer,
+    show_attachment_count    integer,
+    show_label_list          integer
 );
 
 comment on table noteverso_view_option is '视图选项表';
@@ -229,14 +237,22 @@ comment on column noteverso_view_option.id is '视图选项id';
 comment on column noteverso_view_option.view_type is '视图选项类型 0 - PROJECT, 1 - UPCOMING, 2 - TODAY, 3 - PAST, 4 - ATTACHMENT';
 comment on column noteverso_view_option.object_id is '对象id，包括默认为空，如果对象是项目，则为项目id';
 comment on column noteverso_view_option.view_mode is '布局 0 - list 列表，1 - board 看板';
-comment on column noteverso_view_option.grouped_by is '分组方式 0 - ADDED_AT, 1 - NOTE_STATUS, 2 - NOTE_LABEL';
-comment on column noteverso_view_option.ordered_by is '排序方式 0 - ADDED_AT,1 - COMMENT_COUNT,2 - LINKED_NOTE_COUNT';
+comment on column noteverso_view_option.grouped_by is '分组方式 0 - remove grouped , 1 - ADDED_AT, 2 - UPDATED_AT, 3 - NOTE_LABEL';
+comment on column noteverso_view_option.ordered_by is '排序方式 0 - ADDED_AT, 1 - UPDATED_AT';
 comment on column noteverso_view_option.order_value is '排序规则 0 - ASC, 1 - DESC';
-comment on column noteverso_view_option.show_archived_notes is '是否显示已归档笔记, 0 - 不显示, 1 - 显示';
+comment on column noteverso_view_option.show_archived is '是否显示已归档笔记, 0 - 不显示, 1 - 显示';
 comment on column noteverso_view_option.filtered_by is '过滤方式';
 comment on column noteverso_view_option.added_at is '添加时间';
 comment on column noteverso_view_option.update_at is '更新时间';
 comment on column noteverso_view_option.filter_value is '过滤值';
+comment on column noteverso_view_option.show_pinned is '展示置顶笔记 0 - no 1 - yes';
+comment on column noteverso_view_option.show_deleted is '展示删除笔记，0 - no，1 - yes';
+comment on column noteverso_view_option.show_comment_count is '展示评论数 0 - no，1 - yes';
+comment on column noteverso_view_option.show_relation_note_count is '展示关联笔记数 0 - no，1 - yes';
+comment on column noteverso_view_option.show_attachment_count is '展示附件数量 0 - no，1 - yes';
+comment on column noteverso_view_option.show_label_list is '展示标签列表 0 - no 1 - yes';
+alter table noteverso_view_option
+    owner to postgres;
 
 -- create noteverso user
 CREATE TABLE IF NOT EXISTS noteverso_user_info (

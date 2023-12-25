@@ -37,7 +37,7 @@ public class Note {
      */
     private Integer noteType;
     private String content;
-    private Integer isPin;
+    private Integer isPinned;
     private Integer isDeleted;
     private Integer isArchived;
     private Integer isFavorite;

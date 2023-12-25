@@ -23,6 +23,10 @@ public class NoteDTO {
 
     private Integer isDeleted;
 
+    private String addedAt;
+
+    private String updatedAt;
+
     @Schema(description = "Label ids")
     private List<String> labels;
 

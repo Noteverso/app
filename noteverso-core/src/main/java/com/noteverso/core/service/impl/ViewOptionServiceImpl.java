@@ -1,18 +1,23 @@
 package com.noteverso.core.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.noteverso.core.dao.ViewOptionMapper;
 import com.noteverso.core.enums.ObjectGroupByEnum;
 import com.noteverso.core.enums.ObjectOrderByEnum;
 import com.noteverso.core.enums.ObjectOrderValueEnum;
 import com.noteverso.core.enums.ObjectViewModeEnum;
+import com.noteverso.core.model.Note;
 import com.noteverso.core.model.ViewOption;
 import com.noteverso.core.request.ViewOptionCreate;
+import com.noteverso.core.request.ViewOptionUpdate;
 import com.noteverso.core.service.ViewOptionService;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
+import static com.noteverso.common.constant.NumConstants.NUM_1;
 import static com.noteverso.common.constant.NumConstants.NUM_O;
 
 @Service
@@ -26,14 +31,67 @@ public class ViewOptionServiceImpl implements ViewOptionService {
         viewOption.setObjectId(request.getObjectId());
         viewOption.setViewType(request.getViewType());
         viewOption.setViewMode(null != request.getViewMode() ? request.getViewMode() : ObjectViewModeEnum.LIST.getValue());
-        viewOption.setOrderedBy(null != request.getOrderedBy() ? request.getOrderedBy() : ObjectOrderByEnum.ADDED_AT.getValue());
-        viewOption.setOrderValue(null != request.getOrderValue() ? request.getOrderValue() : ObjectOrderValueEnum.DESC.getValue());
-        viewOption.setGroupedBy(null != request.getGroupedBy() ? request.getGroupedBy() : ObjectGroupByEnum.ADDED_AT.getValue());
-        viewOption.setShowArchivedNotes(null != request.getShowArchivedNotes() ? request.getShowArchivedNotes() : NUM_O);
         viewOption.setAddedAt(Instant.now());
         viewOption.setUpdateAt(Instant.now());
         viewOption.setCreator(userId);
         viewOption.setUpdater(userId);
         viewOptionMapper.insert(viewOption);
+    }
+
+    @Override
+    public void updateViewOption(ViewOptionUpdate request, String userId) {
+        LambdaUpdateWrapper<ViewOption> viewOptionUpdateWrapper = new LambdaUpdateWrapper<>();
+        viewOptionUpdateWrapper.eq(ViewOption::getId, request.getViewOptionId());
+        viewOptionUpdateWrapper.eq(ViewOption::getCreator, userId);
+
+        if (request.getShowDeleted() != null) {
+            viewOptionUpdateWrapper.set(ViewOption::getShowDeleted, request.getShowDeleted());
+        }
+
+        if (request.getShowArchived() != null) {
+            viewOptionUpdateWrapper.set(ViewOption::getShowArchived, request.getShowArchived());
+        }
+
+        if (request.getShowPinned() != null) {
+            viewOptionUpdateWrapper.set(ViewOption::getShowPinned, request.getShowPinned());
+        }
+
+        if (request.getOrderedBy() != null) {
+            viewOptionUpdateWrapper.set(ViewOption::getOrderedBy, request.getOrderedBy());
+        }
+
+        if (request.getOrderValue() != null) {
+            viewOptionUpdateWrapper.set(ViewOption::getOrderValue, request.getOrderValue());
+        }
+
+        if (request.getGroupedBy() != null) {
+            viewOptionUpdateWrapper.set(ViewOption::getGroupedBy, request.getGroupedBy());
+        }
+
+        if (request.getShowAttachmentCount() != null) {
+            viewOptionUpdateWrapper.set(ViewOption::getShowAttachmentCount, request.getShowAttachmentCount());
+        }
+
+        if (request.getShowLabelList() != null) {
+            viewOptionUpdateWrapper.set(ViewOption::getShowLabelList, request.getShowLabelList());
+        }
+
+        if (request.getShowCommentCount() != null) {
+            viewOptionUpdateWrapper.set(ViewOption::getShowCommentCount, request.getShowCommentCount());
+        }
+
+        if (request.getShowRelationNoteCount() != null) {
+            viewOptionUpdateWrapper.set(ViewOption::getShowRelationNoteCount, request.getShowRelationNoteCount());
+        }
+
+        viewOptionMapper.update(null, viewOptionUpdateWrapper);
+    }
+
+    @Override
+    public  void deleteViewOption(String objectId, String userId) {
+        LambdaUpdateWrapper<ViewOption> viewOptionUpdateWrapper = new LambdaUpdateWrapper<>();
+        viewOptionUpdateWrapper.eq(ViewOption::getObjectId, objectId);
+        viewOptionUpdateWrapper.eq(ViewOption::getCreator, userId);
+        viewOptionMapper.delete(viewOptionUpdateWrapper);
     }
 }

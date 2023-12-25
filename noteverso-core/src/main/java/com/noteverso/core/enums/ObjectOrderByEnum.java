@@ -5,9 +5,8 @@ import lombok.Getter;
 
 @Getter
 public enum ObjectOrderByEnum {
-    ADDED_AT(0, "ADDED_AT"),
-    COMMENT_COUNT(1, "COMMENT_COUNT"),
-    LINKED_NOTE_COUNT(2, "LINKED_NOTE_COUNT");
+    ADDED_AT(0, "added_at"),
+    UPDATED_AT(1, "updated_at"),;
 
     private final Integer value;
     private final String name;
@@ -15,5 +14,14 @@ public enum ObjectOrderByEnum {
     ObjectOrderByEnum(Integer value, String name) {
         this.value = value;
         this.name = name;
+    }
+
+    public static ObjectOrderByEnum fromValue(Integer value) {
+        for (ObjectOrderByEnum type : ObjectOrderByEnum.values()) {
+            if (type.getValue().equals(value)) {
+                return type;
+            }
+        }
+        return null;
     }
 }

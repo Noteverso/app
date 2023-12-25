@@ -3,6 +3,7 @@ package com.noteverso.core.model;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import lombok.Data;
 
 import java.time.Instant;
@@ -18,7 +19,13 @@ public class ViewOption {
     private Integer viewType;
     private Integer orderedBy;
     private Integer orderValue;
-    private Integer showArchivedNotes;
+    private Integer showArchived;
+    private Integer showPinned;
+    private Integer showDeleted;
+    private Integer showLabelList;
+    private Integer showAttachmentCount;
+    private Integer showCommentCount;
+    private Integer showRelationNoteCount;
     private Integer filteredBy;
     private Instant addedAt;
     private Instant updateAt;

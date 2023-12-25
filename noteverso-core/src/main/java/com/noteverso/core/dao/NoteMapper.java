@@ -1,7 +1,6 @@
 package com.noteverso.core.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.noteverso.common.exceptions.BaseException;
 import com.noteverso.core.model.Note;
 import org.apache.ibatis.annotations.Mapper;
 

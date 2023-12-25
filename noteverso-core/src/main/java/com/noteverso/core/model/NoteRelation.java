@@ -3,8 +3,10 @@ package com.noteverso.core.model;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
@@ -17,6 +19,8 @@ import java.time.Instant;
 @TableName(value = "noteverso_note_map", autoResultMap = true)
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class NoteRelation {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;

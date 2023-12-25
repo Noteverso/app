@@ -1,18 +1,28 @@
 package com.noteverso.core.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.noteverso.common.exceptions.NoSuchDataException;
 import com.noteverso.common.util.IPUtils;
-import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
+import com.noteverso.core.dao.ViewOptionMapper;
 import com.noteverso.core.dto.NoteDTO;
+import com.noteverso.common.util.SnowFlakeUtils;
+import com.noteverso.core.enums.ObjectOrderByEnum;
+import com.noteverso.core.enums.ObjectOrderValueEnum;
 import com.noteverso.core.manager.UserConfigManager;
 import com.noteverso.core.model.Note;
 import com.noteverso.core.model.Project;
 import com.noteverso.core.model.UserConfig;
+import com.noteverso.core.model.ViewOption;
+import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
+import com.noteverso.core.request.NotePageRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
+import com.noteverso.core.response.NotePageResponse;
 import com.noteverso.core.service.RelationService;
 import lombok.AllArgsConstructor;
 import com.noteverso.core.service.NoteService;
@@ -21,10 +31,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.noteverso.common.constant.NumConstants.*;
 import static com.noteverso.core.constant.ExceptionConstants.NOTE_NOT_FOUND;
 import static com.noteverso.core.constant.ExceptionConstants.PROJECT_NOT_FOUND;
+import static com.noteverso.core.constant.StringConstants.*;
 
 @Service
 @AllArgsConstructor
@@ -34,6 +50,7 @@ public class NoteServiceImpl implements NoteService {
     private final RelationService relationService;
     private final ProjectMapper projectMapper;
     private final UserConfigManager userConfigManager;
+    private final ViewOptionMapper viewOptionMapper;
 
     private final SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
             NOTE_DATACENTER_ID, IPUtils.getHostAddressWithLong() % NUM_31
@@ -41,7 +58,7 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void createNote(NoteCreateRequest request, String userId) {
+    public String createNote(NoteCreateRequest request, String userId) {
         String projectId = request.getProjectId();
         String noteId = String.valueOf(snowFlakeUtils.nextId());
 
@@ -57,6 +74,8 @@ public class NoteServiceImpl implements NoteService {
 
         //  create the relation with attachments
         relationService.insertNoteAttachmentRelation(request.getFiles(), noteId, userId);
+
+        return noteId;
     }
 
 
@@ -167,9 +186,9 @@ public class NoteServiceImpl implements NoteService {
         noteWrapper.eq(Note::getNoteId, id);
         noteWrapper.eq(Note::getIsDeleted, NUM_O);
         if (toggle) {
-            noteWrapper.set(Note::getIsPin, NUM_1);
+            noteWrapper.set(Note::getIsPinned, NUM_1);
         } else {
-            noteWrapper.set(Note::getIsPin, NUM_O);
+            noteWrapper.set(Note::getIsPinned, NUM_O);
         }
         noteWrapper.set(Note::getUpdatedAt, Instant.now());
         noteMapper.update(null, noteWrapper);
@@ -210,10 +229,119 @@ public class NoteServiceImpl implements NoteService {
         }
     }
 
-
     @Override
     public NoteDTO getNoteDetail(String noteId, String userId) {
-        // TODO
-        return null;
+        Note note = noteMapper.selectByNoteId(noteId, NUM_O);
+        if (null == note) {
+            throw new NoSuchDataException(NOTE_NOT_FOUND);
+        }
+
+        NoteDTO noteDTO = convertToNoteDTO(note);
+        noteDTO.setLinkedNotes(relationService.getReferringNotesToNote(noteId, userId));
+        noteDTO.setLabels(relationService.getLabelsByNoteId(noteId, userId));
+        noteDTO.setReferences(relationService.getReferencedNotesFromNote(noteId, userId));
+        noteDTO.setAttachments(relationService.getAttachmentsByNoteId(noteId, userId));
+
+        return noteDTO;
+    }
+
+    private NoteDTO convertToNoteDTO(Note note) {
+        if (null == note) {
+            return new NoteDTO();
+        }
+
+        NoteDTO noteDTO = new NoteDTO();
+        noteDTO.setNoteId(note.getNoteId());
+        noteDTO.setContent(note.getContent());
+        noteDTO.setIsDeleted(note.getIsDeleted());
+        noteDTO.setIsFavorite(noteDTO.getIsFavorite());
+        noteDTO.setIsArchived(note.getIsArchived());
+        noteDTO.setIsPinned(note.getIsPinned());
+        noteDTO.setProjectId(note.getProjectId());
+        noteDTO.setAddedAt(note.getAddedAt() != null ? note.getAddedAt().toString() : null);
+        noteDTO.setUpdatedAt(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null);
+
+        return noteDTO;
+    }
+
+    @Override
+    public PageResult<NotePageResponse> getNotePage(NotePageRequest request, String userId) {
+        String projectId = request.getProjectId();
+        LambdaQueryWrapper<ViewOption> viewOptionUpdateWrapper = new LambdaQueryWrapper<>();
+        viewOptionUpdateWrapper.eq(ViewOption::getObjectId, projectId);
+        ViewOption viewOption = viewOptionMapper.selectOne(viewOptionUpdateWrapper);
+
+        QueryWrapper<Note> noteQueryWrapper = new QueryWrapper<>();
+        noteQueryWrapper.eq(KEY_PROJECT_ID, projectId);
+        noteQueryWrapper.eq(KEY_IS_DELETED, NUM_O);
+
+        // OrderBy conditions
+        if (viewOption == null) {
+            noteQueryWrapper.eq(KEY_IS_ARCHIVED, NUM_O);
+            noteQueryWrapper.orderByDesc(KEY_IS_PINNED, KEY_ADDED_AT);
+        } else {
+            // orderBy is_pinned
+            if (Objects.equals(viewOption.getShowPinned(), NUM_1)) {
+                noteQueryWrapper.orderByDesc(KEY_IS_PINNED);
+            }
+
+            // orderBy is_archived
+            if (Objects.equals(viewOption.getShowArchived(), NUM_1)) {
+                noteQueryWrapper.orderByDesc(KEY_IS_ARCHIVED);
+            } else {
+                noteQueryWrapper.eq(KEY_IS_ARCHIVED, NUM_O);
+            }
+
+            noteQueryWrapper.orderBy(true,
+                    Objects.equals(viewOption.getOrderValue(), ObjectOrderValueEnum.ASC.getValue()),
+                    Objects.requireNonNull(ObjectOrderByEnum.fromValue(viewOption.getOrderedBy())).getName());
+        }
+
+        PageResult<NotePageResponse> responsePage = new PageResult<>();
+        Page<Note> notePage = noteMapper.selectPage(new Page<>(request.getPageIndex(), request.getPageSize()), noteQueryWrapper);
+        if (null == notePage || notePage.getRecords().isEmpty()) {
+            return responsePage;
+        }
+
+        List<Note> notes = notePage.getRecords();
+        List<String> noteIds = notes.stream().map(Note::getNoteId).collect(Collectors.toList());
+
+        HashMap<String, Long> referencingCountMap = new HashMap<>();
+        HashMap<String, Long> referencedCountMap = new HashMap<>();
+        if (viewOption != null && Objects.equals(viewOption.getShowRelationNoteCount(), NUM_1)) {
+            referencedCountMap = relationService.getReferencedCountByReferencedNoteIds(noteIds, userId);
+            referencingCountMap = relationService.getReferencingCountByReferencingNoteIds(noteIds, userId);
+        }
+
+        HashMap<String, Long> attachmentCountMap = new HashMap<>();
+        if (viewOption != null && Objects.equals(viewOption.getShowAttachmentCount(), NUM_1)) {
+            attachmentCountMap = relationService.getAttachmentCountByObjectIds(noteIds, userId);
+        }
+
+        List<NotePageResponse> responseList = new ArrayList<>();
+        for (Note note : notes) {
+            NotePageResponse response = new NotePageResponse();
+            String noteProjectId = note.getProjectId();
+            String noteId = note.getNoteId();
+            response.setContent(note.getContent());
+            response.setNoteId(noteId);
+            response.setProjectId(noteProjectId);
+            response.setIsPinned(note.getIsPinned());
+            response.setIsArchived(note.getIsArchived());
+            response.setIsDeleted(note.getIsDeleted());
+            response.setCreator(note.getCreator());
+            response.setAddedAt(note.getAddedAt() != null ? note.getAddedAt().toString() : null);
+            response.setUpdatedAt(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null);
+            response.setAttachmentCount(attachmentCountMap.get(noteId) != null ? attachmentCountMap.get(noteId) : null);
+            response.setReferencingCount(referencingCountMap.get(noteId) != null ? referencingCountMap.get(noteId) : null);
+            response.setReferencedCount(referencedCountMap.get(noteId) != null ? referencedCountMap.get(noteId) : null);
+            responseList.add(response);
+        }
+
+        responsePage.setRecords(responseList);
+        responsePage.setTotal(notePage.getTotal());
+        responsePage.setPageIndex(notePage.getCurrent());
+        responsePage.setPageSize(notePage.getSize());
+        return responsePage;
     }
 }

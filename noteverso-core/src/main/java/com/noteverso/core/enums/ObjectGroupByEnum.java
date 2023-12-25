@@ -4,9 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum ObjectGroupByEnum {
-    ADDED_AT(0, "ADDED_AT"),
-    NOTE_STATUS(1, "NOTE_STATUS"),
-    NOTE_LABEL(2, "NOTE_LABEL");
+    NO_GROUP(0, "NO_GROUP"),
+    ADDED_AT(1, "ADDED_AT"),
+    UPDATED_AT(2, "UPDATED_AT"),
+    NOTE_LABEL(3, "NOTE_LABEL");
 
     private final Integer value;
     private final String name;

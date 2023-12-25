@@ -13,16 +13,4 @@ public class ViewOptionCreate {
 
     @Schema(description = "view layout 0 - list, 1 - board", defaultValue = "0")
     private Integer viewMode;
-
-    @Schema(description = "group by 0 - ADDED_AT, 1 - NOTE STATUS, 2 - NOTE_LABEL", defaultValue = "0")
-    private Integer groupedBy;
-
-    @Schema(description = "ordered by 0 - ADDED_AT, 1 - COMMENT_COUNT, 2 - LINKED_NOTE_COUNT", defaultValue = "0")
-    private Integer orderedBy;
-
-    @Schema(description = "order value 0 - ASC, 1 - DESC", defaultValue = "0")
-    private Integer orderValue;
-
-    @Schema(description = "is show archived notes, 0 - no, 1 - yes", defaultValue = "0")
-    private Integer showArchivedNotes;
 }

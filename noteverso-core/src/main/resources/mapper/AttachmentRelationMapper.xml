@@ -8,4 +8,14 @@
                 (#{item.attachmentId}, #{item.objectId}, #{item.creator}, #{item.updater}, #{item.addedAt}, #{item.updatedAt})
             </foreach>
     </insert>
+
+    <select id="getAttachmentCountByObjectIds" resultType="com.noteverso.core.dto.AttachmentCount">
+        SELECT object_id AS object_id, COUNT(*) AS attachment_count FROM noteverso_attachment_map
+        WHERE object_id IN
+            <foreach collection="objectIds" item="objectId" open="(" close=")" separator=",">
+                #{objectId}
+            </foreach>
+        AND creator = #{userId}
+        GROUP BY object_id;
+    </select>
 </mapper>

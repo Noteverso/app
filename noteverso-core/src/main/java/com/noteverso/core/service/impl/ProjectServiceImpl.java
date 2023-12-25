@@ -42,7 +42,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void createProject(ProjectCreateRequest request, String userId) {
+    public String createProject(ProjectCreateRequest request, String userId) {
         String projectId = String.valueOf(snowFlakeUtils.nextId());
         long projectCount = getProjectCount(userId);
         long projectQuota = getProjectQuota(userId);
@@ -66,6 +66,8 @@ public class ProjectServiceImpl implements ProjectService {
         viewOptionCreate.setObjectId(projectId);
         viewOptionCreate.setViewType(ObjectViewTypeEnum.PROJECT.getValue());
         viewOptionService.createViewOption(viewOptionCreate, userId);
+
+        return projectId;
     }
 
     public long getProjectQuota(String userId) {
@@ -184,6 +186,7 @@ public class ProjectServiceImpl implements ProjectService {
         // delete notes of the project
         if (result > 0) {
             noteMapper.updateNotesIsDeletedByProject(projectId, userId);
+            viewOptionService.deleteViewOption(projectId, userId);
         } else {
             throw new NoSuchDataException(PROJECT_NOT_FOUND);
         }

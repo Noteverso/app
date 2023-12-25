@@ -17,9 +17,9 @@ public class PageResult<T> implements Serializable {
 
     private long total = 0;
 
-    private long pageIndex;
+    private long pageIndex = 1;
 
-    private long pageSize;
+    private long pageSize = 10;
 
     public PageResult() {
     }

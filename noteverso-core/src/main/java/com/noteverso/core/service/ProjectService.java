@@ -6,7 +6,7 @@ import com.noteverso.core.request.ProjectCreateRequest;
 import com.noteverso.core.request.ProjectUpdateRequest;
 
 public interface ProjectService {
-    void createProject(ProjectCreateRequest request, String userId);
+    String createProject(ProjectCreateRequest request, String userId);
 
     void updateProject(String projectId, ProjectUpdateRequest request, String userId);
 

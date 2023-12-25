@@ -29,9 +29,9 @@ public class ProjectController {
     @Operation(summary = "Create a Project", description = "Create a Project", tags = { "Post" })
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResult<Void> createProject(Authentication authentication, @Valid @RequestBody ProjectCreateRequest request) {
-        projectService.createProject(request, authManager.getPrincipal(authentication).getUserId());
-        return ApiResult.success(null);
+    public ApiResult<String> createProject(Authentication authentication, @Valid @RequestBody ProjectCreateRequest request) {
+        String projectId = projectService.createProject(request, authManager.getPrincipal(authentication).getUserId());
+        return ApiResult.success(projectId);
     }
 
     @Operation(summary = "Update a Project", description = "Update a Project", tags = { "Patch" })

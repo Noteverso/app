@@ -1,11 +1,15 @@
 package com.noteverso.core.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.noteverso.core.dto.NoteDTO;
+import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
+import com.noteverso.core.request.NotePageRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
+import com.noteverso.core.response.NotePageResponse;
 
 public interface NoteService {
-    void createNote(NoteCreateRequest request, String userId);
+    String createNote(NoteCreateRequest request, String userId);
 
     void updateNote(String id, String userId, NoteUpdateRequest request);
 
@@ -47,4 +51,12 @@ public interface NoteService {
     void deleteNote(String id, String userId);
 
     NoteDTO getNoteDetail(String noteId, String userId);
+
+    /**
+     * modify the note view option and return the page of notes
+     * @param request
+     * @param userId
+     * @return
+     */
+    PageResult<NotePageResponse> getNotePage(NotePageRequest request, String userId);
 }

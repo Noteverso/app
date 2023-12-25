@@ -9,4 +9,24 @@
                 #{noteRelation.viewStyle}, #{noteRelation.creator}, #{noteRelation.updater})
             </foreach>
     </insert>
+
+    <select id="getReferencingNoteCountByReferencingIds" resultType="com.noteverso.core.dto.ReferencingNoteCount">
+        SELECT note_id AS referencing_note_id, COUNT(*) AS referencing_note_count FROM noteverso_note_map
+        WHERE note_id IN
+            <foreach collection="referencingNoteIds" item="referencingNoteId" open="(" close=")" separator=",">
+                #{referencingNoteId}
+            </foreach>
+        AND creator = #{userId}
+        GROUP BY note_id;
+    </select>
+
+    <select id="getReferencedNoteCountByReferencedIds" resultType="com.noteverso.core.dto.ReferencedNoteCount">
+        SELECT linked_note_id AS referenced_note_id, COUNT(*) AS referenced_note_count FROM noteverso_note_map
+        WHERE linked_note_id IN
+            <foreach collection="referencedNoteIds" item="referencedNoteId" open="(" close=")" separator=",">
+                #{referencedNoteId}
+            </foreach>
+        AND creator = #{userId}
+        GROUP BY linked_note_id;
+    </select>
 </mapper>

@@ -1,11 +1,15 @@
 package com.noteverso.core.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.noteverso.common.api.ApiResult;
 import com.noteverso.core.manager.AuthManager;
 import com.noteverso.core.manager.impl.AuthManagerImpl;
 import com.noteverso.core.model.Note;
+import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
+import com.noteverso.core.request.NotePageRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
+import com.noteverso.core.response.NotePageResponse;
 import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.NoteService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,12 +33,20 @@ public class NoteController {
     private final NoteService noteService;
     private static final AuthManager authManager = new AuthManagerImpl();
 
-    @Operation(summary = "Create a Note", description = "Create a Note", tags = { "Post" })
+    @Operation(summary = "Create a Note", description = "Create a Note", tags = { "POST" })
     @PostMapping("")
-    public ApiResult<Void> createNote(Authentication authentication, @Valid @RequestBody NoteCreateRequest request) {
+    public ApiResult<String> createNote(Authentication authentication, @Valid @RequestBody NoteCreateRequest request) {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
-        noteService.createNote(request, principal.getUserId());
-        return ApiResult.success(null);
+        String noteId = noteService.createNote(request, principal.getUserId());
+        return ApiResult.success(noteId);
+    }
+
+    @Operation(summary = "Get Notes Page", description = "Create a Note", tags = { "GET" })
+    @GetMapping("")
+    public ApiResult<PageResult<NotePageResponse>> getNotes(Authentication authentication, @Valid NotePageRequest request) {
+        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
+        PageResult<NotePageResponse> notePageResponsePage = noteService.getNotePage(request, principal.getUserId());
+        return ApiResult.success(notePageResponsePage);
     }
 
     @Operation(summary = "Update a Note", description = "Update a Note", tags = { "PATCH" })

@@ -1,9 +1,13 @@
 package com.noteverso.core.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.noteverso.core.dao.AttachmentRelationMapper;
 import com.noteverso.core.dao.NoteLabelRelationMapper;
 import com.noteverso.core.dao.NoteRelationMapper;
+import com.noteverso.core.dto.AttachmentCount;
+import com.noteverso.core.dto.ReferencedNoteCount;
+import com.noteverso.core.dto.ReferencingNoteCount;
 import com.noteverso.core.model.AttachmentRelation;
 import com.noteverso.core.model.NoteLabelRelation;
 import com.noteverso.core.model.NoteRelation;
@@ -13,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -64,6 +69,43 @@ public class RelationServiceImpl implements RelationService {
             noteRelations.add(noteRelation);
         }
         noteRelationMapper.batchInsert(noteRelations);
+    }
+
+    private NoteLabelRelation constructNoteLabelRelation(String labelId, String noteId, String userId) {
+        return NoteLabelRelation
+                .builder()
+                .noteId(noteId)
+                .labelId(labelId)
+                .updater(userId)
+                .creator(userId)
+                .addedAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+    }
+
+    private NoteRelation constructNoteRelation(String noteId, String linkedNoteId, String userId) {
+        return NoteRelation
+                .builder()
+                .noteId(noteId)
+                .linkedNoteId(linkedNoteId)
+                .viewStyle(0)
+                .creator(userId)
+                .updater(userId)
+                .addedAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+    }
+
+    private AttachmentRelation constructAttachmentRelation(String attachmentId, String noteId, String userId) {
+        return AttachmentRelation
+                .builder()
+                .attachmentId(attachmentId)
+                .objectId(noteId)
+                .creator(userId)
+                .updater(userId)
+                .addedAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
     }
 
     @Override
@@ -131,40 +173,103 @@ public class RelationServiceImpl implements RelationService {
         attachmentRelationMapper.delete(updateWrapper);
     }
 
-    private NoteLabelRelation constructNoteLabelRelation(String labelId, String noteId, String userId) {
-        return NoteLabelRelation
-                .builder()
-                .noteId(noteId)
-                .labelId(labelId)
-                .updater(userId)
-                .creator(userId)
-                .addedAt(Instant.now())
-                .updatedAt(Instant.now())
-                .build();
+    @Override
+    public List<String> getReferencedNotesFromNote(String referencingNoteId, String userId) {
+        LambdaQueryWrapper<NoteRelation> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(NoteRelation::getNoteId, referencingNoteId);
+        queryWrapper.eq(NoteRelation::getCreator, userId);
+        List<NoteRelation> noteRelations = noteRelationMapper.selectList(queryWrapper);
+        List<String> referencedNotes = new ArrayList<>();
+
+        if (noteRelations != null && !noteRelations.isEmpty()) {
+            for (NoteRelation noteRelation : noteRelations) {
+                referencedNotes.add(noteRelation.getLinkedNoteId());
+            }
+        }
+        return referencedNotes;
     }
 
-    private NoteRelation constructNoteRelation(String noteId, String linkedNoteId, String userId) {
-        return NoteRelation
-                .builder()
-                .noteId(noteId)
-                .linkedNoteId(linkedNoteId)
-                .viewStyle(0)
-                .creator(userId)
-                .updater(userId)
-                .addedAt(Instant.now())
-                .updatedAt(Instant.now())
-                .build();
+    @Override
+    public List<String> getReferringNotesToNote(String referencedNoteId, String userId) {
+        LambdaQueryWrapper<NoteRelation> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(NoteRelation::getLinkedNoteId, referencedNoteId);
+        queryWrapper.eq(NoteRelation::getCreator, userId);
+        List<NoteRelation> noteRelations = noteRelationMapper.selectList(queryWrapper);
+        List<String> referringNotes = new ArrayList<>();
+
+        if (noteRelations != null && !noteRelations.isEmpty()) {
+            for (NoteRelation noteRelation : noteRelations) {
+                referringNotes.add(noteRelation.getLinkedNoteId());
+            }
+        }
+        return referringNotes;
     }
 
-    private AttachmentRelation constructAttachmentRelation(String attachmentId, String noteId, String userId) {
-        return AttachmentRelation
-                .builder()
-                .attachmentId(attachmentId)
-                .objectId(noteId)
-                .creator(userId)
-                .updater(userId)
-                .addedAt(Instant.now())
-                .updatedAt(Instant.now())
-                .build();
+    @Override
+    public List<String> getAttachmentsByNoteId(String noteId, String userId) {
+        LambdaQueryWrapper<AttachmentRelation> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AttachmentRelation::getObjectId, noteId);
+        queryWrapper.eq(AttachmentRelation::getCreator, userId);
+        List<AttachmentRelation> attachmentRelations = attachmentRelationMapper.selectList(queryWrapper);
+        List<String> attachmentIds = new ArrayList<>();
+
+        if (attachmentRelations != null && !attachmentRelations.isEmpty()) {
+            for (AttachmentRelation attachmentRelation: attachmentRelations) {
+                attachmentIds.add(attachmentRelation.getAttachmentId());
+            }
+        }
+        return attachmentIds;
+    }
+
+    @Override
+    public List<String> getLabelsByNoteId(String noteId, String userId) {
+        LambdaQueryWrapper<NoteLabelRelation> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(NoteLabelRelation::getNoteId, noteId);
+        queryWrapper.eq(NoteLabelRelation::getCreator, userId);
+        List<NoteLabelRelation> noteLabelRelations = noteLabelRelationMapper.selectList(queryWrapper);
+        List<String> labelIds = new ArrayList<>();
+
+        if (noteLabelRelations != null && !noteLabelRelations.isEmpty()) {
+            for (NoteLabelRelation noteLabelRelation: noteLabelRelations) {
+                labelIds.add(noteLabelRelation.getLabelId());
+            }
+        }
+        return labelIds;
+    }
+
+    @Override
+    public HashMap<String, Long> getAttachmentCountByObjectIds(List<String> objectIds, String userId) {
+        HashMap<String, Long> attachmentCountMap = new HashMap<>();
+        List<AttachmentCount> attachmentCountList = attachmentRelationMapper.getAttachmentCountByObjectIds(objectIds, userId);
+        if (attachmentCountList != null && !attachmentCountList.isEmpty()) {
+            for (AttachmentCount attachmentCount : attachmentCountList) {
+                attachmentCountMap.put(attachmentCount.getObjectId(), attachmentCount.getAttachmentCount());
+            }
+        }
+        return attachmentCountMap;
+    }
+
+    @Override
+    public HashMap<String, Long> getReferencedCountByReferencedNoteIds(List<String> referencedNoteIds, String userId) {
+        HashMap<String, Long> referencedNoteCountMap = new HashMap<>();
+        List<ReferencedNoteCount> referencedCountList = noteRelationMapper.getReferencedNoteCountByReferencedIds(referencedNoteIds, userId);
+        if (referencedCountList != null && !referencedCountList.isEmpty()) {
+            for (ReferencedNoteCount referencedCount : referencedCountList) {
+                referencedNoteCountMap.put(referencedCount.getReferencedNoteId(), referencedCount.getReferencedNoteCount());
+            }
+        }
+        return referencedNoteCountMap;
+    }
+
+    @Override
+    public HashMap<String, Long> getReferencingCountByReferencingNoteIds(List<String> referencingNoteIds, String userId) {
+        HashMap<String, Long> referencingNoteCountMap = new HashMap<>();
+        List<ReferencingNoteCount> referencingNoteCountList = noteRelationMapper.getReferencingNoteCountByReferencingIds(referencingNoteIds, userId);
+        if (referencingNoteCountList != null && !referencingNoteCountList.isEmpty()) {
+            for (ReferencingNoteCount referencedNoteCount : referencingNoteCountList) {
+                referencingNoteCountMap.put(referencedNoteCount.getReferencingNoteId(), referencedNoteCount.getReferencingNoteCount());
+            }
+        }
+        return referencingNoteCountMap;
     }
 }

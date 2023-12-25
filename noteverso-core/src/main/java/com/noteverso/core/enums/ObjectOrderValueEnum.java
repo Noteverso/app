@@ -14,4 +14,13 @@ public enum ObjectOrderValueEnum {
         this.value = value;
         this.name = name;
     }
+
+    public static ObjectOrderValueEnum fromValue(Integer value) {
+        for (ObjectOrderValueEnum type : ObjectOrderValueEnum.values()) {
+            if (type.getValue().equals(value)) {
+                return type;
+            }
+        }
+        return null;
+    }
 }
