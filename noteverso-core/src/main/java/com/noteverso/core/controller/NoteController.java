@@ -1,7 +1,7 @@
 package com.noteverso.core.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.noteverso.common.api.ApiResult;
+import com.noteverso.core.dto.NoteDTO;
 import com.noteverso.core.manager.AuthManager;
 import com.noteverso.core.manager.impl.AuthManagerImpl;
 import com.noteverso.core.model.Note;
@@ -9,7 +9,7 @@ import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NotePageRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
-import com.noteverso.core.response.NotePageResponse;
+import com.noteverso.core.response.NoteItem;
 import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.NoteService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
+import java.util.List;
 
 @Tag(name = "Note", description = "Note management APIs")
 @RestController
@@ -43,10 +44,18 @@ public class NoteController {
 
     @Operation(summary = "Get Notes Page", description = "Create a Note", tags = { "GET" })
     @GetMapping("")
-    public ApiResult<PageResult<NotePageResponse>> getNotes(Authentication authentication, @Valid NotePageRequest request) {
+    public ApiResult<PageResult<NoteItem>> getNotes(Authentication authentication, @Valid NotePageRequest request) {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
-        PageResult<NotePageResponse> notePageResponsePage = noteService.getNotePage(request, principal.getUserId());
+        PageResult<NoteItem> notePageResponsePage = noteService.getNotePage(request, principal.getUserId());
         return ApiResult.success(notePageResponsePage);
+    }
+
+    @Operation(summary = "Get a Note", description = "Get a Note", tags = { "GET" })
+    @GetMapping("/{id}")
+    public ApiResult<NoteDTO> getNote(Authentication authentication, @PathVariable("id") String id) {
+        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
+        NoteDTO note = noteService.getNoteDetail(id, principal.getUserId());
+        return ApiResult.success(note);
     }
 
     @Operation(summary = "Update a Note", description = "Update a Note", tags = { "PATCH" })
@@ -55,6 +64,14 @@ public class NoteController {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
         noteService.updateNote(id, principal.getUserId(), request);
         return ApiResult.success(null);
+    }
+
+    @Operation(summary = "Get referenced notes", description = "Get referenced notes", tags = { "GET" })
+    @GetMapping("/{id}/referenced")
+    public ApiResult<List<NoteItem>> getReferencedNotes(Authentication authentication, @PathVariable("id") String id) {
+        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
+        List<NoteItem> notes = noteService.getReferencedNotes(id, principal.getUserId());
+        return ApiResult.success(notes);
     }
 
     @Operation(summary = "Move a Note to Trash", description = "Move a Note to Trash", tags = { "DELETE" })

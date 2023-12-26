@@ -13,7 +13,7 @@ import com.noteverso.core.model.ViewOption;
 import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NotePageRequest;
-import com.noteverso.core.response.NotePageResponse;
+import com.noteverso.core.response.NoteItem;
 import com.noteverso.core.service.impl.NoteServiceImpl;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
@@ -121,8 +121,8 @@ class NoteServiceTest {
                 .isPinned(0).isFavorite(0).isArchived(0).isDeleted(0)
                 .build();
 
-        when(relationService.getReferencedNotesFromNote(noteId, userId)).thenReturn(List.of("2", "3"));
-        when(relationService.getReferringNotesToNote(noteId, userId)).thenReturn(List.of("4", "5"));
+        when(relationService.getReferencingNotes(noteId, userId)).thenReturn(List.of("2", "3"));
+        when(relationService.getReferencedNotes(noteId, userId)).thenReturn(List.of("4", "5"));
         when(relationService.getLabelsByNoteId(noteId, userId)).thenReturn(List.of("1", "2"));
         when(relationService.getAttachmentsByNoteId(noteId, userId)).thenReturn(List.of("1", "2"));
         when(noteMapper.selectByNoteId(noteId, 0)).thenReturn(note);
@@ -131,7 +131,7 @@ class NoteServiceTest {
         NoteDTO noteDTO = noteService.getNoteDetail(noteId, userId);
 
         // Assert
-        assertThat(noteDTO.getLinkedNotes()).isEqualTo(List.of("4", "5"));
+        assertThat(noteDTO.getReferencedNotes()).isEqualTo(List.of("4", "5"));
     }
 
     @Test
@@ -175,7 +175,7 @@ class NoteServiceTest {
         when(noteMapper.selectPage(any(), any())).thenReturn(notePage);
 
         // Act
-        PageResult<NotePageResponse> notePageResponsePage = noteService.getNotePage(request, userId);
+        PageResult<NoteItem> notePageResponsePage = noteService.getNotePage(request, userId);
 
         // Assert
         verify(relationService, times(0)).getReferencedCountByReferencedNoteIds(noteIds, userId);
@@ -206,7 +206,7 @@ class NoteServiceTest {
         when(viewOptionMapper.selectOne(any())).thenReturn(viewOption);
 
         // Act
-        PageResult<NotePageResponse> notePageResponsePage = noteService.getNotePage(request, userId);
+        PageResult<NoteItem> notePageResponsePage = noteService.getNotePage(request, userId);
 
         // Assert
         verify(relationService, times(1)).getReferencedCountByReferencedNoteIds(noteIds, userId);

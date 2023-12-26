@@ -19,8 +19,6 @@ public class NoteDTO {
 
     private Integer isArchived;
 
-    private Integer isFavorite;
-
     private Integer isDeleted;
 
     private String addedAt;
@@ -30,11 +28,11 @@ public class NoteDTO {
     @Schema(description = "Label ids")
     private List<String> labels;
 
-    @Schema(description = "Reference note ids")
-    private List<String> references;
+    @Schema(description = "Referencing note ids")
+    private List<String> referencingNotes;
 
-    @Schema(description = "Linked note ids")
-    private List<String> linkedNotes;
+    @Schema(description = "Referenced by note ids")
+    private List<String> referencedNotes;
 
     @Schema(description = "Attachment ids")
     private List<String> attachments;

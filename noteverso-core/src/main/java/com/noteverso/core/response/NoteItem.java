@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class NotePageResponse {
+public class NoteItem {
     private String content;
     private String noteId;
     private String projectId;

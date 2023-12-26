@@ -39,8 +39,8 @@ COMMENT ON COLUMN noteverso_note.url IS '笔记链接，从 web、移动端应�
 COMMENT ON COLUMN noteverso_note.added_at IS '添加时间';
 COMMENT ON COLUMN noteverso_note.updated_at IS '更新时间';
 
-create index index_project_id on noteverso_note (project_id);
-create index index_creator on noteverso_note (creator);
+create index ikey_note_project_id on noteverso_note (project_id);
+create index ikey_note_creator on noteverso_note (creator);
 
 CREATE TABLE IF NOT EXISTS noteverso_note_map (
     id bigserial NOT NULL,
@@ -61,6 +61,10 @@ comment on column noteverso_note_map.note_id is '笔记id，此笔记拥有指�
 comment on column noteverso_note_map.linked_note_id is '被链接的笔记id，也称为被关联的笔记';
 COMMENT ON COLUMN noteverso_note_map.added_at IS '添加时间';
 COMMENT ON COLUMN noteverso_note_map.view_style IS '关联笔记UI布局方式 0 - list 列表，1 - board - 看板';
+
+create index ikey_note_id on noteverso_note_map (note_id);
+create index ikey_linked_note_id on noteverso_note_map (linked_note_id);
+create index ikey_note_map_creator on noteverso_note_map (creator);
 
 -- create noteverso note table
 CREATE TABLE IF NOT EXISTS noteverso_label (
@@ -104,6 +108,10 @@ COMMENT ON TABLE noteverso_note_label_map IS '标签关联表';
 COMMENT ON COLUMN noteverso_note_label_map.id IS '标签关联id';
 COMMENT ON COLUMN noteverso_note_label_map.note_id IS '笔记id';
 COMMENT ON COLUMN noteverso_note_label_map.label_id IS '标签id';
+
+create index ikey_note_label_map_note_id on noteverso_note_label_map (note_id);
+create index ikey_note_label_map_label_id on noteverso_note_label_map (label_id);
+create index ikey_note_label_map_creator on noteverso_note_label_map (creator);
 
 -- creat noteverso label table
 CREATE TABLE IF NOT EXISTS noteverso_project (
@@ -207,6 +215,10 @@ comment on column noteverso_attachment_map.attachment_id is '附件id';
 comment on column noteverso_attachment_map.object_id is '对象id，包括项目、评论和笔记';
 comment on column noteverso_attachment_map.is_deleted is '0 - 否，1 - 是';
 
+create index ikey_attachment_map_object_id on noteverso_attachment_map (object_id);
+create index ikey_attachment_map_attachment_id on noteverso_attachment_map (attachment_id);
+create index ikey_attachment_map_creator on noteverso_attachment_map (creator);
+
 -- create noteverso view option table
 create table noteverso_view_option (
     id                       bigserial
@@ -253,6 +265,9 @@ comment on column noteverso_view_option.show_attachment_count is '展示附件�
 comment on column noteverso_view_option.show_label_list is '展示标签列表 0 - no 1 - yes';
 alter table noteverso_view_option
     owner to postgres;
+
+create index ikey_view_option_object_id on noteverso_view_option (object_id);
+create index ikey_view_option_creator on noteverso_view_option (creator);
 
 -- create noteverso user
 CREATE TABLE IF NOT EXISTS noteverso_user_info (
@@ -328,6 +343,9 @@ COMMENT ON COLUMN noteverso_user_config.tz_info IS '时区信息 gmt_string, hou
 COMMENT ON COLUMN noteverso_user_config.daily_goal IS '日常目标';
 COMMENT ON COLUMN noteverso_user_config.time_format IS '时间格式 0 - 13:00，1 - 1:00pm，默认 0';
 COMMENT ON COLUMN noteverso_user_config.date_format IS '日期格式 0 - YYYY-MM-DD，1 - DD-MM-YYYY，默认 0';
+
+create index ikey_user_config_user_id on noteverso_user_config (user_id);
+create index ikey_user_config_creator on noteverso_user_config (creator);
 
 -- create noteverso setting
 CREATE TABLE IF NOT EXISTS noteverso_setting (

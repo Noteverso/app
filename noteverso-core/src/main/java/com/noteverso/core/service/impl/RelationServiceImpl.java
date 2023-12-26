@@ -174,7 +174,7 @@ public class RelationServiceImpl implements RelationService {
     }
 
     @Override
-    public List<String> getReferencedNotesFromNote(String referencingNoteId, String userId) {
+    public List<String> getReferencingNotes(String referencingNoteId, String userId) {
         LambdaQueryWrapper<NoteRelation> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(NoteRelation::getNoteId, referencingNoteId);
         queryWrapper.eq(NoteRelation::getCreator, userId);
@@ -190,7 +190,7 @@ public class RelationServiceImpl implements RelationService {
     }
 
     @Override
-    public List<String> getReferringNotesToNote(String referencedNoteId, String userId) {
+    public List<String> getReferencedNotes(String referencedNoteId, String userId) {
         LambdaQueryWrapper<NoteRelation> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(NoteRelation::getLinkedNoteId, referencedNoteId);
         queryWrapper.eq(NoteRelation::getCreator, userId);
@@ -199,7 +199,7 @@ public class RelationServiceImpl implements RelationService {
 
         if (noteRelations != null && !noteRelations.isEmpty()) {
             for (NoteRelation noteRelation : noteRelations) {
-                referringNotes.add(noteRelation.getLinkedNoteId());
+                referringNotes.add(noteRelation.getNoteId());
             }
         }
         return referringNotes;

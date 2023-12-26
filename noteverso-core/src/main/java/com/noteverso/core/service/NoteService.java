@@ -1,12 +1,13 @@
 package com.noteverso.core.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.noteverso.core.dto.NoteDTO;
 import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NotePageRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
-import com.noteverso.core.response.NotePageResponse;
+import com.noteverso.core.response.NoteItem;
+
+import java.util.List;
 
 public interface NoteService {
     String createNote(NoteCreateRequest request, String userId);
@@ -58,5 +59,7 @@ public interface NoteService {
      * @param userId
      * @return
      */
-    PageResult<NotePageResponse> getNotePage(NotePageRequest request, String userId);
+    PageResult<NoteItem> getNotePage(NotePageRequest request, String userId);
+
+    List<NoteItem> getReferencedNotes(String noteId, String userId);
 }

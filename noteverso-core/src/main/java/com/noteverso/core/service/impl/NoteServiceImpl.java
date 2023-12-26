@@ -22,7 +22,7 @@ import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NotePageRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
-import com.noteverso.core.response.NotePageResponse;
+import com.noteverso.core.response.NoteItem;
 import com.noteverso.core.service.RelationService;
 import lombok.AllArgsConstructor;
 import com.noteverso.core.service.NoteService;
@@ -84,6 +84,7 @@ public class NoteServiceImpl implements NoteService {
     public void updateNote(String noteId, String userId, NoteUpdateRequest request) {
         LambdaUpdateWrapper<Note> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(Note::getNoteId, noteId);
+        wrapper.eq(Note::getIsDeleted, NUM_O);
         wrapper.set(Note::getContent, request.getContent());
         wrapper.set(Note::getUpdatedAt, Instant.now());
 
@@ -94,8 +95,8 @@ public class NoteServiceImpl implements NoteService {
         noteMapper.update(null, wrapper);
 
         // update the relation with labels
-
         relationService.updateNoteLabelRelation(request.getLabels(), noteId, userId);
+
         // update the relation with the other notes
         relationService.updateNoteRelation(request.getLinkedNotes(), noteId, userId);
 
@@ -237,10 +238,17 @@ public class NoteServiceImpl implements NoteService {
         }
 
         NoteDTO noteDTO = convertToNoteDTO(note);
-        noteDTO.setLinkedNotes(relationService.getReferringNotesToNote(noteId, userId));
+        noteDTO.setReferencedNotes(relationService.getReferencedNotes(noteId, userId));
         noteDTO.setLabels(relationService.getLabelsByNoteId(noteId, userId));
-        noteDTO.setReferences(relationService.getReferencedNotesFromNote(noteId, userId));
+        noteDTO.setReferencingNotes(relationService.getReferencingNotes(noteId, userId));
         noteDTO.setAttachments(relationService.getAttachmentsByNoteId(noteId, userId));
+
+        if (note.getProjectId() != null) {
+            Project project = projectMapper.selectByProjectId(note.getProjectId(), userId);
+            if (project != null) {
+                noteDTO.setProjectName(project.getName());
+            }
+        }
 
         return noteDTO;
     }
@@ -254,7 +262,6 @@ public class NoteServiceImpl implements NoteService {
         noteDTO.setNoteId(note.getNoteId());
         noteDTO.setContent(note.getContent());
         noteDTO.setIsDeleted(note.getIsDeleted());
-        noteDTO.setIsFavorite(noteDTO.getIsFavorite());
         noteDTO.setIsArchived(note.getIsArchived());
         noteDTO.setIsPinned(note.getIsPinned());
         noteDTO.setProjectId(note.getProjectId());
@@ -265,7 +272,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    public PageResult<NotePageResponse> getNotePage(NotePageRequest request, String userId) {
+    public PageResult<NoteItem> getNotePage(NotePageRequest request, String userId) {
         String projectId = request.getProjectId();
         LambdaQueryWrapper<ViewOption> viewOptionUpdateWrapper = new LambdaQueryWrapper<>();
         viewOptionUpdateWrapper.eq(ViewOption::getObjectId, projectId);
@@ -297,7 +304,7 @@ public class NoteServiceImpl implements NoteService {
                     Objects.requireNonNull(ObjectOrderByEnum.fromValue(viewOption.getOrderedBy())).getName());
         }
 
-        PageResult<NotePageResponse> responsePage = new PageResult<>();
+        PageResult<NoteItem> responsePage = new PageResult<>();
         Page<Note> notePage = noteMapper.selectPage(new Page<>(request.getPageIndex(), request.getPageSize()), noteQueryWrapper);
         if (null == notePage || notePage.getRecords().isEmpty()) {
             return responsePage;
@@ -318,23 +325,9 @@ public class NoteServiceImpl implements NoteService {
             attachmentCountMap = relationService.getAttachmentCountByObjectIds(noteIds, userId);
         }
 
-        List<NotePageResponse> responseList = new ArrayList<>();
+        List<NoteItem> responseList = new ArrayList<>();
         for (Note note : notes) {
-            NotePageResponse response = new NotePageResponse();
-            String noteProjectId = note.getProjectId();
-            String noteId = note.getNoteId();
-            response.setContent(note.getContent());
-            response.setNoteId(noteId);
-            response.setProjectId(noteProjectId);
-            response.setIsPinned(note.getIsPinned());
-            response.setIsArchived(note.getIsArchived());
-            response.setIsDeleted(note.getIsDeleted());
-            response.setCreator(note.getCreator());
-            response.setAddedAt(note.getAddedAt() != null ? note.getAddedAt().toString() : null);
-            response.setUpdatedAt(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null);
-            response.setAttachmentCount(attachmentCountMap.get(noteId) != null ? attachmentCountMap.get(noteId) : null);
-            response.setReferencingCount(referencingCountMap.get(noteId) != null ? referencingCountMap.get(noteId) : null);
-            response.setReferencedCount(referencedCountMap.get(noteId) != null ? referencedCountMap.get(noteId) : null);
+            NoteItem response = constructNoteItem(note, attachmentCountMap, referencingCountMap, referencedCountMap);
             responseList.add(response);
         }
 
@@ -343,5 +336,50 @@ public class NoteServiceImpl implements NoteService {
         responsePage.setPageIndex(notePage.getCurrent());
         responsePage.setPageSize(notePage.getSize());
         return responsePage;
+    }
+
+    private NoteItem constructNoteItem(Note note, HashMap<String, Long> attachmentCountMap, HashMap<String, Long> referencingCountMap, HashMap<String, Long> referencedCountMap) {
+        NoteItem noteItem = new NoteItem();
+        String noteProjectId = note.getProjectId();
+        String noteId = note.getNoteId();
+        noteItem.setContent(note.getContent());
+        noteItem.setNoteId(noteId);
+        noteItem.setProjectId(noteProjectId);
+        noteItem.setIsPinned(note.getIsPinned());
+        noteItem.setIsArchived(note.getIsArchived());
+        noteItem.setIsDeleted(note.getIsDeleted());
+        noteItem.setCreator(note.getCreator());
+        noteItem.setAddedAt(note.getAddedAt() != null ? note.getAddedAt().toString() : null);
+        noteItem.setUpdatedAt(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null);
+        noteItem.setAttachmentCount(attachmentCountMap.get(noteId) != null ? attachmentCountMap.get(noteId) : null);
+        noteItem.setReferencingCount(referencingCountMap.get(noteId) != null ? referencingCountMap.get(noteId) : null);
+        noteItem.setReferencedCount(referencedCountMap.get(noteId) != null ? referencedCountMap.get(noteId) : null);
+        return noteItem;
+    }
+
+    @Override
+    public List<NoteItem> getReferencedNotes(String noteId, String userId) {
+        List<String> referencedNoteIds = relationService.getReferencedNotes(noteId, userId);
+        List<NoteItem> referencedNoteItems = new ArrayList<>();
+        if (referencedNoteIds.isEmpty()) {
+            return referencedNoteItems;
+        }
+
+        LambdaQueryWrapper<Note> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(Note::getNoteId, referencedNoteIds);
+        queryWrapper.eq(Note::getCreator, userId);
+        queryWrapper.eq(Note::getIsDeleted, NUM_O);
+        queryWrapper.orderByDesc(Note::getAddedAt);
+        List<Note> notes = noteMapper.selectList(queryWrapper);
+
+        HashMap<String, Long> referencedCountMap = relationService.getReferencedCountByReferencedNoteIds(referencedNoteIds, userId);
+        HashMap<String, Long> referencingCountMap = relationService.getReferencingCountByReferencingNoteIds(referencedNoteIds, userId);
+        HashMap<String, Long> attachmentCountMap = relationService.getAttachmentCountByObjectIds(referencedNoteIds, userId);
+        for (Note note : notes) {
+            NoteItem noteItem = constructNoteItem(note, attachmentCountMap, referencingCountMap, referencedCountMap);
+            referencedNoteItems.add(noteItem);
+        }
+
+        return referencedNoteItems;
     }
 }

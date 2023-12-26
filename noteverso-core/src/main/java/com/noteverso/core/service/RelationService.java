@@ -27,20 +27,20 @@ public interface RelationService {
     void deleteNoteAttachmentRelation(String noteId, String userId);
 
     /**
-     * 获取特定笔记引用的所有笔记 ID 列表。
-     * @param referencingNoteId 引用（或指向）其他笔记的笔记 ID
+     * 获取当前笔记引用(或指向)的笔记ID列表。
+     * @param referencingNoteId 发起引用的笔记ID
      * @param userId
      * @return
      */
-    List<String> getReferencedNotesFromNote(String referencingNoteId, String userId);
+    List<String> getReferencingNotes(String referencingNoteId, String userId);
 
     /**
-     * 获取指向特定笔记的所有笔记 ID 列表。
-     * @param referencedNoteId 被引用的笔记 ID
+     * 获取引用当前笔记的笔记ID列表
+     * @param referencedNoteId 发起引用的笔记 ID
      * @param userId
      * @return
      */
-    List<String> getReferringNotesToNote(String referencedNoteId, String userId);
+    List<String> getReferencedNotes(String referencedNoteId, String userId);
 
     List<String> getAttachmentsByNoteId(String noteId, String userId);
 

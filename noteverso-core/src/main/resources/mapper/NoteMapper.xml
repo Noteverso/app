@@ -5,6 +5,16 @@
         SELECT * FROM noteverso_note WHERE note_id = #{noteId} AND is_deleted = #{isDeleted}
     </select>
 
+    <select id="batchSelect" resultType="com.noteverso.core.model.Note">
+        SELECT * FROM noteverso_note
+        WHERE note_id IN
+            <foreach collection="noteIds" item="noteId" open="(" close=")" separator=",">
+                #{noteId}
+            </foreach>
+        AND creator = #{userId} AND is_deleted = #{isDeleted}
+        ORDER BY added_at DESC
+    </select>
+
     <update id="updateNoteIsArchivedByProject">
         UPDATE noteverso_note
         SET is_archived = #{isArchived}, updated_at = NOW()
