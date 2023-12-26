@@ -5,8 +5,11 @@ import com.noteverso.common.exceptions.BusinessException;
 import com.noteverso.common.exceptions.NoSuchDataException;
 import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
+import com.noteverso.core.dto.ProjectItem;
+import com.noteverso.core.manager.NoteManager;
 import com.noteverso.core.manager.UserConfigManager;
 import com.noteverso.core.model.Project;
+import com.noteverso.core.model.ViewOption;
 import com.noteverso.core.request.ProjectCreateRequest;
 import com.noteverso.core.request.ProjectUpdateRequest;
 import com.noteverso.core.request.ViewOptionCreate;
@@ -18,6 +21,11 @@ import org.junit.jupiter.api.function.Executable;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,6 +45,9 @@ class ProjectServiceTest {
 
     @Mock
     NoteMapper noteMapper;
+
+    @Mock
+    NoteManager noteManager;
 
     @Spy
     @InjectMocks
@@ -178,6 +189,93 @@ class ProjectServiceTest {
 
         Project project = captor.getValue();
         assertThat(project.getIsFavorite()).isEqualTo(1);
+    }
+
+    @Test
+    void should_returnProjectList_whenNoteCountIsNull() {
+        // Arrange
+        String userId = "123";
+        List<String> nonInboxProjectIds = List.of("1", "2", "3", "4", "5");
+        List<Project> projects = new ArrayList<>();
+        for (String projectId : nonInboxProjectIds) {
+            Project project = constructProject("hello World" + projectId, projectId, 0);
+            projects.add(project);
+        }
+
+        when(projectMapper.selectList(any())).thenReturn(projects);
+        when(viewOptionService.getViewOptionsMap(any(), any())).thenReturn(new HashMap<>());
+        when(noteManager.getNoteCountByProjects(any(), any())).thenReturn(new HashMap<>());
+
+        // Act
+        List<ProjectItem> result = projectService.getProjectList(userId);
+
+        // Assert
+        assertThat(result).hasSize(nonInboxProjectIds.size());
+        assertThat(result.get(0).getNoteCount()).isNull();
+    }
+
+    @Test
+    void should_returnProjectList_whenNoteCountIsNotNull() {
+        // Arrange
+        String userId = "123";
+        String projectId1 = "1";
+        String projectId2 = "2";
+        List<String> nonInboxProjectIds = List.of(projectId1, projectId2);
+        List<Project> projects = new ArrayList<>();
+        for (String projectId : nonInboxProjectIds) {
+            Project project = constructProject("hello World", projectId, 0);
+            projects.add(project);
+        }
+
+        when(projectMapper.selectList(any())).thenReturn(projects);
+        when(viewOptionService.getViewOptionsMap(any(), any())).thenReturn(new HashMap<>());
+
+        HashMap<String, Long> noteCountMap = new HashMap<>();
+        noteCountMap.put(projectId1, 10L);
+        noteCountMap.put(projectId2, 20L);
+        when(noteManager.getNoteCountByProjects(any(), any())).thenReturn(noteCountMap);
+
+        // Act
+        List<ProjectItem> result = projectService.getProjectList(userId);
+
+        // Assert
+        assertThat(result).hasSize(nonInboxProjectIds.size());
+        assertThat(result.get(0).getNoteCount()).isEqualTo(10);
+    }
+
+    private Project constructProject(String name, String projectId, Integer isInboxProject) {
+        Project project = new Project();
+        project.setName(name);
+        project.setProjectId(projectId);
+        project.setIsFavorite(0);
+        project.setIsArchived(0);
+        project.setIsCollapsed(0);
+        project.setIsInboxProject(isInboxProject);
+        project.setIsShared(0);
+        project.setColor("red");
+        project.setCreator("1");
+        project.setUpdater("1");
+        return project;
+    }
+
+    private ProjectItem constructProjectItem(Project project) {
+        ProjectItem projectItem = new ProjectItem();
+        projectItem.setName(project.getName());
+        projectItem.setProjectId(project.getProjectId());
+        projectItem.setColor(project.getColor());
+        projectItem.setIsFavorite(project.getIsFavorite());
+        projectItem.setNoteCount(20L);
+        return projectItem;
+    }
+
+    private ViewOption constructViewOption(String objectId, String userId) {
+        ViewOption viewOption = new ViewOption();
+        viewOption.setObjectId(objectId);
+        viewOption.setShowArchived(0);
+        viewOption.setShowDeleted(0);
+        viewOption.setCreator(userId);
+        viewOption.setUpdater(userId);
+        return viewOption;
     }
 
 }

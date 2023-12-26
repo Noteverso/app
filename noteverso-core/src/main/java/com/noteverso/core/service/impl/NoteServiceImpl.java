@@ -8,9 +8,8 @@ import com.noteverso.common.exceptions.NoSuchDataException;
 import com.noteverso.common.util.IPUtils;
 import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
-import com.noteverso.core.dao.ViewOptionMapper;
-import com.noteverso.core.dto.NoteDTO;
 import com.noteverso.common.util.SnowFlakeUtils;
+import com.noteverso.core.dto.NoteDTO;
 import com.noteverso.core.enums.ObjectOrderByEnum;
 import com.noteverso.core.enums.ObjectOrderValueEnum;
 import com.noteverso.core.manager.UserConfigManager;
@@ -22,8 +21,9 @@ import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NotePageRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
-import com.noteverso.core.response.NoteItem;
+import com.noteverso.core.dto.NoteItem;
 import com.noteverso.core.service.RelationService;
+import com.noteverso.core.service.ViewOptionService;
 import lombok.AllArgsConstructor;
 import com.noteverso.core.service.NoteService;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +50,7 @@ public class NoteServiceImpl implements NoteService {
     private final RelationService relationService;
     private final ProjectMapper projectMapper;
     private final UserConfigManager userConfigManager;
-    private final ViewOptionMapper viewOptionMapper;
+    private final ViewOptionService viewOptionService;
 
     private final SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
             NOTE_DATACENTER_ID, IPUtils.getHostAddressWithLong() % NUM_31
@@ -274,9 +274,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public PageResult<NoteItem> getNotePage(NotePageRequest request, String userId) {
         String projectId = request.getProjectId();
-        LambdaQueryWrapper<ViewOption> viewOptionUpdateWrapper = new LambdaQueryWrapper<>();
-        viewOptionUpdateWrapper.eq(ViewOption::getObjectId, projectId);
-        ViewOption viewOption = viewOptionMapper.selectOne(viewOptionUpdateWrapper);
+        ViewOption viewOption = viewOptionService.getViewOption(projectId, userId);
 
         QueryWrapper<Note> noteQueryWrapper = new QueryWrapper<>();
         noteQueryWrapper.eq(KEY_PROJECT_ID, projectId);

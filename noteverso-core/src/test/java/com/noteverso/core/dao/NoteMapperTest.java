@@ -1,6 +1,8 @@
 package com.noteverso.core.dao;
 
 import com.baomidou.mybatisplus.test.autoconfigure.MybatisPlusTest;
+import com.noteverso.core.dto.NoteCount;
+import com.noteverso.core.dto.ProjectViewOption;
 import com.noteverso.core.model.Note;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,10 +98,64 @@ class NoteMapperTest {
         noteMapper.insert(note2);
 
         // Act
-        List<Note> notes = noteMapper.batchSelect(List.of(noteId1, noteId2), userId, 0);
+        List<Note> notes = noteMapper.batchSelectByNoteIds(List.of(noteId1, noteId2), userId, 0);
 
         // Assert
         assertThat(notes).hasSize(2);
+    }
+
+    @Test
+    void should_returnNoteCount_whenNotShowArchivedAndDeletedNotes() {
+        // Arrange
+        Note note1 = buildNote("1", "Hello World1!", "123", "123456789");
+        Note note2 = buildNote("2", "Hello World2!", "123", "123456789");
+        Note note3 = buildNote("3", "Hello World3!", "123", "123456789");
+        note3.setIsArchived(1);
+        Note note4 = buildNote("4", "Hello World4!", "456", "123456789");
+        Note note5 = buildNote("5", "Hello World5!", "456", "123456789");
+        Note note6 = buildNote("6", "Hello World6!", "456", "123456789");
+        note6.setIsDeleted(1);
+        noteMapper.insert(note1);
+        noteMapper.insert(note2);
+        noteMapper.insert(note3);
+        noteMapper.insert(note4);
+        noteMapper.insert(note5);
+        noteMapper.insert(note6);
+        List<ProjectViewOption> projectViewOptions = List.of(
+            new ProjectViewOption("123", 0, 0),
+            new ProjectViewOption("456", 0, 0)
+        );
+
+        // Act
+        List<NoteCount> result = noteMapper.getNoteCountByProjects(projectViewOptions, "123456789");
+
+        // Assert
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getNoteCount()).isEqualTo(2);
+    }
+
+    @Test
+    void should_returnNote_whenShowArchivedAndDeletedNotes() {
+        // Arrange
+        Note note1 = buildNote("1", "Hello World1!", "123", "123456789");
+        Note note2 = buildNote("2", "Hello World2!", "123", "123456789");
+        note2.setIsArchived(1);
+        Note note3 = buildNote("3", "Hello World3!", "123", "123456789");
+        note3.setIsDeleted(1);
+        noteMapper.insert(note1);
+        noteMapper.insert(note2);
+        noteMapper.insert(note3);
+
+        List<ProjectViewOption> projectViewOptions = List.of(
+                new ProjectViewOption("123", 1, 1)
+        );
+
+        // Act
+        List<NoteCount> result = noteMapper.getNoteCountByProjects(projectViewOptions, "123456789");
+
+        // Assert
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getNoteCount()).isEqualTo(3);
     }
 
     private Note buildNote(String noteId, String content, String projectId, String userId) {

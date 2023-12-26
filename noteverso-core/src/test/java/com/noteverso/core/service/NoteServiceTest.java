@@ -13,7 +13,7 @@ import com.noteverso.core.model.ViewOption;
 import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NotePageRequest;
-import com.noteverso.core.response.NoteItem;
+import com.noteverso.core.dto.NoteItem;
 import com.noteverso.core.service.impl.NoteServiceImpl;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;

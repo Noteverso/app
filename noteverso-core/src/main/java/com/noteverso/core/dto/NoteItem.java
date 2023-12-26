@@ -1,4 +1,4 @@
-package com.noteverso.core.response;
+package com.noteverso.core.dto;
 
 import com.noteverso.core.dto.SelectItem;
 import lombok.Data;

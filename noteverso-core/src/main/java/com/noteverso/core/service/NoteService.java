@@ -5,7 +5,7 @@ import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NotePageRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
-import com.noteverso.core.response.NoteItem;
+import com.noteverso.core.dto.NoteItem;
 
 import java.util.List;
 

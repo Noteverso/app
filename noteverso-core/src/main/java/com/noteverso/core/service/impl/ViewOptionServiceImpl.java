@@ -16,6 +16,8 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
 
 import static com.noteverso.common.constant.NumConstants.NUM_1;
 import static com.noteverso.common.constant.NumConstants.NUM_O;
@@ -93,5 +95,28 @@ public class ViewOptionServiceImpl implements ViewOptionService {
         viewOptionUpdateWrapper.eq(ViewOption::getObjectId, objectId);
         viewOptionUpdateWrapper.eq(ViewOption::getCreator, userId);
         viewOptionMapper.delete(viewOptionUpdateWrapper);
+    }
+
+    @Override
+    public ViewOption getViewOption(String objectId, String userId) {
+        LambdaUpdateWrapper<ViewOption> viewOptionUpdateWrapper = new LambdaUpdateWrapper<>();
+        viewOptionUpdateWrapper.eq(ViewOption::getObjectId, objectId);
+        viewOptionUpdateWrapper.eq(ViewOption::getCreator, userId);
+        return viewOptionMapper.selectOne(viewOptionUpdateWrapper);
+    }
+
+    @Override
+    public HashMap<String, ViewOption> getViewOptionsMap(List<String> objectIds, String userId) {
+        LambdaUpdateWrapper<ViewOption> viewOptionUpdateWrapper = new LambdaUpdateWrapper<>();
+        viewOptionUpdateWrapper.in(ViewOption::getObjectId, objectIds);
+        viewOptionUpdateWrapper.eq(ViewOption::getCreator, userId);
+        List<ViewOption> viewOptions = viewOptionMapper.selectList(viewOptionUpdateWrapper);
+
+        HashMap<String, ViewOption> viewOptionMap = new HashMap<>();
+        for (ViewOption viewOption : viewOptions) {
+            viewOptionMap.put(viewOption.getObjectId(), viewOption);
+        }
+
+        return viewOptionMap;
     }
 }

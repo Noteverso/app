@@ -1,10 +1,12 @@
 package com.noteverso.core.controller;
 
 import com.noteverso.common.api.ApiResult;
+import com.noteverso.core.dto.ProjectItem;
 import com.noteverso.core.manager.AuthManager;
 import com.noteverso.core.manager.impl.AuthManagerImpl;
 import com.noteverso.core.request.ProjectCreateRequest;
 import com.noteverso.core.request.ProjectUpdateRequest;
+import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @Tag(name = "Project", description = "Project management APIs")
 @RestController
@@ -74,5 +77,12 @@ public class ProjectController {
     public ApiResult<Void> unFavoriteProject(Authentication authentication, @PathVariable("projectId") String projectId) {
         projectService.unFavoriteProject(projectId, authManager.getPrincipal(authentication).getUserId());
         return ApiResult.success(null);
+    }
+
+    @Operation(summary = "Get Project List", description = "Get Project List", tags = { "Get" })
+    @GetMapping("")
+    public ApiResult<List<ProjectItem>> getProjectList(Authentication authentication) {
+        UserDetailsImpl userDetails = authManager.getPrincipal(authentication) ;
+        return ApiResult.success(projectService.getProjectList(userDetails.getUserId()));
     }
 }

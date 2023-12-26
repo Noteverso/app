@@ -5,7 +5,7 @@
         SELECT * FROM noteverso_note WHERE note_id = #{noteId} AND is_deleted = #{isDeleted}
     </select>
 
-    <select id="batchSelect" resultType="com.noteverso.core.model.Note">
+    <select id="batchSelectByNoteIds" resultType="com.noteverso.core.model.Note">
         SELECT * FROM noteverso_note
         WHERE note_id IN
             <foreach collection="noteIds" item="noteId" open="(" close=")" separator=",">
@@ -26,4 +26,20 @@
         SET is_deleted = 1, updated_at = NOW(), project_id = null
         WHERE project_id = #{projectId} AND creator=#{userId}
     </update>
+
+    <select id="getNoteCountByProjects" resultType="com.noteverso.core.dto.NoteCount">
+        SELECT project_id, COUNT(*) AS note_count
+        FROM noteverso_note
+        WHERE creator = #{userId} AND
+        <foreach collection="projectViewOptions" item="projectViewOption" open="(" close=")" separator="or">
+           (project_id = #{projectViewOption.projectId}
+            <if test="projectViewOption.showArchived == null or projectViewOption.showArchived == 0">
+                AND is_archived = 0
+            </if>
+            <if test="projectViewOption.showDeleted == null or projectViewOption.showDeleted == 0">
+                AND is_deleted = 0
+            </if>)
+        </foreach>
+        GROUP BY project_id
+    </select>
 </mapper>

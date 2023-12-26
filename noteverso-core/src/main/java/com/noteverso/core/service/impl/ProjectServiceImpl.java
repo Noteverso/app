@@ -9,10 +9,14 @@ import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
 import com.noteverso.core.dto.ProjectDTO;
+import com.noteverso.core.dto.ProjectItem;
+import com.noteverso.core.dto.ProjectViewOption;
 import com.noteverso.core.enums.ObjectViewTypeEnum;
+import com.noteverso.core.manager.NoteManager;
 import com.noteverso.core.manager.UserConfigManager;
 import com.noteverso.core.model.Project;
 import com.noteverso.core.model.UserConfig;
+import com.noteverso.core.model.ViewOption;
 import com.noteverso.core.request.ProjectCreateRequest;
 import com.noteverso.core.request.ProjectUpdateRequest;
 import com.noteverso.core.request.ViewOptionCreate;
@@ -23,6 +27,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.noteverso.common.constant.NumConstants.*;
 import static com.noteverso.core.constant.ExceptionConstants.PROJECT_NOT_FOUND;
@@ -35,6 +43,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ViewOptionService viewOptionService;
     private final UserConfigManager userConfigManager;
     private final NoteMapper noteMapper;
+    private final NoteManager noteManager;
 
     private final static SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
             PROJECT_DATACENTER_ID, IPUtils.getHostAddressWithLong() % NUM_31
@@ -197,6 +206,7 @@ public class ProjectServiceImpl implements ProjectService {
         toggleProjectIsFavorite(projectId, userId, NUM_1);
     }
 
+    @Override
     public void unFavoriteProject(String projectId, String userId) {
         toggleProjectIsFavorite(projectId, userId, NUM_O);
     }
@@ -214,5 +224,50 @@ public class ProjectServiceImpl implements ProjectService {
         if (result == 0) {
             throw new NoSuchDataException(PROJECT_NOT_FOUND);
         }
+    }
+
+    @Override
+    public List<ProjectItem> getProjectList(String userId) {
+        LambdaQueryWrapper<Project> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Project::getCreator, userId);
+        queryWrapper.eq(Project::getIsInboxProject, NUM_O);
+        queryWrapper.eq(Project::getIsArchived, NUM_O);
+        List<Project> projects = projectMapper.selectList(queryWrapper);
+
+        List<String> projectIds = projects.stream().map(Project::getProjectId).collect(Collectors.toList());
+
+        // Get view option for each project
+        HashMap<String, ViewOption> viewOptionsMap = viewOptionService.getViewOptionsMap(projectIds, userId);
+
+        // Construct project view options
+        List<ProjectViewOption> projectViewOptions = new ArrayList<>();
+        for (String projectId : projectIds) {
+            ProjectViewOption projectViewOption = new ProjectViewOption();
+            projectViewOption.setProjectId(projectId);
+
+            ViewOption viewOption = viewOptionsMap.get(projectId);
+            if (null != viewOption) {
+                projectViewOption.setShowArchived(viewOption.getShowArchived());
+                projectViewOption.setShowDeleted(viewOption.getShowDeleted());
+            }
+
+            projectViewOptions.add(projectViewOption);
+        }
+
+        // Get note count for each project
+        HashMap<String, Long> noteCountMap = noteManager.getNoteCountByProjects(projectViewOptions, userId);
+
+        List<ProjectItem> projectItems = new ArrayList<>();
+        for (Project project : projects) {
+            ProjectItem projectItem = new ProjectItem();
+            projectItem.setName(project.getName());
+            projectItem.setProjectId(project.getProjectId());
+            projectItem.setColor(project.getColor());
+            projectItem.setIsFavorite(project.getIsFavorite());
+            projectItem.setNoteCount(noteCountMap.getOrDefault(project.getProjectId(), null));
+            projectItems.add(projectItem);
+        }
+
+        return projectItems;
     }
 }
