@@ -14,7 +14,7 @@ public interface ViewOptionService {
 
     void deleteViewOption(String objectId, String userId);
 
-    ViewOption getViewOption(String objectId, String userId);
+    ViewOption getViewOption(ViewOption viewOption, String userId);
 
     HashMap<String, ViewOption> getViewOptionsMap(List<String> objectIds, String userId);
 }

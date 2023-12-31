@@ -10,13 +10,12 @@ import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dto.NoteDTO;
-import com.noteverso.core.enums.ObjectOrderByEnum;
+import com.noteverso.core.dto.SelectItem;
 import com.noteverso.core.enums.ObjectOrderValueEnum;
+import com.noteverso.core.enums.ObjectOrderByEnum;
+import com.noteverso.core.enums.ObjectViewTypeEnum;
 import com.noteverso.core.manager.UserConfigManager;
-import com.noteverso.core.model.Note;
-import com.noteverso.core.model.Project;
-import com.noteverso.core.model.UserConfig;
-import com.noteverso.core.model.ViewOption;
+import com.noteverso.core.model.*;
 import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NotePageRequest;
@@ -272,12 +271,81 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    public PageResult<NoteItem> getNotePage(NotePageRequest request, String userId) {
-        String projectId = request.getProjectId();
-        ViewOption viewOption = viewOptionService.getViewOption(projectId, userId);
+    public PageResult<NoteItem> getNotePageByProject(NotePageRequest request, String userId) {
+        String objectId = request.getObjectId();
+        ViewOption viewOptionRequest = new ViewOption();
+        viewOptionRequest.setObjectId(objectId);
+        viewOptionRequest.setViewType(ObjectViewTypeEnum.PROJECT.getValue());
+        ViewOption viewOption = viewOptionService.getViewOption(viewOptionRequest, userId);
 
+        QueryWrapper<Note> noteQueryWrapper = noteQueryWrapper(viewOption);
+        noteQueryWrapper.eq(KEY_PROJECT_ID, objectId);
+
+        Page<Note> notePage = noteMapper.selectPage(new Page<>(request.getPageIndex(), request.getPageSize()), noteQueryWrapper);
+        return getNoteItemPage(notePage, viewOption, userId);
+    }
+
+    @Override
+    public PageResult<NoteItem> getNotePageByLabel(NotePageRequest request, String userId) {
+        String objectId = request.getObjectId();
+
+        // get noteIds by label
+        List<NoteLabelRelation> noteLabelRelations = relationService.getNoteLabelRelations(objectId, userId);
+        List<String> noteIds = noteLabelRelations.stream().map(NoteLabelRelation::getNoteId).toList();
+
+        // get viewOption of label
+        ViewOption viewOptionRequest = new ViewOption();
+        viewOptionRequest.setObjectId(objectId);
+        viewOptionRequest.setViewType(ObjectViewTypeEnum.LABEL.getValue());
+        ViewOption viewOption = viewOptionService.getViewOption(viewOptionRequest, userId);
+
+        QueryWrapper<Note> noteQueryWrapper = noteQueryWrapper(viewOption);
+        noteQueryWrapper.in(KEY_NOTE_ID, noteIds);
+
+        Page<Note> notePage = noteMapper.selectPage(new Page<>(request.getPageIndex(), request.getPageSize()), noteQueryWrapper);
+        return getNoteItemPage(notePage, viewOption, userId);
+    }
+
+    public PageResult<NoteItem> getNoteItemPage(Page<Note> notePage, ViewOption viewOption, String userId) {
+        if (null == notePage || notePage.getRecords().isEmpty()) {
+            return new PageResult<>();
+        }
+
+        List<Note> notes = notePage.getRecords();
+        List<String> noteIds = notes.stream().map(Note::getNoteId).toList();
+
+        // get referencing and referenced count for each note
+        HashMap<String, Long> referencingCountMap = new HashMap<>();
+        HashMap<String, Long> referencedCountMap = new HashMap<>();
+        if (viewOption != null && Objects.equals(viewOption.getShowRelationNoteCount(), NUM_1)) {
+            referencedCountMap = relationService.getReferencedCountByReferencedNoteIds(noteIds, userId);
+            referencingCountMap = relationService.getReferencingCountByReferencingNoteIds(noteIds, userId);
+        }
+
+        // get attachment count for each note
+        HashMap<String, Long> attachmentCountMap = new HashMap<>();
+        if (viewOption != null && Objects.equals(viewOption.getShowAttachmentCount(), NUM_1)) {
+            attachmentCountMap = relationService.getAttachmentCountByObjectIds(noteIds, userId);
+        }
+
+        // get label ids for each note
+        HashMap<String, List<String>> labelMap = relationService.getLabelsByNoteIds(noteIds, userId);
+        List<NoteItem> responseList = new ArrayList<>();
+        for (Note note : notes) {
+            NoteItem response = constructNoteItem(note, attachmentCountMap, referencingCountMap, referencedCountMap, labelMap);
+            responseList.add(response);
+        }
+
+        PageResult<NoteItem> responsePage = new PageResult<>();
+        responsePage.setRecords(responseList);
+        responsePage.setTotal(notePage.getTotal());
+        responsePage.setPageIndex(notePage.getCurrent());
+        responsePage.setPageSize(notePage.getSize());
+        return responsePage;
+    }
+
+    public QueryWrapper<Note> noteQueryWrapper(ViewOption viewOption) {
         QueryWrapper<Note> noteQueryWrapper = new QueryWrapper<>();
-        noteQueryWrapper.eq(KEY_PROJECT_ID, projectId);
         noteQueryWrapper.eq(KEY_IS_DELETED, NUM_O);
 
         // OrderBy conditions
@@ -297,46 +365,23 @@ public class NoteServiceImpl implements NoteService {
                 noteQueryWrapper.eq(KEY_IS_ARCHIVED, NUM_O);
             }
 
-            noteQueryWrapper.orderBy(true,
-                    Objects.equals(viewOption.getOrderValue(), ObjectOrderValueEnum.ASC.getValue()),
-                    Objects.requireNonNull(ObjectOrderByEnum.fromValue(viewOption.getOrderedBy())).getName());
+            Integer orderedBy = viewOption.getOrderedBy();
+            if (orderedBy != null && ObjectOrderByEnum.isExistValue(orderedBy)) {
+                noteQueryWrapper.orderBy(true,
+                        Objects.equals(viewOption.getOrderValue(), ObjectOrderValueEnum.ASC.getValue()),
+                        Objects.requireNonNull(ObjectOrderByEnum.fromValue(orderedBy)).getName());
+            }
         }
 
-        PageResult<NoteItem> responsePage = new PageResult<>();
-        Page<Note> notePage = noteMapper.selectPage(new Page<>(request.getPageIndex(), request.getPageSize()), noteQueryWrapper);
-        if (null == notePage || notePage.getRecords().isEmpty()) {
-            return responsePage;
-        }
-
-        List<Note> notes = notePage.getRecords();
-        List<String> noteIds = notes.stream().map(Note::getNoteId).collect(Collectors.toList());
-
-        HashMap<String, Long> referencingCountMap = new HashMap<>();
-        HashMap<String, Long> referencedCountMap = new HashMap<>();
-        if (viewOption != null && Objects.equals(viewOption.getShowRelationNoteCount(), NUM_1)) {
-            referencedCountMap = relationService.getReferencedCountByReferencedNoteIds(noteIds, userId);
-            referencingCountMap = relationService.getReferencingCountByReferencingNoteIds(noteIds, userId);
-        }
-
-        HashMap<String, Long> attachmentCountMap = new HashMap<>();
-        if (viewOption != null && Objects.equals(viewOption.getShowAttachmentCount(), NUM_1)) {
-            attachmentCountMap = relationService.getAttachmentCountByObjectIds(noteIds, userId);
-        }
-
-        List<NoteItem> responseList = new ArrayList<>();
-        for (Note note : notes) {
-            NoteItem response = constructNoteItem(note, attachmentCountMap, referencingCountMap, referencedCountMap);
-            responseList.add(response);
-        }
-
-        responsePage.setRecords(responseList);
-        responsePage.setTotal(notePage.getTotal());
-        responsePage.setPageIndex(notePage.getCurrent());
-        responsePage.setPageSize(notePage.getSize());
-        return responsePage;
+        return noteQueryWrapper;
     }
 
-    private NoteItem constructNoteItem(Note note, HashMap<String, Long> attachmentCountMap, HashMap<String, Long> referencingCountMap, HashMap<String, Long> referencedCountMap) {
+    private NoteItem constructNoteItem(
+            Note note,
+            HashMap<String, Long> attachmentCountMap,
+            HashMap<String, Long> referencingCountMap,
+            HashMap<String, Long> referencedCountMap,
+            HashMap<String, List<String>> noteLabelMap) {
         NoteItem noteItem = new NoteItem();
         String noteProjectId = note.getProjectId();
         String noteId = note.getNoteId();
@@ -347,6 +392,7 @@ public class NoteServiceImpl implements NoteService {
         noteItem.setIsArchived(note.getIsArchived());
         noteItem.setIsDeleted(note.getIsDeleted());
         noteItem.setCreator(note.getCreator());
+        noteItem.setLabelIds(noteLabelMap.get(noteId) != null ? noteLabelMap.get(noteId) : null);
         noteItem.setAddedAt(note.getAddedAt() != null ? note.getAddedAt().toString() : null);
         noteItem.setUpdatedAt(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null);
         noteItem.setAttachmentCount(attachmentCountMap.get(noteId) != null ? attachmentCountMap.get(noteId) : null);
@@ -373,8 +419,10 @@ public class NoteServiceImpl implements NoteService {
         HashMap<String, Long> referencedCountMap = relationService.getReferencedCountByReferencedNoteIds(referencedNoteIds, userId);
         HashMap<String, Long> referencingCountMap = relationService.getReferencingCountByReferencingNoteIds(referencedNoteIds, userId);
         HashMap<String, Long> attachmentCountMap = relationService.getAttachmentCountByObjectIds(referencedNoteIds, userId);
+
+        HashMap<String, List<String>> labelMap = relationService.getLabelsByNoteIds(referencedNoteIds, userId);
         for (Note note : notes) {
-            NoteItem noteItem = constructNoteItem(note, attachmentCountMap, referencingCountMap, referencedCountMap);
+            NoteItem noteItem = constructNoteItem(note, attachmentCountMap, referencingCountMap, referencedCountMap, labelMap);
             referencedNoteItems.add(noteItem);
         }
 

@@ -20,5 +20,5 @@ public class NoteItem {
     private Long referencedCount;
     private Long attachmentCount;
     private String creator;
-    private List<SelectItem> labels;
+    private List<String> labelIds;
 }

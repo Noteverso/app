@@ -6,10 +6,13 @@ import com.noteverso.core.constant.StringConstants;
 import com.noteverso.core.dao.ProjectMapper;
 import com.noteverso.core.dao.UserConfigMapper;
 import com.noteverso.core.dao.UserMapper;
+import com.noteverso.core.enums.ObjectViewTypeEnum;
 import com.noteverso.core.model.User;
 import com.noteverso.core.model.UserConfig;
+import com.noteverso.core.request.ViewOptionCreate;
 import com.noteverso.core.service.ProjectService;
 import com.noteverso.core.service.UserService;
+import com.noteverso.core.service.ViewOptionService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,7 @@ public class UserServiceImpl implements UserService {
     private final ProjectService projectService;
     private final ProjectMapper projectMapper;
     private final UserConfigMapper userConfigMapper;
+    private final ViewOptionService viewOptionService;
     private static final SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
             USER_DATACENTER_ID, IPUtils.getHostAddressWithLong() % NUM_31
     );
@@ -47,6 +51,11 @@ public class UserServiceImpl implements UserService {
         // Create user config - project quota and other
         var userConfig = constructUserConfig(userId, project.getProjectId());
         userConfigMapper.insert(userConfig);
+
+        // Create default view option for today, upcoming, attachment
+        ViewOptionCreate viewOptionCreate = new ViewOptionCreate();
+        viewOptionCreate.setViewType(ObjectViewTypeEnum.TODAY.getValue());
+        viewOptionService.createViewOption(viewOptionCreate, userId);
     }
 
     private User constructUser(String userId, String username, String password) {

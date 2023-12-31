@@ -1,5 +1,7 @@
 package com.noteverso.core.service;
 
+import com.noteverso.core.model.NoteLabelRelation;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -46,6 +48,8 @@ public interface RelationService {
 
     List<String> getLabelsByNoteId(String noteId, String userId);
 
+    HashMap<String, List<String>> getLabelsByNoteIds(List<String> noteIds, String userId);
+
     /**
      * 获取指定对象关联的附件数量
      * @param objectIds 对象ids
@@ -57,4 +61,8 @@ public interface RelationService {
     HashMap<String, Long> getReferencedCountByReferencedNoteIds(List<String> referencedNoteIds, String userId);
 
     HashMap<String, Long> getReferencingCountByReferencingNoteIds(List<String> referencingNoteIds, String userId);
+
+    HashMap<String, Long> getNoteCountByLabels(List<String> labelIds, String userId);
+
+    List<NoteLabelRelation> getNoteLabelRelations(String labelId, String userId);
 }

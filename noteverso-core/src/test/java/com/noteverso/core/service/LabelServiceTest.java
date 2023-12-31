@@ -4,10 +4,17 @@ import com.noteverso.common.exceptions.DuplicateRecordException;
 import com.noteverso.common.exceptions.NoSuchDataException;
 import com.noteverso.core.dao.LabelMapper;
 import com.noteverso.core.dao.NoteLabelRelationMapper;
+import com.noteverso.core.dao.NoteMapper;
+import com.noteverso.core.dto.LabelItem;
+import com.noteverso.core.dto.NoteCountForLabel;
+import com.noteverso.core.manager.NoteManager;
 import com.noteverso.core.model.Label;
+import com.noteverso.core.model.NoteLabelRelation;
 import com.noteverso.core.request.LabelCreateRequest;
 import com.noteverso.core.request.LabelUpdateRequest;
+import com.noteverso.core.request.ViewOptionCreate;
 import com.noteverso.core.service.impl.LabelServiceImpl;
+import com.noteverso.core.service.impl.ViewOptionServiceImpl;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +24,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DuplicateKeyException;
 
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,7 +40,16 @@ class LabelServiceTest {
     private LabelMapper labelMapper;
 
     @Mock
+    private NoteManager noteManager;
+
+    @Mock
     private NoteLabelRelationMapper noteLabelRelationMapper;
+
+    @Mock
+    private RelationService relationService;
+
+    @Mock
+    private ViewOptionServiceImpl viewOptionService;
 
     @InjectMocks
     private LabelServiceImpl labelService;
@@ -123,10 +144,43 @@ class LabelServiceTest {
         // Arrange
         String labelId = "1";
 
-        // Act
-        ThrowableAssert.ThrowingCallable callable = () -> labelService.updateIsFavoriteStatus(labelId, 1);
-
+        /* Act */ThrowableAssert.ThrowingCallable callable = () -> labelService.updateIsFavoriteStatus(labelId, 1);
         // Assert
         assertThatThrownBy(callable).isInstanceOf(NoSuchDataException.class).hasMessage("Label not found");
+    }
+
+    @Test
+    void should_getLabelsSuccessfully() {
+        // Arrange
+        String userId = "1234567";
+        String labelId1 = "1";
+        String labelId2 = "2";
+        List<Label> labels = List.of(
+                constructLabel(labelId1, "test1", "red", userId),
+                constructLabel(labelId2, "test2", "blue", userId)
+        );
+
+        HashMap<String, Long> noteCountMap = new HashMap<>();
+        noteCountMap.put(labelId1, 1L);
+        noteCountMap.put(labelId2, 2L);
+
+        when(labelMapper.selectList(any())).thenReturn(labels);
+        when(relationService.getNoteCountByLabels(any(List.class), any(String.class))).thenReturn(noteCountMap);
+
+        // Act
+        List<LabelItem> labelItems = labelService.getLabels(userId);
+
+        // Assert
+        assertThat(labelItems).hasSize(labels.size());
+        assertThat(labelItems.get(0).getLabelId()).isEqualTo(labelId1);
+    }
+
+    private Label constructLabel(String labelId, String name, String color, String userId) {
+        return Label.builder()
+                .labelId(labelId).name(name).color(color)
+                .creator(userId).updater(userId)
+                .addedAt(Instant.now()).updatedAt(Instant.now())
+                .isFavorite(0)
+                .build();
     }
 }

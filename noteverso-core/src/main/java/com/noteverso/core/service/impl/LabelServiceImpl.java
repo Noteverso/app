@@ -1,5 +1,6 @@
 package com.noteverso.core.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.noteverso.common.exceptions.DaoException;
 import com.noteverso.common.exceptions.DuplicateRecordException;
@@ -9,11 +10,18 @@ import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.LabelMapper;
 import com.noteverso.core.dao.NoteLabelRelationMapper;
 import com.noteverso.core.dto.LabelDTO;
+import com.noteverso.core.dto.LabelItem;
+import com.noteverso.core.dto.SelectItem;
+import com.noteverso.core.enums.ObjectViewTypeEnum;
 import com.noteverso.core.model.Label;
 import com.noteverso.core.model.NoteLabelRelation;
 import com.noteverso.core.request.LabelCreateRequest;
+import com.noteverso.core.request.LabelRequest;
 import com.noteverso.core.request.LabelUpdateRequest;
+import com.noteverso.core.request.ViewOptionCreate;
 import com.noteverso.core.service.LabelService;
+import com.noteverso.core.service.RelationService;
+import com.noteverso.core.service.ViewOptionService;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -23,18 +31,24 @@ import static com.noteverso.core.constant.ExceptionConstants.LABEL_NAME_DUPLICAT
 import static com.noteverso.core.constant.ExceptionConstants.LABEL_NOT_FOUND;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class LabelServiceImpl implements LabelService {
     private final LabelMapper labelMapper;
     private final NoteLabelRelationMapper noteLabelRelationMapper;
+    private final RelationService relationService;
+    private final ViewOptionService viewOptionService;
+
     private final static SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
         LABEL_DATACENTER_ID, IPUtils.getHostAddressWithLong() % NUM_31
     );
 
     @Override
-    public void createLabel(LabelCreateRequest request, String userId) {
+    public String createLabel(LabelCreateRequest request, String userId) {
         String labelId = String.valueOf(snowFlakeUtils.nextId());
         LabelDTO labelDTO = new LabelDTO();
         labelDTO.setName(request.getName());
@@ -46,6 +60,12 @@ public class LabelServiceImpl implements LabelService {
 
         try {
             labelMapper.insert(label);
+            ViewOptionCreate viewOptionCreate = new ViewOptionCreate();
+            viewOptionCreate.setObjectId(labelId);
+            viewOptionCreate.setViewType(ObjectViewTypeEnum.LABEL.getValue());
+            viewOptionService.createViewOption(viewOptionCreate, userId);
+
+            return labelId;
         } catch (Exception e) {
             if (e instanceof DuplicateKeyException) {
                 throw new DuplicateRecordException(LABEL_NAME_DUPLICATE);
@@ -124,5 +144,48 @@ public class LabelServiceImpl implements LabelService {
                 .updatedAt(Instant.now())
                 .isFavorite(null != labelDTO.getIsFavorite() ? labelDTO.getIsFavorite() : NUM_O)
                 .build();
+    }
+
+    @Override
+    public List<LabelItem> getLabels(String userId) {
+        LambdaQueryWrapper<Label> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Label::getCreator, userId);
+        queryWrapper.orderByDesc(Label::getAddedAt);
+        List<Label> labels = labelMapper.selectList(queryWrapper);
+
+        List<String> labelIds = labels.stream().map(Label::getLabelId).toList();
+        HashMap<String, Long> noteCountMap = relationService.getNoteCountByLabels(labelIds, userId);
+
+        List<LabelItem> labelItems = new ArrayList<>();
+        for (Label label : labels) {
+            String labelId = label.getLabelId();
+            LabelItem labelItem = new LabelItem();
+            labelItem.setLabelName(label.getName());
+            labelItem.setColor(label.getColor());
+            labelItem.setLabelId(labelId);
+            labelItem.setNoteCount(noteCountMap.getOrDefault(labelId, null));
+            labelItems.add(labelItem);
+        }
+
+        return labelItems;
+    }
+
+    @Override
+    public List<SelectItem> getLabelSelectItems(LabelRequest request, String userId) {
+        List<Label> labels = labelMapper.getLabels(request, userId);
+        if (labels == null || labels.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<SelectItem> labelSelectItems = new ArrayList<>();
+        for (Label label : labels) {
+            String labelId = label.getLabelId();
+            SelectItem labelSelectItem = new SelectItem();
+            labelSelectItem.setName(label.getName());
+            labelSelectItem.setValue(labelId);
+            labelSelectItems.add(labelSelectItem);
+        }
+
+        return labelSelectItems;
     }
 }

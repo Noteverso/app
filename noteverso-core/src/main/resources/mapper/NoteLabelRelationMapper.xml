@@ -9,4 +9,13 @@
             #{noteLabelRelation.creator}, #{noteLabelRelation.updater})
         </foreach>
     </insert>
+
+    <select id="getNoteCountByLabels" resultType="com.noteverso.core.dto.NoteCountForLabel">
+        SELECT label_id, COUNT(*) AS note_count FROM noteverso_note_label_map
+        WHERE creator = #{userId} AND
+            <foreach collection="labelIds" item="labelId" open="(" close=")" separator=",">
+                label_id = #{labelId}
+            </foreach>
+        GROUP BY label_id;
+    </select>
 </mapper>

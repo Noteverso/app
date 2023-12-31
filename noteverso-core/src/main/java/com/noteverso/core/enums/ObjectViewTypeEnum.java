@@ -9,7 +9,10 @@ public enum ObjectViewTypeEnum {
     TODAY(2, "TODAY"),
     // 定期回顾
     PAST(3, "PAST"),
-    ATTACHMENT(4, "ATTACHMENT");
+    ATTACHMENT(4, "ATTACHMENT"),
+    LABEL(5, "LABEL"),
+
+    ;
 
     private final Integer value;
     private final String name;

@@ -1,7 +1,7 @@
 package com.noteverso.core.dao;
 
 import com.baomidou.mybatisplus.test.autoconfigure.MybatisPlusTest;
-import com.noteverso.core.dto.NoteCount;
+import com.noteverso.core.dto.NoteCountForProject;
 import com.noteverso.core.dto.ProjectViewOption;
 import com.noteverso.core.model.Note;
 import org.junit.jupiter.api.Test;
@@ -127,7 +127,7 @@ class NoteMapperTest {
         );
 
         // Act
-        List<NoteCount> result = noteMapper.getNoteCountByProjects(projectViewOptions, "123456789");
+        List<NoteCountForProject> result = noteMapper.getNoteCountByProjects(projectViewOptions, "123456789");
 
         // Assert
         assertThat(result).hasSize(2);
@@ -151,7 +151,7 @@ class NoteMapperTest {
         );
 
         // Act
-        List<NoteCount> result = noteMapper.getNoteCountByProjects(projectViewOptions, "123456789");
+        List<NoteCountForProject> result = noteMapper.getNoteCountByProjects(projectViewOptions, "123456789");
 
         // Assert
         assertThat(result).hasSize(1);

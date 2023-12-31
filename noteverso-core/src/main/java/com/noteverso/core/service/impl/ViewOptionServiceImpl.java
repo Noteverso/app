@@ -2,10 +2,7 @@ package com.noteverso.core.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.noteverso.core.dao.ViewOptionMapper;
-import com.noteverso.core.enums.ObjectGroupByEnum;
-import com.noteverso.core.enums.ObjectOrderByEnum;
-import com.noteverso.core.enums.ObjectOrderValueEnum;
-import com.noteverso.core.enums.ObjectViewModeEnum;
+import com.noteverso.core.enums.*;
 import com.noteverso.core.model.Note;
 import com.noteverso.core.model.ViewOption;
 import com.noteverso.core.request.ViewOptionCreate;
@@ -98,9 +95,16 @@ public class ViewOptionServiceImpl implements ViewOptionService {
     }
 
     @Override
-    public ViewOption getViewOption(String objectId, String userId) {
+    public ViewOption getViewOption(ViewOption viewOption, String userId) {
         LambdaUpdateWrapper<ViewOption> viewOptionUpdateWrapper = new LambdaUpdateWrapper<>();
-        viewOptionUpdateWrapper.eq(ViewOption::getObjectId, objectId);
+        if (viewOption.getObjectId() != null) {
+            viewOptionUpdateWrapper.eq(ViewOption::getObjectId, viewOption.getObjectId());
+        }
+
+        if (viewOption.getViewType() != null) {
+            viewOptionUpdateWrapper.eq(ViewOption::getViewType, viewOption.getViewType());
+        }
+
         viewOptionUpdateWrapper.eq(ViewOption::getCreator, userId);
         return viewOptionMapper.selectOne(viewOptionUpdateWrapper);
     }

@@ -27,9 +27,8 @@
         WHERE project_id = #{projectId} AND creator=#{userId}
     </update>
 
-    <select id="getNoteCountByProjects" resultType="com.noteverso.core.dto.NoteCount">
-        SELECT project_id, COUNT(*) AS note_count
-        FROM noteverso_note
+    <select id="getNoteCountByProjects" resultType="com.noteverso.core.dto.NoteCountForProject">
+        SELECT project_id, COUNT(*) AS note_count FROM noteverso_note
         WHERE creator = #{userId} AND
         <foreach collection="projectViewOptions" item="projectViewOption" open="(" close=")" separator="or">
            (project_id = #{projectViewOption.projectId}

@@ -16,6 +16,15 @@ public enum ObjectOrderByEnum {
         this.name = name;
     }
 
+    public static boolean isExistValue(Integer value) {
+        for (ObjectOrderByEnum type : ObjectOrderByEnum.values()) {
+            if (type.getValue().equals(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static ObjectOrderByEnum fromValue(Integer value) {
         for (ObjectOrderByEnum type : ObjectOrderByEnum.values()) {
             if (type.getValue().equals(value)) {

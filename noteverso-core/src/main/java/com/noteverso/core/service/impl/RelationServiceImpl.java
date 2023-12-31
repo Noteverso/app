@@ -1,11 +1,13 @@
 package com.noteverso.core.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.noteverso.core.dao.AttachmentRelationMapper;
 import com.noteverso.core.dao.NoteLabelRelationMapper;
 import com.noteverso.core.dao.NoteRelationMapper;
 import com.noteverso.core.dto.AttachmentCount;
+import com.noteverso.core.dto.NoteCountForLabel;
 import com.noteverso.core.dto.ReferencedNoteCount;
 import com.noteverso.core.dto.ReferencingNoteCount;
 import com.noteverso.core.model.AttachmentRelation;
@@ -19,6 +21,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static com.noteverso.core.constant.StringConstants.KEY_ADDED_AT;
+import static com.noteverso.core.constant.StringConstants.KEY_NOTE_ID;
 
 @Service
 @AllArgsConstructor
@@ -238,6 +243,30 @@ public class RelationServiceImpl implements RelationService {
     }
 
     @Override
+    public HashMap<String, List<String>> getLabelsByNoteIds(List<String> noteIds, String userId) {
+        LambdaQueryWrapper<NoteLabelRelation> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(NoteLabelRelation::getNoteId, noteIds);
+        queryWrapper.eq(NoteLabelRelation::getCreator, userId);
+        List<NoteLabelRelation> noteLabelRelations = noteLabelRelationMapper.selectList(queryWrapper);
+
+        if (noteLabelRelations == null || noteLabelRelations.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        HashMap<String, List<String>> noteLabelMap = new HashMap<>();
+        for (NoteLabelRelation noteLabelRelation: noteLabelRelations) {
+            String noteId = noteLabelRelation.getNoteId();
+            String labelId = noteLabelRelation.getLabelId();
+            if (!noteLabelMap.containsKey(noteId)) {
+                noteLabelMap.put(noteId, new ArrayList<>());
+            }
+            noteLabelMap.get(noteId).add(labelId);
+        }
+
+        return noteLabelMap;
+    }
+
+    @Override
     public HashMap<String, Long> getAttachmentCountByObjectIds(List<String> objectIds, String userId) {
         HashMap<String, Long> attachmentCountMap = new HashMap<>();
         List<AttachmentCount> attachmentCountList = attachmentRelationMapper.getAttachmentCountByObjectIds(objectIds, userId);
@@ -271,5 +300,31 @@ public class RelationServiceImpl implements RelationService {
             }
         }
         return referencingNoteCountMap;
+    }
+
+    @Override
+    public HashMap<String, Long> getNoteCountByLabels(List<String> labelIds, String userId) {
+        HashMap<String, Long> noteCountMap = new HashMap<>();
+        if (labelIds != null && !labelIds.isEmpty()) {
+            List<NoteCountForLabel> noteCountList = noteLabelRelationMapper.getNoteCountByLabels(labelIds, userId);
+            for (NoteCountForLabel noteCount : noteCountList) {
+                noteCountMap.put(noteCount.getLabelId(), noteCount.getNoteCount());
+            }
+        }
+        return noteCountMap;
+    }
+
+    @Override
+    public List<NoteLabelRelation> getNoteLabelRelations(String labelId, String userId) {
+        LambdaQueryWrapper<NoteLabelRelation> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(NoteLabelRelation::getLabelId, labelId);
+        queryWrapper.eq(NoteLabelRelation::getCreator, userId);
+        List<NoteLabelRelation> noteLabelRelations = noteLabelRelationMapper.selectList(queryWrapper);
+
+        if (noteLabelRelations == null) {
+            return new ArrayList<>();
+        }
+
+        return noteLabelRelations;
     }
 }

@@ -42,11 +42,19 @@ public class NoteController {
         return ApiResult.success(noteId);
     }
 
-    @Operation(summary = "Get Notes Page", description = "Create a Note", tags = { "GET" })
-    @GetMapping("")
-    public ApiResult<PageResult<NoteItem>> getNotes(Authentication authentication, @Valid NotePageRequest request) {
+    @Operation(summary = "Get Notes Page by Project", description = "Get Notes Page by Project", tags = { "GET" })
+    @GetMapping("/project")
+    public ApiResult<PageResult<NoteItem>> getNotesByProject(Authentication authentication, @Valid NotePageRequest request) {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
-        PageResult<NoteItem> notePageResponsePage = noteService.getNotePage(request, principal.getUserId());
+        PageResult<NoteItem> notePageResponsePage = noteService.getNotePageByProject(request, principal.getUserId());
+        return ApiResult.success(notePageResponsePage);
+    }
+
+    @Operation(summary = "Get Notes Page by Label", description = "Get Notes Page by Label", tags = { "GET" })
+    @GetMapping("/label")
+    public ApiResult<PageResult<NoteItem>> getNotesByLabel(Authentication authentication, @Valid NotePageRequest request) {
+        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
+        PageResult<NoteItem> notePageResponsePage = noteService.getNotePageByLabel(request, principal.getUserId());
         return ApiResult.success(notePageResponsePage);
     }
 

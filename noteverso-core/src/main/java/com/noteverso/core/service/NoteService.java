@@ -59,7 +59,9 @@ public interface NoteService {
      * @param userId
      * @return
      */
-    PageResult<NoteItem> getNotePage(NotePageRequest request, String userId);
+    PageResult<NoteItem> getNotePageByProject(NotePageRequest request, String userId);
+
+    PageResult<NoteItem> getNotePageByLabel(NotePageRequest request, String userId);
 
     List<NoteItem> getReferencedNotes(String noteId, String userId);
 }

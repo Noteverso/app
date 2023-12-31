@@ -1,7 +1,7 @@
 package com.noteverso.core.manager.impl;
 
 import com.noteverso.core.dao.NoteMapper;
-import com.noteverso.core.dto.NoteCount;
+import com.noteverso.core.dto.NoteCountForProject;
 import com.noteverso.core.dto.ProjectViewOption;
 import com.noteverso.core.manager.NoteManager;
 import lombok.AllArgsConstructor;
@@ -17,9 +17,9 @@ public class NoteManagerImpl implements NoteManager {
     @Override
     public HashMap<String, Long> getNoteCountByProjects(List<ProjectViewOption> projectViewOptions, String userId) {
         HashMap<String, Long> result = new HashMap<>();
-        if (!projectViewOptions.isEmpty()) {
-            List<NoteCount> noteCounts = noteMapper.getNoteCountByProjects(projectViewOptions, userId);
-            for (NoteCount noteCount : noteCounts) {
+        if (projectViewOptions != null && !projectViewOptions.isEmpty()) {
+            List<NoteCountForProject> noteCounts = noteMapper.getNoteCountByProjects(projectViewOptions, userId);
+            for (NoteCountForProject noteCount : noteCounts) {
                 result.put(noteCount.getProjectId(), noteCount.getNoteCount());
             }
         }
