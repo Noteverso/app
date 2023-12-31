@@ -11,13 +11,16 @@ import com.noteverso.core.dao.ProjectMapper;
 import com.noteverso.core.dto.ProjectDTO;
 import com.noteverso.core.dto.ProjectItem;
 import com.noteverso.core.dto.ProjectViewOption;
+import com.noteverso.core.dto.SelectItem;
 import com.noteverso.core.enums.ObjectViewTypeEnum;
 import com.noteverso.core.manager.NoteManager;
 import com.noteverso.core.manager.UserConfigManager;
+import com.noteverso.core.model.Label;
 import com.noteverso.core.model.Project;
 import com.noteverso.core.model.UserConfig;
 import com.noteverso.core.model.ViewOption;
 import com.noteverso.core.request.ProjectCreateRequest;
+import com.noteverso.core.request.ProjectRequest;
 import com.noteverso.core.request.ProjectUpdateRequest;
 import com.noteverso.core.request.ViewOptionCreate;
 import com.noteverso.core.service.ProjectService;
@@ -269,5 +272,25 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         return projectItems;
+    }
+
+    @Override
+    public List<SelectItem> getProjectSelectItems(ProjectRequest request, String userId) {
+        List<Project> projects = projectMapper.getProjects(request, userId);
+        if (projects == null || projects.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<SelectItem> projectSelectItems = new ArrayList<>();
+        for (Project project : projects) {
+            String projectId = project.getProjectId();
+            SelectItem projectSelectItem = new SelectItem();
+            projectSelectItem.setName(project.getName());
+            projectSelectItem.setValue(projectId);
+            projectSelectItem.setColor(project.getColor());
+            projectSelectItems.add(projectSelectItem);
+        }
+
+        return projectSelectItems;
     }
 }

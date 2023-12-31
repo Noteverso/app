@@ -2,8 +2,10 @@ package com.noteverso.core.service;
 
 import com.noteverso.core.dto.ProjectDTO;
 import com.noteverso.core.dto.ProjectItem;
+import com.noteverso.core.dto.SelectItem;
 import com.noteverso.core.model.Project;
 import com.noteverso.core.request.ProjectCreateRequest;
+import com.noteverso.core.request.ProjectRequest;
 import com.noteverso.core.request.ProjectUpdateRequest;
 
 import java.util.List;
@@ -28,4 +30,6 @@ public interface ProjectService {
     Project constructInboxProject(String userId);
 
     List<ProjectItem> getProjectList(String userId);
+
+    List<SelectItem> getProjectSelectItems(ProjectRequest request, String userId);
 }

@@ -5,4 +5,14 @@
         SELECT * FROM noteverso_project
         WHERE project_id = #{projectId} AND creator = #{userId}
     </select>
+
+    <select id="getProjects" resultType="com.noteverso.core.model.Project">
+        SELECT name, project_id, color FROM noteverso_project
+        WHERE creator = #{userId}
+        <if test="request.name">
+            AND LOWER(name) LIKE LOWER(CONCAT('%', TRIM('${request.name}'), '%'))
+        </if>
+
+        ORDER BY added_at DESC
+    </select>
 </mapper>

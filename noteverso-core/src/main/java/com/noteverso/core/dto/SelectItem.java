@@ -6,4 +6,5 @@ import lombok.Data;
 public class SelectItem {
     private String value;
     private String name;
+    private String color;
 }

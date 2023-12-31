@@ -2,9 +2,11 @@ package com.noteverso.core.controller;
 
 import com.noteverso.common.api.ApiResult;
 import com.noteverso.core.dto.ProjectItem;
+import com.noteverso.core.dto.SelectItem;
 import com.noteverso.core.manager.AuthManager;
 import com.noteverso.core.manager.impl.AuthManagerImpl;
 import com.noteverso.core.request.ProjectCreateRequest;
+import com.noteverso.core.request.ProjectRequest;
 import com.noteverso.core.request.ProjectUpdateRequest;
 import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.ProjectService;
@@ -84,5 +86,12 @@ public class ProjectController {
     public ApiResult<List<ProjectItem>> getProjectList(Authentication authentication) {
         UserDetailsImpl userDetails = authManager.getPrincipal(authentication) ;
         return ApiResult.success(projectService.getProjectList(userDetails.getUserId()));
+    }
+
+    @Operation(summary = "Get Project Select items", description = "Get Project Select items", tags = { "GET" })
+    @GetMapping("/select")
+    public ApiResult<List<SelectItem>> getProjectSelectItems(Authentication authentication, @jakarta.validation.Valid ProjectRequest request) {
+        List<SelectItem> selectItems = projectService.getProjectSelectItems(request, authManager.getPrincipal(authentication).getUserId());
+        return ApiResult.success(selectItems);
     }
 }

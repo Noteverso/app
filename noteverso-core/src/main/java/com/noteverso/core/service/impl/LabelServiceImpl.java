@@ -183,6 +183,7 @@ public class LabelServiceImpl implements LabelService {
             SelectItem labelSelectItem = new SelectItem();
             labelSelectItem.setName(label.getName());
             labelSelectItem.setValue(labelId);
+            labelSelectItem.setColor(label.getColor());
             labelSelectItems.add(labelSelectItem);
         }
 
