@@ -28,12 +28,12 @@ public class Attachment {
     private String url;
 
     /**
-     * 附件资源类型，0 - image - 图片，1 - file - 文件
+     * 附件资源类型, image - 图片，file - 文件
      */
-    private Integer resourceType;
+    private String resourceType;
 
     /**
-     * 附件大小
+     * 附件大小，单位 bytes
      */
     private Long size;
 

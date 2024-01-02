@@ -31,10 +31,10 @@ public class UserConfig {
     /**
      * 语言, 0 - zh-cn,1 - en-us
      */
-
     private Integer lang;
 
     /**
+
      * 用户首次登陆应用后的定位页面，project?id=${project_id}, upcoming, label?name=${label_name}
      */
     private String startPage;
@@ -70,7 +70,7 @@ public class UserConfig {
      */
     private Long projectsQuota;
     /**
-     * 文件大小总和配额
+     * 文件大小总和配额, bytes
      */
     private Long filesSizeQuota;
     /**

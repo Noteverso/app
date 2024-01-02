@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS noteverso_attachment (
     type varchar(25) NOT NULL,
     url varchar(255) NOT NULL,
     size bigint NOT NULL,
-    resource_type smallint NOT NULL,
+    resource_type varchar(20) NOT NULL,
     attachment_id varchar(50) not null constraint uq_attachment_id unique,
     creator varchar(50) DEFAULT NULL,
     updater varchar(50) DEFAULT NULL,
@@ -190,8 +190,8 @@ comment on constraint uq_attachment_id on noteverso_attachment is '附件唯一i
 COMMENT ON COLUMN noteverso_attachment.name IS '附件名称';
 COMMENT ON COLUMN noteverso_attachment.type IS '附件类型，MIME type，如 video/*, audio/*, image/*';
 COMMENT ON COLUMN noteverso_attachment.size IS '附件大小，单位bytes';
-COMMENT ON COLUMN noteverso_attachment.url IS '附件链接';
-COMMENT ON COLUMN noteverso_attachment.resource_type IS '附件资源类型，0 - image - 图片，1 - file - 文件';
+COMMENT ON COLUMN noteverso_attachment.url IS '附件OSS地址';
+COMMENT ON COLUMN noteverso_attachment.resource_type IS '附件资源类型, image - 图片，file - 文件';
 COMMENT ON COLUMN noteverso_attachment.creator IS '创建人';
 COMMENT ON COLUMN noteverso_attachment.updater IS '更新人';
 COMMENT ON COLUMN noteverso_attachment.added_at IS '添加时间';

@@ -1,11 +1,9 @@
-package com.noteverso.core.dto;
+package com.noteverso.core.request;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class AttachmentDTO {
+public class AttachmentRequest {
     /**
      * 附件名称
      */
@@ -14,7 +12,7 @@ public class AttachmentDTO {
     /**
      * 附件 MIME 类型，如 video/*, audio/*, image/*
      */
-    private String type;
+    private String contentType;
 
     /**
      * 附件 OSS 链接
@@ -27,13 +25,7 @@ public class AttachmentDTO {
     private String resourceType;
 
     /**
-     * 附件资源类型，image - 图片，file - 文件, bytes
+     * 附件资源类型，image - 图片，file - 文件
      */
-    private Long size;
-
-    /**
-     *
-     * 附件id
-     */
-    private String attachmentId;
+    private Long contentLength;
 }
