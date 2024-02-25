@@ -22,6 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -292,6 +293,7 @@ class NoteServiceTest {
         verify(relationService, times(1)).getReferencedCountByReferencedNoteIds(noteIds, userId);
         assertThat(notePageResponsePage.getTotal()).isEqualTo(notePage.getTotal());
     }
+
 
     private List<Note> constructNotesByNoteIds(List<String> noteIds, String userId) {
         List<Note> notes = new ArrayList<>();

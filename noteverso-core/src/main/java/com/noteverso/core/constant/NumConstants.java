@@ -39,4 +39,24 @@ public class NumConstants {
      * 笔记链接数配额
      */
     public static final Long LINKED_NOTE_QUOTA_PREMIUM = 10000L;
+
+    /**
+     * 验证码过期时间，单位秒
+     */
+    public static final int CAPTCHA_EXPIRE = 5 * 60;
+
+    /**
+     * 验证码发送间隔时间，单位毫秒
+     */
+    public static final int CAPTCHA_INTERVAL = 1 * 60 * 1000;
+
+    /**
+     * 同一个邮箱验证码最多发送次数
+     */
+    public static final int CAPTCHA_SEND_TIMES = 10;
+
+    /**
+     * 邮箱验证每天发送总次数
+     */
+    public static final int CAPTCHA_SEND_TIMES_TOTAL = 300;
 }

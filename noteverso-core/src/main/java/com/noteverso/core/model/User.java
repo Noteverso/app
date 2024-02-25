@@ -33,7 +33,7 @@ public class User {
     private Object avatar;
 
     /**
-     * 用户名 - 实际为邮箱用于登录
+     * 用户名
      */
     private String username;
 

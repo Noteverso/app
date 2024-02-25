@@ -274,8 +274,8 @@ CREATE TABLE IF NOT EXISTS noteverso_user_info (
    id               bigserial NOT NULL,
    user_id          varchar(50) NOT NULL CONSTRAINT uq_user_id UNIQUE,
    avatar           jsonb,
-   username         varchar(50) NOT NULL CONSTRAINT uq_username UNIQUE,
-   email            varchar(50) NOT NULL,
+   username         varchar(50) NOT NULL,
+   email            varchar(50) NOT NULL CONSTRAINT uq_email UNIQUE,
    full_name        varchar(20) DEFAULT NULL::character varying,
    has_password     smallint DEFAULT 0,
    password         varchar(80) NOT NULL,
@@ -295,8 +295,8 @@ COMMENT ON COLUMN noteverso_user_info.user_id IS '用户id';
 COMMENT ON CONSTRAINT uq_user_id ON noteverso_user_info IS 'user_id 唯一';
 COMMENT ON COLUMN noteverso_user_info.avatar IS '头像';
 COMMENT ON COLUMN noteverso_user_info.username IS '用户名称';
-COMMENT ON CONSTRAINT uq_username ON noteverso_user_info IS 'email 唯一';
 COMMENT ON COLUMN noteverso_user_info.email IS '邮箱';
+COMMENT ON CONSTRAINT uq_email ON noteverso_user_info IS 'email 唯一';
 COMMENT ON COLUMN noteverso_user_info.full_name IS '昵称';
 COMMENT ON COLUMN noteverso_user_info.has_password IS '是否有密码, 0 - 否, 1 - 是';
 COMMENT ON COLUMN noteverso_user_info.password IS '密码';

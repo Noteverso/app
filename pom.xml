@@ -61,6 +61,8 @@
 		<spring-security-test.version>6.1.2</spring-security-test.version>
         <jjwt.version>0.12.3</jjwt.version>
 		<aws-java-sdk-s3>1.12.629</aws-java-sdk-s3>
+		<spring-boot-starter-data-redis.version>3.2.3</spring-boot-starter-data-redis.version>
+		<commons-pool2.version>2.12.0</commons-pool2.version>
 	</properties>
 
 	<dependencyManagement>
@@ -179,6 +181,16 @@
 				<groupId>cn.hutool</groupId>
 				<artifactId>hutool-core</artifactId>
 				<version>${hutool.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-data-redis</artifactId>
+				<version>${spring-boot-starter-data-redis.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-pool2</artifactId>
+				<version>${commons-pool2.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

@@ -8,5 +8,5 @@ public class UploadFileGetResponse {
 
     private String signedGetUrl;
 
-    private String attachmentId;
+    private String attachmentUrl;
 }

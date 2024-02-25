@@ -1,5 +1,6 @@
 package com.noteverso.core.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.noteverso.common.util.IPUtils;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.constant.StringConstants;
@@ -38,10 +39,10 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void createUser(String username, String password) {
+    public void createUser(String email, String username, String password) {
         // Create user
         String userId = String.valueOf(snowFlakeUtils.nextId());
-        var user = constructUser(userId, username, password);
+        var user = constructUser(userId, email, username, password);
         userMapper.insert(user);
 
         // Create default project - inbox
@@ -58,11 +59,11 @@ public class UserServiceImpl implements UserService {
         viewOptionService.createViewOption(viewOptionCreate, userId);
     }
 
-    private User constructUser(String userId, String username, String password) {
+    private User constructUser(String userId, String email, String username, String password) {
         return User
             .builder()
             .userId(userId)
-            .email(username)
+            .email(email)
             .username(username)
             .authority(StringConstants.AUTHORITY_NORMAL)
             .password(passwordEncoder.encode(password))
@@ -92,5 +93,12 @@ public class UserServiceImpl implements UserService {
                 .addedAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        LambdaQueryWrapper<User> qw = new LambdaQueryWrapper<>();
+        qw.eq(User::getEmail, email);
+        return userMapper.exists(qw);
     }
 }
