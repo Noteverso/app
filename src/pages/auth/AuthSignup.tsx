@@ -1,3 +1,5 @@
 export default function AuthSignup() {
-  return <div>AuthSignup</div>
+  return <div>
+    AuthSignup
+  </div>
 }
