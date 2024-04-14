@@ -1,2 +1,2 @@
-export { default as AuthLogin } from './AuthLogin'
-export { default as AuthSignup } from './AuthSignup'
+export { default as LoginPage } from './LoginPage'
+export { default as SignupPage } from './SignupPage'

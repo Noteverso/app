@@ -16,5 +16,8 @@ module.exports = {
       'warn',
       { allowConstantExport: true },
     ],
+    'react/prop-types': 'off',
+    curly: ['error', 'all'],
+    '@typescript-eslint/brace-style': ['error', '1tbs', { allowSingleLine: false }],
   },
 }

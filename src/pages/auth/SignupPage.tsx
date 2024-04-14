@@ -1,4 +1,4 @@
-export default function AuthSignup() {
+export default function SignupPage() {
   return <div>
     AuthSignup
   </div>
