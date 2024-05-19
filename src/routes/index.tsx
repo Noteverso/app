@@ -24,23 +24,23 @@ export const router = createBrowserRouter([
           },
           {
             // loading
-            path: '/app',
+            path: 'app',
             element: <Navigate to="/app/inbox" replace />,
           },
           {
-            path: '/app/inbox',
+            path: 'app/inbox',
             element: <Inbox />,
           },
           {
-            path: '/app/labels',
+            path: 'app/labels',
             element: <Labels />,
           },
           {
-            path: '/app/attachments',
+            path: 'app/attachments',
             element: <Attachments />,
           },
           {
-            path: '/app/projects/:projectId',
+            path: 'app/projects/:projectId',
             element: <Project />,
           },
         ],

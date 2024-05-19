@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { ROUTER_PATHS } from '@/routes/path'
 export type SidebarProprs = {
   projectIds: string[];
 }
@@ -7,17 +8,17 @@ export default function Sidebar({ projectIds }: SidebarProprs) {
   return <div>
     <ul>
       <li>
-        <NavLink to="/app/inbox">inbox</NavLink>
+        <NavLink to={ROUTER_PATHS.INBOX_PATH}>inbox</NavLink>
       </li>
       <li>
-        <NavLink to="/app/labels">labels</NavLink>
+        <NavLink to={ROUTER_PATHS.LABELS_PATH}>labels</NavLink>
       </li>
       <li>
-        <NavLink to="/app/attachments">attachments</NavLink>
+        <NavLink to={ROUTER_PATHS.ATTACHMENTS_PATH}>attachments</NavLink>
       </li>
       {
         projectIds.map(projectId => <li key={projectId}>
-          <NavLink to={`/app/projects/${projectId}`}>{projectId}</NavLink>
+          <NavLink to={`${ROUTER_PATHS.PROJECTS_PATH}/${projectId}`}>{projectId}</NavLink>
         </li>)
       }
     </ul>
