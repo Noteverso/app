@@ -13,6 +13,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.TextStyle;
+import java.time.zone.ZoneRules;
+import java.util.Locale;
+import java.util.Set;
+
 @Tag(name = "Mail", description = "Mail management APIs")
 @RestController
 @RequestMapping("/api/v1/mails")
@@ -63,5 +72,26 @@ public class MailController {
     public ApiResult<Object> redisGetTest(String key) {
         Object value = redisTemplate.opsForValue().get(key);
         return ApiResult.success(value);
+    }
+
+    public static void main(String[] args) {
+        ZoneId zoneId = ZoneOffset.ofTotalSeconds(8 * 60 * 60);
+        String zoneIdStr = zoneId.getId();
+        String zoneDisplayName = zoneId.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+        ZoneRules zoneRules = zoneId.getRules();
+        System.out.println("时区标识符" + zoneIdStr);
+        System.out.println("时区显示名称" +  zoneDisplayName);
+        System.out.println("时区规则" + zoneRules);
+        ZoneOffset offset = ZoneOffset.ofHours(8);
+        Set<String> availableIds = ZoneId.getAvailableZoneIds();
+
+        for (String zoneIdString : availableIds) {
+            ZoneId zoneId1 = ZoneId.of(zoneIdString);
+            ZoneOffset zoneOffset = zoneId1.getRules().getOffset(Instant.now());
+            if (offset.equals(zoneOffset)) {
+                System.out.println(zoneOffset);
+                System.out.println(zoneIdString);
+            }
+        }
     }
 }

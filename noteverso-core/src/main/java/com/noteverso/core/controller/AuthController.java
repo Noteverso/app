@@ -6,6 +6,7 @@ import com.noteverso.common.exceptions.BusinessException;
 import com.noteverso.common.exceptions.DuplicateRecordException;
 import com.noteverso.core.request.CreateUserRequest;
 import com.noteverso.core.request.LoginRequest;
+import com.noteverso.core.response.LoginResponse;
 import com.noteverso.core.security.jwt.JwtUtils;
 import com.noteverso.core.service.EmailService;
 import com.noteverso.core.service.UserService;
@@ -38,14 +39,17 @@ public class AuthController {
 
     @Operation(description = "Login with username and password", tags = {"POST"})
     @PostMapping("/login")
-    public ApiResult<String> login(@Valid @RequestBody LoginRequest loginRequest) {
+    public ApiResult<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String token = jwtUtils.generateJwtToken(authentication);
-        return ApiResult.success(token);
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setUsername(loginRequest.getUsername());
+        loginResponse.setToken(token);
+        return ApiResult.success(loginResponse);
     }
 
     @Operation(description = "Sign up with username and password", tags = {"POST"})
