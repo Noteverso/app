@@ -1,9 +1,18 @@
-import { isRouteErrorResponse, useRouteError } from 'react-router-dom'
+import { Navigate, isRouteErrorResponse, useLocation, useRouteError } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth'
+import { ROUTER_PATHS } from '@/routes/path'
 
-export default function ErrorPage() {
+export function ErrorPage() {
   const error = useRouteError()
+  const auth = useAuth()
+  const location = useLocation()
 
   if (isRouteErrorResponse(error)) {
+    if (error.status === 401) {
+      auth?.logout()
+      return <Navigate to={ROUTER_PATHS.LOGIN.path} state={{ from: location }} replace />
+    }
+
     return (
       <div id="error-page">
         <h1>Oops!</h1>

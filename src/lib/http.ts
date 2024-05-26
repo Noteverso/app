@@ -5,6 +5,8 @@ import type {
   AxiosRequestConfig,
   AxiosResponse,
 } from 'axios'
+import { json } from 'react-router-dom'
+import { getUserStorageItem } from './auth'
 
 export interface HttpRequestConfig extends AxiosRequestConfig {
   // 是否开启统一错误提示，设置 false 关闭
@@ -48,6 +50,13 @@ export class Http {
   private requestInterceptors(): void {
     this.axiosInstance.interceptors.request.use(
       (config) => {
+        const user = getUserStorageItem()
+        config.headers = config.headers ?? {}
+        if (user !== null) {
+          const token = user.token
+          config.headers.Authorization = `Bearer ${token}`
+        }
+
         return config
       },
       (error: AxiosError) => {
@@ -77,7 +86,8 @@ export class Http {
         return response
       },
       (error: AxiosError) => {
-        return this.handleError(error)
+        const response = this.handleError(error)
+        return response
       },
     )
   }
@@ -85,7 +95,7 @@ export class Http {
   private handleError(error: AxiosError) {
     let message: string
 
-    const { status, data } = error.response!
+    const { status } = error.response!
     switch (status) {
       case 500:
         message = '服务器连接失败'
@@ -102,7 +112,13 @@ export class Http {
       console.warn(message)
     }
 
-    return Promise.reject(data)
+    // return Promise.reject(new Response(message, { status }))
+    return Promise.reject(
+      json(
+        { message },
+        { status },
+      ),
+    )
   }
 
   static getInstance(): Http

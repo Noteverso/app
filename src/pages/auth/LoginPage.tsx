@@ -7,6 +7,7 @@ import { UserForLogin } from '@/api/user'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Button } from '@/components/ui/button/button'
+import { ROUTER_PATHS } from '@/routes/path'
 
 const formSchema = z.object({
   username: z.string().email(),
@@ -15,12 +16,13 @@ const formSchema = z.object({
   }),
 })
 
-export default function LoginPage() {
+export function LoginPage() {
   const auth = useAuth()
   const navicate = useNavigate()
   const location = useLocation()
 
-  const from = location.state?.from?.pathname || '/'
+  const params = new URLSearchParams(location.search)
+  const from = location.state?.from?.pathname || params.get('from') || ROUTER_PATHS.HOME.path
 
   // 1. Define a form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -59,6 +61,7 @@ export default function LoginPage() {
                     {...field}
                     type="email"
                     required
+                    autoComplete="username"
                     placeholder="Enter your email"
                   />
                 </FormControl>
@@ -78,6 +81,7 @@ export default function LoginPage() {
                     {...field}
                     type="password"
                     required
+                    autoComplete="current-password"
                     placeholder="Enter your password"
                   />
                 </FormControl>

@@ -1,7 +1,7 @@
 import * as React from 'react'
 
 import { Slot } from '@radix-ui/react-slot'
-import useFormField from './useFormField'
+import { useFormField } from '.'
 
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
@@ -25,4 +25,4 @@ const FormControl = React.forwardRef<
 })
 FormControl.displayName = 'FormControl'
 
-export default FormControl
+export { FormControl }

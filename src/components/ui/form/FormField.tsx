@@ -30,4 +30,4 @@ const FormField = <
   )
 }
 
-export default FormField
+export { FormField }

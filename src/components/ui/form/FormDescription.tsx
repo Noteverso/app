@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import useFormField from './useFormField'
+import { useFormField } from '.'
 import { cn } from '@/lib/utils'
 
 const FormDescription = React.forwardRef<
@@ -19,4 +19,4 @@ const FormDescription = React.forwardRef<
   )
 })
 FormDescription.displayName = 'FormDescription'
-export default FormDescription
+export { FormDescription }

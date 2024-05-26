@@ -1,4 +1,4 @@
-function Logo() {
+export function Logo() {
   return (
     <a href="https://noteverso.com">
       <svg width="70" height="18" viewBox="0 0 70 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -20,5 +20,3 @@ function Logo() {
     </a>
   )
 }
-
-export default Logo

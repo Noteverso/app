@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import useFormField from './useFormField'
+import { useFormField } from '.'
 import { cn } from '@/lib/utils'
 
 const FormMessage = React.forwardRef<
@@ -27,4 +27,4 @@ const FormMessage = React.forwardRef<
 })
 FormMessage.displayName = 'FormMessage'
 
-export default FormMessage
+export { FormMessage }

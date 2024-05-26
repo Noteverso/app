@@ -1,24 +1,36 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useFetcher } from 'react-router-dom'
 import { ROUTER_PATHS } from '@/routes/path'
+import type { Project } from '@/api/project'
+
 export type SidebarProprs = {
-  projectIds: string[];
+  projectList: Project[];
 }
 
-export default function Sidebar({ projectIds }: SidebarProprs) {
+export function Sidebar({ projectList }: SidebarProprs) {
+  const fetcher = useFetcher()
+
   return <div>
-    <ul>
+    <ul className="flex gap-x-2">
       <li>
-        <NavLink to={ROUTER_PATHS.INBOX_PATH}>inbox</NavLink>
+        <NavLink to={ROUTER_PATHS.HOME.path}>{ROUTER_PATHS.HOME.name}</NavLink>
       </li>
       <li>
-        <NavLink to={ROUTER_PATHS.LABELS_PATH}>labels</NavLink>
+        <NavLink to={ROUTER_PATHS.INBOX.path}>{ROUTER_PATHS.INBOX.name}</NavLink>
       </li>
       <li>
-        <NavLink to={ROUTER_PATHS.ATTACHMENTS_PATH}>attachments</NavLink>
+        <NavLink to={ROUTER_PATHS.LABELS.path}>{ROUTER_PATHS.LABELS.name}</NavLink>
+      </li>
+      <li>
+        <NavLink to={ROUTER_PATHS.ATTACHMENTS.path}>{ROUTER_PATHS.ATTACHMENTS.name}</NavLink>
+      </li>
+      <li>
+        <fetcher.Form method="post" action={ROUTER_PATHS.LOGOUT.path}>
+          <button>{ROUTER_PATHS.LOGOUT.name}</button>
+        </fetcher.Form>
       </li>
       {
-        projectIds.map(projectId => <li key={projectId}>
-          <NavLink to={`${ROUTER_PATHS.PROJECTS_PATH}/${projectId}`}>{projectId}</NavLink>
+        projectList.map(project => <li key={project.projectId}>
+          <NavLink to={`${ROUTER_PATHS.PROJECTS.path}/${project.projectId}`}>{project.name}</NavLink>
         </li>)
       }
     </ul>
