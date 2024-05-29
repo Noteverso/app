@@ -1,13 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { UserForLogin } from '@/api/user'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Button } from '@/components/ui/button/button'
 import { ROUTER_PATHS } from '@/routes/path'
+import { authProvider } from '@/lib/auth'
 
 const formSchema = z.object({
   username: z.string().email(),
@@ -17,7 +17,6 @@ const formSchema = z.object({
 })
 
 export function LoginPage() {
-  const auth = useAuth()
   const navicate = useNavigate()
   const location = useLocation()
 
@@ -34,15 +33,18 @@ export function LoginPage() {
   })
 
   // 2. Define a submit handler
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     const user: UserForLogin = {
       username: values.username,
       password: values.password,
     }
 
-    auth?.signin(user, () => {
-      navicate(from, { replace: true })
-    })
+    await authProvider.login(user)
+    navicate(from, { replace: true })
+  }
+
+  if (authProvider.isAuthenticated()) {
+    return <Navigate to={from} replace />
   }
 
   return (

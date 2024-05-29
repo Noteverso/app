@@ -1,10 +1,10 @@
 import { LoaderFunction, LoaderFunctionArgs, redirect } from 'react-router-dom'
-import { getUserStorageItem } from '@/lib/auth'
 import { ROUTER_PATHS } from '@/routes/path'
+import { authProvider } from '@/lib/auth'
 
 export function protectedLoader(loader: LoaderFunction) {
   return (arg: LoaderFunctionArgs) => {
-    const user = getUserStorageItem()
+    const user = authProvider.user()
     // that allows login to redirect back to this page upon successful authentication
     // if the user is not logged in, redirect them to the login page with a `from` parameter
     if (!user) {

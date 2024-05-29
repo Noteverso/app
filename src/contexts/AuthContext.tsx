@@ -7,7 +7,7 @@ import {
   getUserStorageItem,
   setIsLoginStorageItem,
   setUserStorageItem,
-} from '@/lib/auth'
+} from '@/lib/storage'
 
 function useProviderAuth() {
   const [user, setUser] = useState(getUserStorageItem())

@@ -6,7 +6,7 @@ import type {
   AxiosResponse,
 } from 'axios'
 import { json } from 'react-router-dom'
-import { getUserStorageItem } from './auth'
+import { authProvider } from '@/lib/auth'
 
 export interface HttpRequestConfig extends AxiosRequestConfig {
   // 是否开启统一错误提示，设置 false 关闭
@@ -50,7 +50,7 @@ export class Http {
   private requestInterceptors(): void {
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        const user = getUserStorageItem()
+        const user = authProvider.user()
         config.headers = config.headers ?? {}
         if (user !== null) {
           const token = user.token
