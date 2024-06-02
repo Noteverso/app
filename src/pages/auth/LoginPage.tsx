@@ -21,7 +21,7 @@ export function LoginPage() {
   const location = useLocation()
 
   const params = new URLSearchParams(location.search)
-  const from = location.state?.from?.pathname || params.get('from') || ROUTER_PATHS.HOME.path
+  const from = location.state?.from?.pathname || params.get('from') || ROUTER_PATHS.INBOX.path
 
   // 1. Define a form
   const form = useForm<z.infer<typeof formSchema>>({

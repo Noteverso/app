@@ -1,3 +1,5 @@
+@import './abstracts/variables.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

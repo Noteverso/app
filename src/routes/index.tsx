@@ -16,8 +16,10 @@ export const router = createBrowserRouter([
     id: 'root',
     path: '/',
     element: <Home />,
-    errorElement: <ErrorPage />,
-    // loader: rootLoader,
+    async loader() {
+      const user = authProvider.user()
+      return user
+    },
   },
   {
     id: 'auth',

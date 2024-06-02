@@ -1,34 +1,34 @@
 export const ROUTER_PATHS = {
   HOME: {
     path: '/',
-    name: 'home',
+    name: '首页',
   },
   INBOX: {
     path: '/app/inbox',
-    name: 'inbox',
+    name: 'Inbox',
   },
   LABELS: {
     path: '/app/labels',
-    name: 'labels',
+    name: 'Labels',
   },
   ATTACHMENTS: {
     path: '/app/attachments',
-    name: 'attachments',
+    name: 'Attachments',
   },
   PROJECTS: {
     path: '/app/projects',
-    name: 'projects',
+    name: 'Projects',
   },
   LOGIN: {
     path: '/auth/login',
-    name: 'login',
+    name: 'Login',
   },
   SIGNUP: {
     path: '/auth/signup',
-    name: 'signup',
+    name: 'Signup',
   },
   LOGOUT: {
     path: '/auth/logout',
-    name: 'logout',
+    name: 'Logout',
   },
 } as const
