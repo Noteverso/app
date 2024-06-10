@@ -1,3 +1,3 @@
-export { layoutLoader } from './layoutLoader'
-export { protectedLoader } from './protectedLoader'
+export { layoutLoader } from './layout-loader'
+export { protectedLoader } from './protected-loader'
 

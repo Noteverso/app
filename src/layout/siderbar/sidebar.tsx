@@ -12,9 +12,6 @@ export function Sidebar({ projectList }: SidebarProprs) {
   return <div>
     <ul className="flex gap-x-2">
       <li>
-        <NavLink to={ROUTER_PATHS.HOME.path}>{ROUTER_PATHS.HOME.name}</NavLink>
-      </li>
-      <li>
         <NavLink to={ROUTER_PATHS.INBOX.path}>{ROUTER_PATHS.INBOX.name}</NavLink>
       </li>
       <li>

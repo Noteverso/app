@@ -1,3 +1,3 @@
-export { LoginPage } from './LoginPage'
-export { SignupPage } from './SignupPage'
-export { AuthLayout } from './AuthLayout'
+export { LoginPage } from './login-page'
+export { SignupPage } from './signup-page'
+export { AuthLayout } from './auth-layout'

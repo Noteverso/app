@@ -1,6 +1,6 @@
 import { Navigate, createBrowserRouter, redirect } from 'react-router-dom'
 import { ROUTER_PATHS } from './path'
-import { Layout } from '@/components/layout'
+import { Layout } from '@/layout'
 import { AuthLayout, LoginPage } from '@/pages/auth'
 import { ErrorPage } from '@/pages/error'
 import { Project } from '@/pages/project'

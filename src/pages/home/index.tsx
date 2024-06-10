@@ -9,10 +9,10 @@ import {
   homeSectionReverse,
   homeWrapperHero,
 } from './home.module.css'
-import { HomeHeader } from '@/components/layout/header/HomeHeader'
+import { HomeHeader } from '@/layout/header/home-header'
 import { UserResponse } from '@/api/user'
-import { Footer } from '@/components/layout/footer/Footer'
-import { Button } from '@/components/ui/button/button'
+import { Footer } from '@/layout/footer/footer'
+import { Button } from '@/components/button/button'
 
 import HeroImage from '@/assets/svg/hero.svg'
 import Feature1 from '@/assets/svg/feature_1.svg'
