@@ -1,9 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@import './abstracts/variables';
-@import './components/tiptap';
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 html {
   font-size: 14px;
@@ -11,12 +10,6 @@ html {
 
 body {
   font-size: 1rem;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
 }
 
 .loading-area {
@@ -35,7 +28,7 @@ mark {
     font-size: .9rem
 }
 
-// Reset prismjs `pre` element styles with tailwindcss
+/* Reset prismjs `pre` element styles with tailwindcss */
 pre[class*="language-"] {
   font-size: 0.875em;
   line-height: 1.7142857;
@@ -83,4 +76,4 @@ pre[class*="language-"] {
 
 ::-webkit-scrollbar-corner {
     background-color: transparent
-}
+} 

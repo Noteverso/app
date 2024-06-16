@@ -17,7 +17,7 @@ import ReactDOM from 'react-dom/client'
 import App from './app.tsx'
 import './styles/index.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById('noteverso-app')!).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,

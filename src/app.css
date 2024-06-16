@@ -1,8 +1,0 @@
-#root, body, html {
-  height: 100%;
-  position: relative;
-}
-
-.active {
-  color: blue;
-}

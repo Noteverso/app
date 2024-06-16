@@ -1,6 +1,6 @@
 .tiptap {
   padding: 1em;
-  // border: 2px solid;
+  border: 2px solid;
 
   > * + * {
     margin-top: 0.75em;

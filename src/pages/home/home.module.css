@@ -5,8 +5,8 @@
 }
 
 .home-section {
-  --padding-left: var(--space-8);
-  --padding-right: var(--space-8);
+  --padding-left: var(--global-space-8);
+  --padding-right: var(--global-space-8);
   --flex-direction: column;
   --justify-content: center;
   --text-align: center;
@@ -15,26 +15,26 @@
   justify-content: var(--justify-content);
   flex-direction: var(--flex-direction);
   text-align: var(--text-align);
-  padding-top: var(--space-48);
-  padding-bottom: var(--space-48);
+  padding-top: var(--global-space-48);
+  padding-bottom: var(--global-space-48);
   padding-left: var(--padding-left);
   padding-right: var(--padding-right);
 
   @media (min-width: 320px) {
-    --padding-left: var(--space-16);
-    --padding-right: var(--space-16);
+    --padding-left: var(--global-space-16);
+    --padding-right: var(--global-space-16);
   }
 
   @media (min-width: 375px) {
-    --padding-left: var(--space-32);
-    --padding-right: var(--space-32);
+    --padding-left: var(--global-space-32);
+    --padding-right: var(--global-space-32);
   }
 
   @media (min-width: 768px) {
     --flex-direction: row;
     --justify-content: space-between;
-    --padding-left: var(--space-48);
-    --padding-right: var(--space-48);
+    --padding-left: var(--global-space-48);
+    --padding-right: var(--global-space-48);
     --text-align: left;
 
     align-items: center;
@@ -56,20 +56,20 @@
 
 
 .home-heading-primary {
-  margin-bottom: var(--space-12);
-  font-size: var(--heading-2xl-font-size);
+  margin-bottom: var(--global-space-12);
+  font-size: var(--global-heading-2xl-font-size);
   line-height: 1.2;
   letter-spacing: 2px;
 }
 
 .home-heading-secondary {
-  margin-bottom: var(--space-12);
-  font-size: var(--heading-lg-font-size);
+  margin-bottom: var(--global-space-12);
+  font-size: var(--global-heading-lg-font-size);
 }
 
 .home-description {
   font-size: 1.7rem;
-  margin-bottom: var(--space-32);
+  margin-bottom: var(--global-space-32);
 }
 
 .home-wrapper-hero {
@@ -79,18 +79,18 @@
   margin-bottom: var(--mb);
 
   @media (min-width: 540px) {
-    --mb: var(--negative-space-15);
+    --mb: var(--global-negative-space-15);
   }
 
   @media (min-width: 648px) {
-    --mb: var(--negative-space-25);
+    --mb: var(--global-negative-space-25);
   }
 
   @media (min-width: 848px) {
-    --mb: var(--negative-space-35);
+    --mb: var(--global-negative-space-35);
   }
 
   @media (min-width: 1120px) {
-    --mb: var(--negative-space-45);
+    --mb: var(--global-negative-space-45);
   }
 }

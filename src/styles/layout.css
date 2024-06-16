@@ -1,0 +1,80 @@
+.app-layout {
+  --max-main-content-width: 800px;
+  --sidebar-width: minmax(160px, min(250px, 15vw));
+  --aside-width: 300px;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--global-space-10);
+  align-items: start;
+
+  @media(min-width: 768px) {
+    grid-template-columns: var(--sidebar-width) 1fr var(--aside-width);
+  }
+}
+
+.app-nav {
+  &-wrapper {
+    position: fixed;
+    top: 0;
+    margin-left: 0;
+    /* left: -100%; */
+
+    width: 75%;
+    height: 100vh; 
+    transition: left 300ms cubic-bezier(0.4,0,0.2,1);
+    overflow: auto;
+
+    @media (min-width: 768px) {
+      position: sticky;
+      left: 0;
+      width: auto;
+    }
+
+    /* Test */
+    background-color: gray;
+  }
+
+  &-menu {
+  }
+}
+
+
+.app-main-wrapper {
+  display: grid;
+  justify-items: center;
+  overflow: auto;
+
+  /* Test */
+  min-height: 100vh;
+}
+
+.app-main-content {
+  width: 100%;
+  max-width: var(--max-main-content-width);
+}
+
+.app-aside {
+  &-content {
+    /* Test */
+    background-color: var(--global-color-gray-05);
+  }
+
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 4.8rem; 
+  border-top: 1px solid #333;
+  border-bottom: 1px solid transparent;
+
+  a {
+    display: flex;
+  }
+
+  svg {
+    width: 45px;
+  }
+}

@@ -2,22 +2,22 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: var(--space-64);
+  height: var(--global-space-64);
   
   @media (min-width: 480px) {
     justify-content: flex-start;
-    padding-left: var(--space-32);
-    padding-right: var(--space-32);
+    padding-left: var(--global-space-32);
+    padding-right: var(--global-space-32);
   }
 
   @media (min-width: 768px) {
-    padding-left: var(--space-64);
-    padding-right: var(--space-64); 
+    padding-left: var(--global-space-64);
+    padding-right: var(--global-space-64); 
   }
 
   @media (min-width: 1024px) {
-    padding-left: var(--space-96);
-    padding-right: var(--space-96);
+    padding-left: var(--global-space-96);
+    padding-right: var(--global-space-96);
   }
 
   @media (min-width: 1120px) {
@@ -45,18 +45,18 @@
     display: flex;
     position: relative;
     align-items: center;
-    padding: 0 var(--space-16);
+    padding: 0 var(--global-space-16);
     border-top: 2px solid transparent;
     border-bottom: 2px solid transparent;
     font-size: 1.2rem;
 
     &:hover {
-      background-color: var(--color-gray-01);
-      border-bottom: 2px solid var(--highlight);
+      background-color: var(--global-color-gray-01);
+      border-bottom: 2px solid var(--global-highlight);
     }
   }
 
   &-link__highlight {
-    color: var(--highlight);
+    color: var(--global-highlight);
   }
 }

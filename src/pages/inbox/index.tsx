@@ -1,3 +1,3 @@
 export function Inbox() {
-  return <div>InboxPage</div>
+  return <div className="app-inbox">InboxPage</div>
 }
