@@ -1,7 +1,6 @@
 import { useLoaderData } from 'react-router-dom'
 import { Main } from './main/main'
 import { Nav } from './nav/nav'
-import { Aside } from './aside/aside'
 import { Project } from '@/api/project'
 
 export function Layout() {
@@ -11,7 +10,6 @@ export function Layout() {
     <div className="app-layout">
       <Nav projectList={layoutLoaderData.projectList} />
       <Main />
-      <Aside />
     </div>
   )
 }

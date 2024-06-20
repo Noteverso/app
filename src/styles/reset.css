@@ -4,12 +4,14 @@
   box-sizing: border-box;
 }
 
-html {
-  font-size: 14px;
+body {
+  overscroll-behavior: none;
 }
 
-body {
-  font-size: 1rem;
+body,
+html, 
+#noteverso-app {
+  height: 100%;
 }
 
 .loading-area {

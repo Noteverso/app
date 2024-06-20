@@ -5,7 +5,7 @@ import {
   setIsLoginStorageItem,
   setUserStorageItem,
 } from './storage'
-import { UserForLogin, UserResponse, loginApi } from '@/api/user'
+import { UserForLogin, UserResponse/* , loginApi */ } from '@/api/user'
 
 interface AuthProvider {
   isAuthenticated(): boolean | null;
@@ -22,7 +22,12 @@ export const authProvider: AuthProvider = {
     return getUserStorageItem()
   },
   async login(user: UserForLogin) {
-    const userResponse = await loginApi(user)
+    // const userResponse = await loginApi(user)
+    console.warn(user)
+    const userResponse = {
+      username: 'test',
+      token: 'testtoken',
+    }
     setUserStorageItem(userResponse)
     setIsLoginStorageItem(true)
   },
