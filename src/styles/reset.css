@@ -1,23 +1,71 @@
+/* Reset some default styles and provide a clean slate */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
+/* Prevent font size inflation */
+html {
+  text-size-adjust: none;
+}
+
+/* Apply a simple, elegant font to the entire page */
 body {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.5;
   overscroll-behavior: none;
 }
 
+/* Add a subtle background color */
 body,
 html, 
 #noteverso-app {
   height: 100%;
+  background-color: #f0f0f0;
 }
 
-.loading-area {
-  height: 50px;
-  margin: 30px;
-  text-align: center;
+:where(h1) {
+  font-size: 2em;
+  margin-bottom: 0.67em;
+}
+
+:where(p + p) {
+  margin-bottom: 1rem;
+}
+
+/* Improve media defaults */
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Remove build-in form typography styles */
+input, button, textarea, select {
+  font-size: inherit;
+  font-family: inherit;
+}
+
+/* Avoid text overflows */
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+/* Select shorter line height on headings and interactive elements */
+h1, h2, h3, h4, h5, h6, button, input, label {
+  line-height: 1.1;
+}
+
+/* Balance text wrapping on headings */
+h1, h2, h3, h4 {
+  text-wrap: balance;
+}
+
+/* Remove list styles */
+ul, ol {
+  list-style: none;
 }
 
 mark {
