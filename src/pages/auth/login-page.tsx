@@ -5,7 +5,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { UserForLogin } from '@/api/user'
 import { Input } from '@/components/input/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/form'
-import { Button } from '@/components/button/button'
+import { Button } from '@/components/button'
 import { ROUTER_PATHS } from '@/routes/path'
 import { authProvider } from '@/lib/auth'
 

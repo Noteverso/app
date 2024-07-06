@@ -5,15 +5,18 @@ export const ROUTER_PATHS = {
   },
   INBOX: {
     path: '/app/inbox',
-    name: 'Inbox',
+    // name: 'Inbox',
+    name: '收件箱',
   },
   LABELS: {
     path: '/app/labels',
-    name: 'Labels',
+    // name: 'Labels',
+    name: '标签',
   },
   ATTACHMENTS: {
     path: '/app/attachments',
-    name: 'Attachments',
+    // name: 'Attachments',
+    name: '附件',
   },
   PROJECTS: {
     path: '/app/projects',
@@ -21,14 +24,17 @@ export const ROUTER_PATHS = {
   },
   LOGIN: {
     path: '/auth/login',
-    name: 'Login',
+    // name: 'Login',
+    name: '登录',
   },
   SIGNUP: {
     path: '/auth/signup',
-    name: 'Signup',
+    // name: 'Signup',
+    name: '注册',
   },
   LOGOUT: {
     path: '/auth/logout',
-    name: 'Logout',
+    // name: 'Logout',
+    name: '退出登陆',
   },
 } as const

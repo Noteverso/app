@@ -1,13 +1,13 @@
 :root {
-  --global-color-back-01: rgba(0,0,0,0.02);
-  --global-color-back-02: rgba(0,0,0,0.05);
-  --global-color-back-03: rgba(0,0,0,0.08);
-  --global-color-back-04: rgba(0,0,0,0.14);
-  --global-color-back-05: rgba(0,0,0,0.24);
-  --global-color-back-06: rgba(0,0,0,0.45);
-  --global-color-back-07: rgba(0,0,0,0.66);
-  --global-color-back-08: rgba(0,0,0,0.88);
-  --global-color-back-09: rgba(0,0,0,0.90);
+  --global-color-back-01: rgba(0, 0, 0, 0.02);
+  --global-color-back-02: rgba(0, 0, 0, 0.05);
+  --global-color-back-03: rgba(0, 0, 0, 0.08);
+  --global-color-back-04: rgba(0, 0, 0, 0.14);
+  --global-color-back-05: rgba(0, 0, 0, 0.24);
+  --global-color-back-06: rgba(0, 0, 0, 0.45);
+  --global-color-back-07: rgba(0, 0, 0, 0.66);
+  --global-color-back-08: rgba(0, 0, 0, 0.88);
+  --global-color-back-09: rgba(0, 0, 0, 0.90);
   --global-color-gray-01: #fafafa;
   --global-color-gray-02: #f2f2f2;
   --global-color-gray-03: #ebebeb;
@@ -93,4 +93,47 @@
   --global-heading-2xl-font-size: 3.15rem;
   --global-heading-3xl-font-size: 3.42rem;
   --global-heading-4xl-font-size: 4.60rem;
+  --named-color-berry-red: #b8255f;
+  --named-color-red: #cf473a;
+  --named-color-orange: #c77100;
+  --named-color-yellow: #b29104;
+  --named-color-olive-green: #949c31;
+  --named-color-lime-green: #65a33a;
+  --named-color-green: #369307;
+  --named-color-mint-green: #42a393;
+  --named-color-teal: #148fad;
+  --named-color-sky-blue: #319dc0;
+  --named-color-light-blue: #6988a4;
+  --named-color-blue: #2a67e2;
+  --named-color-grape: #692ec2;
+  --named-color-violet: #ac30cc;
+  --named-color-lavender: #a4698c;
+  --named-color-magenta: #e05095;
+  --named-color-salmon: #b2635c;
+  --named-color-charcoal: #808080;
+  --named-color-grey: #999;
+  --named-color-taupe: #8f7a69
+}
+
+:root.theme_dark {
+  --named-color-berry-red: #d62b6f;
+  --named-color-red: #cf473a;
+  --named-color-orange: #f48318;
+  --named-color-yellow: #b29104;
+  --named-color-olive-green: #aeb83a;
+  --named-color-lime-green: #7ecc48;
+  --named-color-green: #369307;
+  --named-color-mint-green: #52ccb8;
+  --named-color-teal: #148fad;
+  --named-color-sky-blue: #3ab9e2;
+  --named-color-light-blue: #96c3eb;
+  --named-color-blue: #2a67e2;
+  --named-color-grape: #8758ce;
+  --named-color-violet: #ac30cc;
+  --named-color-lavender: #eb96c8;
+  --named-color-magenta: #e05095;
+  --named-color-salmon: #ff8e84;
+  --named-color-charcoal: #808080;
+  --named-color-grey: #999;
+  --named-color-taupe: #ccae96
 }
