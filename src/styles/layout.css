@@ -17,6 +17,12 @@
   @media(min-width: 768px) {
     grid-template-columns: var(--sidebar-width) 1fr;
   }
+
+  &__content {
+    height: 100%;
+    overflow: auto;
+  }
+
 }
 
 /* 导航 */
@@ -47,11 +53,6 @@
 .app-main {
   display: grid;
   justify-items: center;
-  height: 100%;
-  overflow: auto;
-
-  /* Test */
-  /* min-height: 100vh; */
 
   &__content {
     width: 100%;
@@ -80,7 +81,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 4.8rem; 
+  height: 4.8rem;
   border-top: 1px solid #333;
   border-bottom: 1px solid transparent;
 

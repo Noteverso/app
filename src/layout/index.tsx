@@ -16,7 +16,7 @@ export function Layout() {
         <Nav projectList={layoutLoaderData.projectList} />
       </div>
       <div className="app-layout__content">
-        <header className="flex h-14 items-center gap-4 px-4 lg:h-[60px] lg:px-6">
+        <header className="flex h-14 items-center gap-4 px-4 lg:h-[60px] lg:px-6 mb-4">
           {/* 移动端侧边栏 */}
           <Sheet>
             <SheetTrigger asChild>

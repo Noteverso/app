@@ -19,7 +19,7 @@ import {
   CodeXml,
   Heading1,
   Heading2,
-  Heading3, Highlighter, Images, Italic, Link as LinkIcon, List, ListChecks, ListOrdered, Palette, Pilcrow, RemoveFormatting, Strikethrough,
+  Heading3, Highlighter, Image as ImageIcon, Italic, Link as LinkIcon, List, ListChecks, ListOrdered, Palette, Pilcrow, RemoveFormatting, Strikethrough,
   TextQuote,
 } from 'lucide-react'
 import classnames from 'classnames'
@@ -375,7 +375,7 @@ function TextEditor() {
                   size="icon"
                   className="h-8 w-8"
                 >
-                  <Images className="h-4 w-4" />
+                  <ImageIcon className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="p-0 outline-0 border-none shadow-none">
