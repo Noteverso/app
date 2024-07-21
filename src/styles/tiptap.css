@@ -1,14 +1,63 @@
 .tiptap {
-  padding: 1em;
-  border: 2px solid;
-
-  > * + * {
+  >*+* {
     margin-top: 0.75em;
+  }
+
+  ul[data-type="taskList"] {
+    list-style: none;
+    padding: 0;
+    margin-left: 0;
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      padding: 0;
+
+      >label {
+        width: 20px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.6rem;
+      }
+    }
+
+    li[data-checked="true"] {
+      p {
+        text-decoration: line-through;
+        color: #adb5bd;
+      }
+    }
+
+    li[data-checked="false"] {
+      p {
+        text-decoration: none;
+        color: inherit;
+      }
+    }
+
+    input[type=checkbox] {
+      cursor: pointer;
+    }
   }
 
   ul,
   ol {
     padding: 0 1rem;
+
+    p {
+      margin-bottom: 0 !important;
+      margin-top: 0 !important;
+    }
+
+    li {
+      margin-top: 0 !important;
+    }
+
+    li:last-child {
+      margin-bottom: 0 !important;
+    }
   }
 
   h1,
@@ -38,6 +87,58 @@
       background: none;
       font-size: 0.8rem;
     }
+
+    .hljs-comment,
+    .hljs-quote {
+      color: #616161;
+    }
+
+    .hljs-variable,
+    .hljs-template-variable,
+    .hljs-attribute,
+    .hljs-tag,
+    .hljs-name,
+    .hljs-regexp,
+    .hljs-link,
+    .hljs-name,
+    .hljs-selector-id,
+    .hljs-selector-class {
+      color: #F98181;
+    }
+
+    .hljs-number,
+    .hljs-meta,
+    .hljs-built_in,
+    .hljs-builtin-name,
+    .hljs-literal,
+    .hljs-type,
+    .hljs-params {
+      color: #FBBC88;
+    }
+
+    .hljs-string,
+    .hljs-symbol,
+    .hljs-bullet {
+      color: #B9F18D;
+    }
+
+    .hljs-title,
+    .hljs-section {
+      color: #FAF594;
+    }
+
+    .hljs-keyword,
+    .hljs-selector-tag {
+      color: #70CFF8;
+    }
+
+    .hljs-emphasis {
+      font-style: italic;
+    }
+
+    .hljs-strong {
+      font-weight: 700;
+    }
   }
 
   img {
@@ -50,11 +151,11 @@
     border-left: 2px solid rgba(#0D0D0D, 0.1);
   }
 
-  hr {
-    border: none;
-    border-top: 2px solid rgba(#0D0D0D, 0.1);
-    margin: 2rem 0;
-  }
+  /* hr { */
+  /*   border: none; */
+  /*   border-top: 2px solid rgba(#0D0D0D, 0.1); */
+  /*   margin: 2rem 0; */
+  /* } */
 
   .mention {
     border: 1px solid #000;
@@ -81,5 +182,20 @@
       color: #868e96;
     }
 
+  }
+
+  mark {
+    background-color: #FAF594;
+    border-radius: 0.4rem;
+    box-decoration-break: clone;
+    padding: 0.1rem 0.3rem;
+  }
+
+  p.is-empty::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
   }
 }

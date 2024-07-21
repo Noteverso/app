@@ -1,25 +1,10 @@
+import { TextEditor } from '@/features/editor'
+
 export function Inbox() {
   return (
     <div className="app-inbox">
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
-      <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellendus consectetur quas sunt magnam eos dolores molestias fugit! Consectetur aperiam, neque minus facere, tempora nobis doloribus dolores quo sed esse rerum?</p>
+      <h1 className="text-2xl mb-4">收件箱</h1>
+      <TextEditor />
 
     </div>
   )

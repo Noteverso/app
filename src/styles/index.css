@@ -1,6 +1,7 @@
 @import './variables.css';
 @import './reset.css';
 @import './layout.css';
+@import './tiptap.css';
 
 @tailwind base;
 @tailwind components;
