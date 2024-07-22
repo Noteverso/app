@@ -1,0 +1,71 @@
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - 'release/*'
+
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22.x'                # set this to the node version to use
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      id: pnpm-install
+      with:
+        version: 8
+        run_install: false
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install
+      
+    - name: Build dist
+      run: pnpm run build
+
+    - name: Upload artifact for deployment job
+      uses: actions/upload-artifact@v4
+      with:
+        name: build
+        path: dist
+
+  deploy:
+    name: Deploy
+    # permissions:
+    #   contents: none
+    runs-on: self-hosted
+    needs: build
+
+    steps:
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v4
+      with:
+        name: build
+        path: ./dist
+
+    - name: Copy build directory
+      shell: bash
+      run: |
+        mkdir -p /data/www/noteverso/bak
+        mv /data/www/noteverso/build /data/www/noteverso/bak/build-${{ github.event.repository.updated_at}}
+        cp -r dist/ /data/www/noteverso/build
+
+    - name: Delete _work
+      shell: bash
+      run: rm -rf /home/byodian/actions-runner/_work/
