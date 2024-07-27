@@ -5,7 +5,7 @@ const content = '<h1>good morning</h1><h2>good morning</h2><h3>good morning</h3>
 
 export function Inbox() {
   return (
-    <div className="app-inbox h-full overflow-hidden flex flex-col">
+    <div className="flex flex-col">
       <h1 className="text-2xl mb-4">收件箱</h1>
       <TextEditor />
       <ul className="flex flex-col gap-x-4">

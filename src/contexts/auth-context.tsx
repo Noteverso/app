@@ -1,6 +1,6 @@
 import { createContext, useState } from 'react'
 import type { ReactNode } from 'react'
-import { type UserForLogin, UserForSignup, loginApi, signupApi } from '@/api/user'
+import { type UserForLogin, UserForSignup, loginApi, signupApi } from '@/api/user/user'
 import {
   clearStorage,
   getIsLoginStorageItem,

@@ -1,24 +1,24 @@
 import { ArrowDownLeft, ArrowUpRight, Hash, Paperclip, Tag } from 'lucide-react'
 import parse from 'html-react-parser'
-import { Button } from '@/components/button'
+import { NoteMetaButton } from './note-meta-button'
 
-interface NoteCardProps {
-  content: string,
-  timeStamp: string,
+export interface NoteCardProps {
+  content: string;
+  timeStamp: string;
   tags?: {
     name: string,
     tagId: string
-  }[] | null,
-  project?: {
+  }[] | null;
+  project: {
     name: string,
     projectId: string
-  },
-  fileNumber?: number | null,
-  linkedNoteNumber?: number | null,
-  linkingNoteNumber?: number | null
+  };
+  fileNumber?: number | null;
+  linkedNoteNumber?: number | null;
+  linkingNoteNumber?: number | null;
 }
 
-function NoteCard(props: NoteCardProps) {
+export function NoteCard(props: NoteCardProps) {
   const {
     tags,
     content,
@@ -31,57 +31,42 @@ function NoteCard(props: NoteCardProps) {
 
   return (
     <>
-      <p>
+      <p className="text-gray-600">
         <time dateTime={timeStamp}>{timeStamp}</time>
       </p>
       <div className="flex flex-wrap gap-x-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-auto gap-x-1 text-gray-400 hover:underline"
-        >
-          <Hash className="h-4 w-4" />
-          <span>{project?.name}</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
+        <NoteMetaButton
+          icon={Hash}
+          text={project.name}
           className="w-auto gap-x-1 text-gray-400"
-        >
-          <Paperclip className="h-4 w-4" />
-          <span>{fileNumber ?? 0}</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
+          hover
+        />
+        <NoteMetaButton
+          icon={Paperclip}
+          text={fileNumber ?? 0}
           className="w-auto gap-x-1 text-gray-400"
-        >
-          <ArrowUpRight className="h-4 w-4" />
-          <span>{linkingNoteNumber ?? 0}</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
+        />
+        <NoteMetaButton
+          icon={ArrowUpRight}
+          text={linkingNoteNumber ?? 0}
           className="w-auto gap-x-1 text-gray-400"
-        >
-          <ArrowDownLeft className="h-4 w-4" />
-          <span>{linkedNoteNumber ?? 0}</span>
-        </Button>
+        />
+        <NoteMetaButton
+          icon={ArrowDownLeft}
+          text={linkedNoteNumber ?? 0}
+          className="w-auto gap-x-1 text-gray-400"
+        />
         {tags && tags.map(tag => (
-          <Button
-            variant="ghost"
-            size="icon"
+          <NoteMetaButton
             key={tag?.tagId}
-            className="w-auto gap-x-1 text-gray-400 hover:underline"
-          >
-            <Tag className="h-4 w-4" />
-            <span>{tag?.name}</span>
-          </Button>
+            icon={Tag}
+            text={tag?.name}
+            className="w-auto gap-x-1 text-gray-400"
+            hover
+          />
         ))}
       </div>
       <div className="prose prose-sm sm:prose-base focus:outline-none max-w-full tiptap">{parse(content)}</div>
     </>
   )
 }
-
-export default NoteCard

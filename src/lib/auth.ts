@@ -5,7 +5,7 @@ import {
   setIsLoginStorageItem,
   setUserStorageItem,
 } from './storage'
-import { UserForLogin, UserResponse/* , loginApi */ } from '@/api/user'
+import { UserForLogin, UserResponse/* , loginApi */ } from '@/api/user/user'
 
 interface AuthProvider {
   isAuthenticated(): boolean | null;

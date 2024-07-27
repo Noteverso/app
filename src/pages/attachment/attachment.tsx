@@ -1,3 +1,3 @@
-export function Attachments() {
+export function Attachment() {
   return <div>Attachments</div>
 }

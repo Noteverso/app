@@ -30,12 +30,12 @@ import ts from 'highlight.js/lib/languages/typescript'
 import html from 'highlight.js/lib/languages/xml'
 import { PopoverTrigger } from '@radix-ui/react-popover'
 import { TrailingNode } from './tailing-node'
-import { Button } from '@/components/button'
+import { Button } from '@/components/button/button'
 
 import {
   Popover,
   PopoverContent,
-} from '@/components/popover'
+} from '@/components/popover/popover'
 import { Input } from '@/components/input/input'
 
 const lowlight = createLowlight(common)
@@ -44,7 +44,7 @@ lowlight.register('css', css)
 lowlight.register('js', js)
 lowlight.register('ts', ts)
 
-function TextEditor() {
+export function TextEditor() {
   const [isImagePopoverOpen, setIsImagePopoverOpen] = useState(false)
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false)
   const [textLink, setTextLink] = useState('')
@@ -407,5 +407,3 @@ function TextEditor() {
     </div>
   )
 }
-
-export default TextEditor

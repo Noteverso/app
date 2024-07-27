@@ -1,13 +1,13 @@
 import { Navigate, createBrowserRouter, redirect } from 'react-router-dom'
 import { ROUTER_PATHS } from './path'
-import { Layout } from '@/layout'
+import { Layout } from '@/layout/layout'
 import { AuthLayout, LoginPage } from '@/pages/auth'
-import { ErrorPage } from '@/pages/error'
-import { Project } from '@/pages/project'
-import { Inbox } from '@/pages/inbox'
-import { Labels } from '@/pages/labels'
-import { Attachments } from '@/pages/attachments'
-import { Home } from '@/pages/home'
+import { ErrorPage } from '@/pages/error/error'
+import { Project } from '@/pages/project/project'
+import { Inbox } from '@/pages/inbox/inbox'
+import { Label } from '@/pages/label/label'
+import { Attachment } from '@/pages/attachment/attachment'
+import { Home } from '@/pages/home/home'
 import { layoutLoader, protectedLoader } from '@/lib/loaders'
 import { authProvider } from '@/lib/auth'
 
@@ -57,11 +57,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'labels',
-        element: <Labels />,
+        element: <Label />,
       },
       {
         path: 'attachments',
-        element: <Attachments />,
+        element: <Attachment />,
       },
       {
         path: 'projects/:projectId',

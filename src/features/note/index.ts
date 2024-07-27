@@ -1,1 +1,1 @@
-export { default as NoteCard } from './note-card'
+export { NoteCard } from './note-card'

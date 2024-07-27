@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
-  ArchiveIcon,
+  Archive,
   Calculator,
   Calendar,
   ChevronDown,
@@ -8,26 +8,26 @@ import {
   CirclePlus,
   CreditCard,
   HashIcon,
-  InboxIcon,
+  Inbox,
   Package2,
-  PanelLeft,
-  PaperclipIcon,
-  PenLineIcon,
+  Paperclip,
+  PenLine,
   Plus,
   Search,
   Settings,
   Smile,
-  StarIcon,
-  StarOffIcon,
-  TagIcon,
-  Trash2Icon,
+  Star,
+  StarOff,
+  Tag,
+  Trash2,
   User,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { NavMainButton } from './nav-main-button'
+import { BreadcrumbButton } from './nav-breadcrumb-button'
 import { ROUTER_PATHS } from '@/routes/path'
-import type { Project } from '@/api/project'
-import { Button } from '@/components/button'
-import { Badge } from '@/components/badge'
+import type { Project } from '@/api/project/project'
+import { Button } from '@/components/button/button'
 
 import {
   Card,
@@ -35,13 +35,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/card'
+} from '@/components/card/card'
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/collapsible'
+} from '@/components/collapsible/collapsible'
 
 import {
   ContextMenu,
@@ -50,7 +50,7 @@ import {
   ContextMenuSeparator,
   ContextMenuShortcut,
   ContextMenuTrigger,
-} from '@/components/context-menu'
+} from '@/components/context-menu/context-menu'
 
 import {
   DropdownMenu,
@@ -59,7 +59,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/dropdown-menu'
+} from '@/components/dropdown-menu/dropdown-menu'
 
 import {
   Dialog,
@@ -69,7 +69,7 @@ import {
   DialogHeader,
   DialogTitle,
   // DialogTrigger,
-} from '@/components/dialog'
+} from '@/components/dialog/dialog'
 import { Input } from '@/components/input/input'
 import { Label } from '@/components/label/label'
 import {
@@ -78,7 +78,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/select'
+} from '@/components/select/select'
 
 import {
   AlertDialog,
@@ -90,7 +90,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   // AlertDialogTrigger,
-} from '@/components/alert-dialog'
+} from '@/components/alert-dialog/alert-dialog'
 
 import {
   CommandDialog,
@@ -101,16 +101,21 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from '@/components/command'
+} from '@/components/command/command'
 
 import { PROJECT_COLORS } from '@/lib/config/project'
-import { Switch } from '@/components/switch'
+import { Switch } from '@/components/switch/switch'
+import { Badge } from '@/components/badge/badge'
 
 export type SidebarProprs = {
   projectList: Project[];
+  onToggle?: () => void;
 }
 
-export function Nav({ projectList }: SidebarProprs) {
+export function Nav({
+  projectList,
+  onToggle,
+}: SidebarProprs) {
   const [isCollaOpen, setIsCollaOpen] = useState(true)
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false)
   const [isCreateProject, setIsCreateProject] = useState(false)
@@ -164,55 +169,52 @@ export function Nav({ projectList }: SidebarProprs) {
   }
 
   return (
-    <div className="flex h-full max-h-screen flex-col">
-      <div className="flex min-h-[60px] px-3 items-center border-b">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="flex items-center gap-2 font-semibold">
-              <Package2 className="h-6 w-6" />
-              <span className="">Noteverso</span>
-              <ChevronDown className="h-4 w-4" />
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Support</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Logout
-              {/* <fetcher.Form */}
-              {/*   method="post" */}
-              {/*   action={ROUTER_PATHS.LOGOUT.path} */}
-              {/*   className="flex items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" */}
-              {/* > */}
-              {/*   <Package className="h-4 w-4" /> */}
-              {/*   <button>{ROUTER_PATHS.LOGOUT.name}</button> */}
-              {/* </fetcher.Form> */}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <div className="flex flex-col max-h-screen">
+      <div className="flex items-center min-h-[60px] px-3">
+        <div className="flex items-center w-full px-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center gap-2 font-semibold">
+                <Package2 className="h-6 w-6" />
+                <span className="">Noteverso</span>
+                <ChevronDown className="h-4 w-4" />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Logout
+                {/* <fetcher.Form */}
+                {/*   method="post" */}
+                {/*   action={ROUTER_PATHS.LOGOUT.path} */}
+                {/*   className="flex items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" */}
+                {/* > */}
+                {/*   <Package className="h-4 w-4" /> */}
+                {/*   <button>{ROUTER_PATHS.LOGOUT.name}</button> */}
+                {/* </fetcher.Form> */}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        <Button
-          variant="outline"
-          size="icon"
-          className="shrink-0 hidden md:flex ml-auto"
-        >
-          <PanelLeft className="h-5 w-5" />
-          <span className="sr-only">Toggle navigation menu</span>
-        </Button>
+          <BreadcrumbButton onClick={onToggle} className="ml-auto absolute left-full" />
+        </div>
       </div>
 
-      <div className="flex flex-col w-full px-3 text-sm text-muted-foreground font-medium" >
-        <Button
-          variant="ghost"
-          size="lg"
-          className="flex items-center justify-start gap-3 h-10 py-2 px-2 transition-all hover:text-primary"
-          onClick={() => handleNoteAdd('')}
-        >
-          <CirclePlus className="h-4 w-4" />
-          <span className="">添加笔记</span>
-        </Button>
+      <div className="flex flex-col w-full text-sm text-muted-foreground font-medium" >
+        <div className="px-3">
+          <Button
+            variant="ghost"
+            size="lg"
+            className="flex items-center justify-start gap-3 h-10 py-2 px-2 transition-all hover:text-primary"
+            onClick={() => handleNoteAdd('')}
+          >
+            <CirclePlus className="h-4 w-4" />
+            <span className="">添加笔记</span>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col w-full overflow-y-auto overscroll-y-contain text-sm text-muted-foreground font-medium">
@@ -228,31 +230,24 @@ export function Nav({ projectList }: SidebarProprs) {
               <span className="">搜索</span>
             </Button>
 
-            <NavLink
-              to={ROUTER_PATHS.INBOX.path}
-              className="flex items-center gap-3 h-10 py-2 px-2 transition-all hover:text-primary"
-            >
-              <InboxIcon className="h-4 w-4" />
-              {ROUTER_PATHS.INBOX.name}
-            </NavLink>
+            <NavMainButton
+              routePath={ROUTER_PATHS.INBOX.path}
+              routeName={ROUTER_PATHS.INBOX.name}
+              icon={Inbox}
+            />
 
-            <NavLink
-              to={ROUTER_PATHS.LABELS.path}
-              className="flex items-center gap-3 h-10 py-2 px-2 transition-all hover:text-primary"
-            >
-              <TagIcon className="h-4 w-4" />
-              {ROUTER_PATHS.LABELS.name}
-              <Badge className="ml-auto bg-transparent text-muted-foreground flex h-6 w-6 shrink-0 items-center justify-center">
-                6
-              </Badge>
-            </NavLink>
-            <NavLink
-              to={ROUTER_PATHS.ATTACHMENTS.path}
-              className="flex items-center gap-3 h-10 py-2 px-2 transition-all hover:text-primary"
-            >
-              <PaperclipIcon className="h-4 w-4" />
-              {ROUTER_PATHS.ATTACHMENTS.name}
-            </NavLink>
+            <NavMainButton
+              routePath={ROUTER_PATHS.LABELS.path}
+              routeName={ROUTER_PATHS.LABELS.name}
+              icon={Tag}
+
+            />
+
+            <NavMainButton
+              routePath={ROUTER_PATHS.ATTACHMENTS.path}
+              routeName={ROUTER_PATHS.ATTACHMENTS.name}
+              icon={Paperclip}
+            />
           </div>
 
           <Collapsible
@@ -291,16 +286,18 @@ export function Nav({ projectList }: SidebarProprs) {
                         <NavLink
                           to={`${ROUTER_PATHS.PROJECTS.path}/${project.projectId}`}
                           key={project.projectId}
-                          className="flex items-center gap-3 py-2 px-2 transition-all hover:text-primary"
+                          className="group flex items-center gap-3 py-2 px-2 transition-all hover:text-primary"
                         >
-                          <HashIcon className="h-4 w-4" />
-                          {project.name}
-                          <span className="ml-auto">{project.noteCount}</span>
+                          <HashIcon className="h-4 w-4 group-[.active]:text-blue-500" />
+                          <span className="group-[.active]:text-blue-500">{project.name}</span>
+                          <Badge className="ml-auto bg-transparent text-muted-foreground flex h-6 w-6 shrink-0 items-center justify-center">
+                            {project.noteCount ?? 0}
+                          </Badge>
                         </NavLink>
                       </ContextMenuTrigger>
                       <ContextMenuContent className="w-64">
                         <ContextMenuItem className="flex gap-x-4 py-2" onClick={() => editProject(project.projectId)}>
-                          <PenLineIcon className="h-4 w-4" />
+                          <PenLine className="h-4 w-4" />
                           编辑项目
                           <ContextMenuShortcut>⌘E</ContextMenuShortcut>
                         </ContextMenuItem>
@@ -308,13 +305,13 @@ export function Nav({ projectList }: SidebarProprs) {
                           {project.isFavorite
                             ? (
                               <>
-                                <StarOffIcon className="h-4 w-4" />
+                                <StarOff className="h-4 w-4" />
                                 取消收藏项目
                               </>
                               )
                             : (
                               <>
-                                <StarIcon className="h-4 w-4" />
+                                <Star className="h-4 w-4" />
                                 收藏项目
                               </>
                               )
@@ -323,12 +320,12 @@ export function Nav({ projectList }: SidebarProprs) {
                         </ContextMenuItem>
                         <ContextMenuSeparator />
                         <ContextMenuItem className="flex gap-x-4 py-2" onClick={() => archiveProject(project)}>
-                          <ArchiveIcon className="h-4 w-4" />
+                          <Archive className="h-4 w-4" />
                           归档项目
                           <ContextMenuShortcut>⌘A</ContextMenuShortcut>
                         </ContextMenuItem>
                         <ContextMenuItem className="flex gap-x-4 py-2" onClick={() => deleteProject(project)}>
-                          <Trash2Icon className="h-4 w-4 text-red-600" />
+                          <Trash2 className="h-4 w-4 text-red-600" />
                           <span className="text-red-600">删除项目</span>
                           <ContextMenuShortcut>⌘R</ContextMenuShortcut>
                         </ContextMenuItem>
