@@ -1,10 +1,10 @@
-import type { LoaderFunctionArgs } from 'react-router-dom'
+import type { ActionFunctionArgs } from 'react-router-dom'
 import { redirect } from 'react-router-dom'
 import { ROUTER_PATHS } from '@/routes/path'
 import { authProvider } from '@/lib/auth'
 
-export function protectedLoader<T>(loader: (arg: LoaderFunctionArgs) => Promise<T>) {
-  return async (arg: LoaderFunctionArgs): Promise<T> => {
+export function protectedAction<T>(action: (arg: ActionFunctionArgs) => Promise<T>) {
+  return async (arg: ActionFunctionArgs): Promise<T> => {
     const user = authProvider.user()
     // that allows login to redirect back to this page upon successful authentication
     // if the user is not logged in, redirect them to the login page with a `from` parameter
@@ -15,6 +15,6 @@ export function protectedLoader<T>(loader: (arg: LoaderFunctionArgs) => Promise<
       return redirect(`${ROUTER_PATHS.LOGIN.path}?${params.toString()}`) as any
     }
 
-    return loader(arg)
+    return action(arg)
   }
 }

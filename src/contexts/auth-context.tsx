@@ -1,6 +1,7 @@
 import { createContext, useState } from 'react'
 import type { ReactNode } from 'react'
-import { type UserForLogin, UserForSignup, loginApi, signupApi } from '@/api/user/user'
+import { loginApi, signupApi } from '@/api/user/user'
+import type { BaseUser, NewUser } from '@/types/user'
 import {
   clearStorage,
   getIsLoginStorageItem,
@@ -13,7 +14,7 @@ function useProviderAuth() {
   const [user, setUser] = useState(getUserStorageItem())
   const [isLogin, setIsLogin] = useState(getIsLoginStorageItem() ?? false)
 
-  async function signin(user: UserForLogin, callback: VoidFunction) {
+  async function signin(user: BaseUser, callback: VoidFunction) {
     try {
       const userResponse = await loginApi(user)
 
@@ -29,7 +30,7 @@ function useProviderAuth() {
     }
   }
 
-  async function signup(newUser: UserForSignup, callback: VoidFunction) {
+  async function signup(newUser: NewUser, callback: VoidFunction) {
     await signupApi(newUser)
     callback()
   }
@@ -46,7 +47,7 @@ function useProviderAuth() {
 type AuthContextType = ReturnType<typeof useProviderAuth>
 export const AuthContext = createContext<AuthContextType | null>(null)
 
-export function AuthProvider({ children }: { children : ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const auth = useProviderAuth()
   return (
     <AuthContext.Provider value={auth}>

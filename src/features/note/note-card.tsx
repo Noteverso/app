@@ -1,13 +1,15 @@
 import { ArrowDownLeft, ArrowUpRight, Hash, Paperclip, Tag } from 'lucide-react'
 import parse from 'html-react-parser'
+import { useNavigate } from 'react-router-dom'
 import { NoteMetaButton } from './note-meta-button'
+import { ROUTER_PATHS } from '@/routes/path'
 
 export interface NoteCardProps {
   content: string;
   timeStamp: string;
-  tags?: {
+  labels?: {
     name: string,
-    tagId: string
+    labelId: string
   }[] | null;
   project: {
     name: string,
@@ -19,8 +21,10 @@ export interface NoteCardProps {
 }
 
 export function NoteCard(props: NoteCardProps) {
+  const navigate = useNavigate()
+
   const {
-    tags,
+    labels,
     content,
     timeStamp,
     project,
@@ -39,6 +43,7 @@ export function NoteCard(props: NoteCardProps) {
           icon={Hash}
           text={project.name}
           className="w-auto gap-x-1 text-gray-400"
+          onClick={() => navigate(`${ROUTER_PATHS.PROJECTS.path}/${project.projectId}`)}
           hover
         />
         <NoteMetaButton
@@ -56,12 +61,13 @@ export function NoteCard(props: NoteCardProps) {
           text={linkedNoteNumber ?? 0}
           className="w-auto gap-x-1 text-gray-400"
         />
-        {tags && tags.map(tag => (
+        {labels && labels.map(label => (
           <NoteMetaButton
-            key={tag?.tagId}
+            key={label?.labelId}
             icon={Tag}
-            text={tag?.name}
+            text={label?.name}
             className="w-auto gap-x-1 text-gray-400"
+            onClick={() => navigate(`${ROUTER_PATHS.LABELS.path}/${label.labelId}`)}
             hover
           />
         ))}

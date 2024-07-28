@@ -10,7 +10,7 @@ import {
   homeWrapperHero,
 } from './home.module.css'
 import { HomeHeader } from '@/layout/header/home-header'
-import { UserResponse } from '@/api/user/user'
+import type { UserResponse } from '@/types/user'
 import { Footer } from '@/layout/footer/footer'
 import { Button } from '@/components/button/button'
 

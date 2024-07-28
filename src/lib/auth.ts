@@ -5,12 +5,13 @@ import {
   setIsLoginStorageItem,
   setUserStorageItem,
 } from './storage'
-import { UserForLogin, UserResponse/* , loginApi */ } from '@/api/user/user'
+import { loginApi } from '@/api/user/user'
+import type { BaseUser, UserResponse } from '@/types/user'
 
 interface AuthProvider {
   isAuthenticated(): boolean | null;
   user(): UserResponse | null;
-  login(user: UserForLogin): Promise<void>;
+  login(user: BaseUser): Promise<UserResponse>;
   logout(): void;
 }
 
@@ -21,15 +22,11 @@ export const authProvider: AuthProvider = {
   user() {
     return getUserStorageItem()
   },
-  async login(user: UserForLogin) {
-    // const userResponse = await loginApi(user)
-    console.warn(user)
-    const userResponse = {
-      username: 'test',
-      token: 'testtoken',
-    }
+  async login(user: BaseUser) {
+    const userResponse = await loginApi(user)
     setUserStorageItem(userResponse)
     setIsLoginStorageItem(true)
+    return userResponse
   },
   logout() {
     clearStorage()

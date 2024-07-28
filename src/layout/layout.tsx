@@ -2,13 +2,13 @@ import { Outlet, useLoaderData } from 'react-router-dom'
 import { PanelLeft } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Nav } from './nav/nav'
-import { Project } from '@/api/project/project'
+import type { FullProject } from '@/types/project'
 
-import { Sheet, SheetContent, SheetTrigger } from '@/components/sheet/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/sheet/sheet'
 import { Button } from '@/components/button/button'
 
 export function Layout() {
-  const layoutLoaderData = useLoaderData() as { projectList: Project[] }
+  const layoutLoaderData = useLoaderData() as { projectList: FullProject[] }
   const [isSidebarVisible, setIsSidebarVisible] = useState(true)
   const sidebarRef = useRef<HTMLDivElement>(null)
   const [sidebarWidth, setSidebarWidth] = useState(0)
@@ -76,6 +76,12 @@ export function Layout() {
             </SheetTrigger>
 
             <SheetContent side="left" className="flex flex-col p-0">
+              <SheetHeader className="hidden">
+                <SheetTitle>Edit profile</SheetTitle>
+                <SheetDescription>
+                  The mobile device navigation
+                </SheetDescription>
+              </SheetHeader>
               <Nav projectList={layoutLoaderData.projectList} />
             </SheetContent>
           </Sheet>

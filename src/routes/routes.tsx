@@ -8,8 +8,11 @@ import { Inbox } from '@/pages/inbox/inbox'
 import { Label } from '@/pages/label/label'
 import { Attachment } from '@/pages/attachment/attachment'
 import { Home } from '@/pages/home/home'
-import { layoutLoader, protectedLoader } from '@/lib/loaders'
+import { protectedLoader, sharedProjectLoader } from '@/lib/loaders'
+import { projectLoader } from '@/layout/project-loader'
 import { authProvider } from '@/lib/auth'
+import { protectedAction, sharedNoteAction } from '@/lib/actions'
+import { loginAction } from '@/pages/auth/auth-action'
 
 export const router = createBrowserRouter([
   {
@@ -30,12 +33,13 @@ export const router = createBrowserRouter([
       {
         path: 'login',
         element: <LoginPage />,
+        action: loginAction,
       },
       {
         path: 'logout',
         action: async () => {
           authProvider.logout()
-          return redirect(ROUTER_PATHS.HOME.path)
+          return redirect(ROUTER_PATHS.LOGIN.path)
         },
       },
     ],
@@ -45,27 +49,36 @@ export const router = createBrowserRouter([
     path: '/app',
     element: <Layout />,
     errorElement: <ErrorPage />,
-    loader: protectedLoader(layoutLoader),
+    loader: protectedLoader(projectLoader),
     children: [
       {
-        index: true,
-        element: <Navigate to="/app/inbox" replace />,
-      },
-      {
-        path: 'inbox',
-        element: <Inbox />,
-      },
-      {
-        path: 'labels',
-        element: <Label />,
-      },
-      {
-        path: 'attachments',
-        element: <Attachment />,
-      },
-      {
-        path: 'projects/:projectId',
-        element: <Project />,
+        errorElement: <ErrorPage />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/app/inbox" replace />,
+          },
+          {
+            path: 'inbox',
+            element: <Inbox />,
+            loader: protectedLoader(sharedProjectLoader),
+            action: protectedAction(sharedNoteAction),
+          },
+          {
+            path: 'labels',
+            element: <Label />,
+          },
+          {
+            path: 'attachments',
+            element: <Attachment />,
+          },
+          {
+            path: 'projects/:projectId',
+            element: <Project />,
+            loader: protectedLoader(sharedProjectLoader),
+            action: protectedAction(sharedNoteAction),
+          },
+        ],
       },
     ],
   },

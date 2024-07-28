@@ -19,5 +19,12 @@ module.exports = {
     'react/prop-types': 'off',
     curly: ['error', 'all'],
     '@typescript-eslint/brace-style': ['error', '1tbs', { allowSingleLine: false }],
+    "@typescript-eslint/consistent-type-imports": ["error", {
+      "prefer": "type-imports",
+      "disallowTypeAnnotations": true
+    }],
+
+    // 确保只导入类型时使用 import type
+    "@typescript-eslint/no-import-type-side-effects": "error",
   },
 }

@@ -1,5 +1,5 @@
 :root {
-  --main-content-max-width: 800px;
+  --main-content-max-width: 680px;
   --sidebar-minmax-width: minmax(300px, min(420px, 20vw));
   --sidebar-width: clamp(300px, 18vw, max(420px, 20vw));
 }

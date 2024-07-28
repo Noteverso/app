@@ -1,15 +1,8 @@
 import { request } from '@/lib/http'
+import type { FullProject } from '@/types/project'
 
-export type Project = {
-  name: string;
-  projectId: string;
-  noteCount: number;
-  isFavorite: 0 | 1;
-  color: string;
-}
-
-export function getProjectListApi() {
-  return request<Project[]>({
+export function getProjectsApi() {
+  return request<FullProject[]>({
     url: '/api/v1/projects',
     method: 'get',
   })

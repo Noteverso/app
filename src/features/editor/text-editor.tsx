@@ -44,7 +44,13 @@ lowlight.register('css', css)
 lowlight.register('js', js)
 lowlight.register('ts', ts)
 
-export function TextEditor() {
+export interface TextEditorProps {
+  className?: string;
+  onChange?: (content: string, hasContent: boolean) => void;
+
+}
+
+export function TextEditor({ className = '', onChange }: TextEditorProps) {
   const [isImagePopoverOpen, setIsImagePopoverOpen] = useState(false)
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false)
   const [textLink, setTextLink] = useState('')
@@ -82,16 +88,11 @@ export function TextEditor() {
         class: 'prose prose-sm sm:prose-base focus:outline-none max-w-full',
       },
     },
-    onUpdate: (_props) => {
-      // const text = props.editor?.getHTML()
-      // console.warn(text)
+    onUpdate: (props) => {
+      const text = props.editor?.getHTML()
+      onChange && onChange(text, !props.editor?.isEmpty)
     },
   })
-
-  const handleNoteSave = async () => {
-    const content = editor?.getHTML()
-    console.warn(content)
-  }
 
   const handleLinkPaste = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Enter') {
@@ -125,7 +126,7 @@ export function TextEditor() {
   }
 
   return (
-    <div>
+    <div className={`${className}`}>
       <div className="border-2 border-black rounded">
         <div className="p-4 flex items-center">
           {editor && <div className="Button-group">
@@ -395,13 +396,6 @@ export function TextEditor() {
 
         <div className="h-32 max-h-64 overflow-auto bg-white relative">
           <EditorContent editor={editor} className="p-4 h-40" />
-        </div>
-      </div>
-      <div className="flex mt-4">
-        <div className="text-right ml-auto">
-          <Button onClick={handleNoteSave}>
-            保存
-          </Button>
         </div>
       </div>
     </div>

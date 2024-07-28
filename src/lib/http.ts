@@ -5,45 +5,28 @@ import type {
   AxiosRequestConfig,
   AxiosResponse,
 } from 'axios'
-import { json } from 'react-router-dom'
 import { authProvider } from '@/lib/auth'
 
-export interface HttpRequestConfig extends AxiosRequestConfig {
-  // 是否开启统一错误提示，设置 false 关闭
-  showFailToast?: boolean;
-}
-
-export interface Result<T = any> {
-  code: string | number;
-  message: string;
-  data: T;
+export interface RequestOptions extends AxiosRequestConfig {
 }
 
 export class Http {
   // 普通请求单例
   private static instance: Http | null = null
-  // 文件请求单例
-  private static fileInstance: Http | null = null
 
   axiosInstance: AxiosInstance
-  baseConfig: HttpRequestConfig
-  requestConfig: HttpRequestConfig
+  baseOptions: RequestOptions
+  options: RequestOptions
 
-  constructor(isFile = false, config: AxiosRequestConfig) {
-    this.baseConfig = {
+  constructor(config: RequestOptions) {
+    this.baseOptions = {
       // baseURL: import.meta.env.DEV ? '/api' : 'https://noteverso.com',
-      showFailToast: true,
     }
 
-    this.requestConfig = Object.assign(this.baseConfig, config)
-    this.axiosInstance = axios.create(this.requestConfig)
+    this.options = Object.assign(this.baseOptions, config)
+    this.axiosInstance = axios.create(this.options)
     this.requestInterceptors()
-
-    if (isFile) {
-      this.responseFileInterceptors()
-    } else {
-      this.responseInterceptors()
-    }
+    this.responseInterceptors()
   }
 
   // 请求拦截
@@ -60,6 +43,10 @@ export class Http {
         return config
       },
       (error: AxiosError) => {
+        if (error.response) {
+          return Promise.reject(error.response)
+        }
+
         return Promise.reject(error)
       },
     )
@@ -69,83 +56,86 @@ export class Http {
   private responseInterceptors() {
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
-        const { data }: Result = response.data
-
-        return data
-      },
-      (error: AxiosError) => {
-        return this.handleError(error)
-      },
-    )
-  }
-
-  // 导出文件请求的响应拦截
-  private responseFileInterceptors() {
-    this.axiosInstance.interceptors.response.use(
-      (response: AxiosResponse) => {
         return response
       },
       (error: AxiosError) => {
-        const response = this.handleError(error)
-        return response
+        if (error.response) {
+          return Promise.reject(error.response)
+        }
+
+        return Promise.reject(error)
       },
-    )
-  }
-
-  private handleError(error: AxiosError) {
-    let message: string
-
-    const { status } = error.response!
-    switch (status) {
-      case 500:
-        message = '服务器连接失败'
-        break
-      case 401:
-        message = '登录过期，请重新登录'
-        break
-      default:
-        message = '未知异常，请重新登录'
-    }
-
-    if (this.requestConfig.showFailToast) {
-      // TODO: 调用错误提示
-      console.warn(message)
-    }
-
-    // return Promise.reject(new Response(message, { status }))
-    return Promise.reject(
-      json(
-        { message },
-        { status },
-      ),
     )
   }
 
   static getInstance(): Http
-  static getInstance(axiosRequestConfig: HttpRequestConfig): Http
-  static getInstance(axiosRequestConfig?: HttpRequestConfig) {
+  static getInstance(options: RequestOptions): Http
+  static getInstance(options?: RequestOptions) {
     if (!Http.instance) {
-      Http.instance = new Http(false, axiosRequestConfig || {})
+      Http.instance = new Http(options || {})
     }
 
     return Http.instance
   }
+}
 
-  static getFileInstance(): Http
-  static getFileInstance(axiosRequestConfig: AxiosRequestConfig): Http
-  static getFileInstance(axiosRequestConfig?: AxiosRequestConfig) {
-    if (!Http.fileInstance) {
-      Http.fileInstance = new Http(true, axiosRequestConfig || {})
-    }
+export interface ApiSuccessResponse<T = any> {
+  ok: true;
+  data: T
+}
 
-    return Http.fileInstance
+export interface ApiErrorResponse {
+  ok: false;
+  error: string
+}
+
+export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse
+
+export async function request<T = any>(options: RequestOptions): Promise<ApiResponse<T>> {
+  try {
+    const response: AxiosResponse<T> = await Http.getInstance().axiosInstance(options)
+    return { ok: true, data: response.data }
+  } catch (error) {
+    return handleError(error)
   }
 }
 
-export function request<T = any>(config: HttpRequestConfig): Promise<T> {
-  return Http.getInstance().axiosInstance(config)
+export function handleError(error: unknown): ApiErrorResponse {
+  let errorMessage: string
+  if (error instanceof Error) {
+    errorMessage = error.message
+  } else if (typeof error === 'string') {
+    errorMessage = error
+  } else {
+    errorMessage = 'An unknow error occurred'
+  }
+
+  return { ok: false, error: errorMessage }
 }
 
-export function requestFile<T = any>(config: HttpRequestConfig): Promise<T> {
-  return Http.getFileInstance().axiosInstance(config)
+export type ApiMethod = 'get' | 'post' | 'put' | 'delete'
+
+export function createApi(method: ApiMethod) {
+  return async function <T>(url: string, options?: RequestOptions): Promise<ApiResponse> {
+    try {
+      let response: AxiosResponse<T>
+
+      if (method === 'get' || method === 'delete') {
+        response = await Http.getInstance().axiosInstance[method]<T>(url, options)
+      } else {
+        response = await Http.getInstance().axiosInstance[method]<T>(url, options?.data, options)
+      }
+
+      return { ok: true, data: response.data }
+    } catch (error) {
+      return handleError(error)
+    }
+  }
+}
+
+export const api = {
+  get: createApi('get'),
+  post: createApi('post'),
+  put: createApi('put'),
+  delete: createApi('delete'),
 }

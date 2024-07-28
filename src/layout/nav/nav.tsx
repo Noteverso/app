@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { Form, NavLink } from 'react-router-dom'
 import {
   Archive,
   Calculator,
@@ -9,6 +9,7 @@ import {
   CreditCard,
   HashIcon,
   Inbox,
+  LogOut,
   Package2,
   Paperclip,
   PenLine,
@@ -26,16 +27,8 @@ import { useEffect, useState } from 'react'
 import { NavMainButton } from './nav-main-button'
 import { BreadcrumbButton } from './nav-breadcrumb-button'
 import { ROUTER_PATHS } from '@/routes/path'
-import type { Project } from '@/api/project/project'
+import type { FullProject } from '@/types/project'
 import { Button } from '@/components/button/button'
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/card/card'
 
 import {
   Collapsible,
@@ -56,8 +49,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
+  // DropdownMenuLabel,
+  // DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/dropdown-menu/dropdown-menu'
 
@@ -108,7 +101,7 @@ import { Switch } from '@/components/switch/switch'
 import { Badge } from '@/components/badge/badge'
 
 export type SidebarProprs = {
-  projectList: Project[];
+  projectList: FullProject[];
   onToggle?: () => void;
 }
 
@@ -120,7 +113,7 @@ export function Nav({
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false)
   const [isCreateProject, setIsCreateProject] = useState(false)
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false)
-  const [project, setProject] = useState<Project | null>(null)
+  const [project, setProject] = useState<FullProject | null>(null)
   const [operation, setOperation] = useState<'archive' | 'delete'>('archive')
   const [isCommandDialogOpen, setIsCommandDialogOpen] = useState(false)
 
@@ -128,7 +121,6 @@ export function Nav({
     const down = (e: KeyboardEvent) => {
       if (e.key === 'j' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        console.warn('open command dialog')
         setIsCommandDialogOpen(open => !open)
       }
     }
@@ -137,7 +129,6 @@ export function Nav({
   }, [])
 
   function editProject(id: string) {
-    console.warn('edit project', id)
     if (id === '') {
       setIsCreateProject(true)
     }
@@ -145,22 +136,19 @@ export function Nav({
     setIsProjectDialogOpen(true)
   }
 
-  function archiveProject(project: Project) {
-    console.warn('archive project', project.projectId)
+  function archiveProject(project: FullProject) {
     setIsAlertDialogOpen(true)
     setProject(project)
     setOperation('archive')
   }
 
-  function deleteProject(project: Project) {
-    console.warn('delete project', project.projectId)
+  function deleteProject(project: FullProject) {
     setIsAlertDialogOpen(true)
     setOperation('delete')
     setProject(project)
   }
 
   function handleSearch(_arg0: string): void {
-    console.warn('search')
     setIsCommandDialogOpen(true)
   }
 
@@ -181,20 +169,20 @@ export function Nav({
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout
-                {/* <fetcher.Form */}
-                {/*   method="post" */}
-                {/*   action={ROUTER_PATHS.LOGOUT.path} */}
-                {/*   className="flex items-center gap-3 rounded-lg px-3 py-2 text-primary transition-all hover:text-primary" */}
-                {/* > */}
-                {/*   <Package className="h-4 w-4" /> */}
-                {/*   <button>{ROUTER_PATHS.LOGOUT.name}</button> */}
-                {/* </fetcher.Form> */}
+              {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
+              {/* <DropdownMenuSeparator /> */}
+              {/* <DropdownMenuItem>Settings</DropdownMenuItem> */}
+              {/* <DropdownMenuItem>Support</DropdownMenuItem> */}
+              {/* <DropdownMenuSeparator /> */}
+              <DropdownMenuItem>
+                <Form
+                  method="post"
+                  action={ROUTER_PATHS.LOGOUT.path}
+                  className="flex items-center gap-3 rounded-lg text-primary transition-all hover:text-primary"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <button type="submit" name="logout">{ROUTER_PATHS.LOGOUT.name}</button>
+                </Form>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -339,22 +327,22 @@ export function Nav({
         </div>
       </div>
 
-      <div className="mt-auto p-4">
-        <Card x-chunk="dashboard-02-chunk-0">
-          <CardHeader className="p-2 pt-0 md:p-4">
-            <CardTitle>Upgrade to Pro</CardTitle>
-            <CardDescription>
-              Unlock all features and get unlimited access to our support
-              team.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-2 pt-0 md:p-4 md:pt-0">
-            <Button size="sm" className="w-full">
-              Upgrade
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      {/* <div className="mt-auto p-4"> */}
+      {/*   <Card x-chunk="dashboard-02-chunk-0"> */}
+      {/*     <CardHeader className="p-2 pt-0 md:p-4"> */}
+      {/*       <CardTitle>Upgrade to Pro</CardTitle> */}
+      {/*       <CardDescription> */}
+      {/*         Unlock all features and get unlimited access to our support */}
+      {/*         team. */}
+      {/*       </CardDescription> */}
+      {/*     </CardHeader> */}
+      {/*     <CardContent className="p-2 pt-0 md:p-4 md:pt-0"> */}
+      {/*       <Button size="sm" className="w-full"> */}
+      {/*         Upgrade */}
+      {/*       </Button> */}
+      {/*     </CardContent> */}
+      {/*   </Card> */}
+      {/* </div> */}
 
       {/* All Dialogs */}
       <Dialog open={isProjectDialogOpen} onOpenChange={setIsProjectDialogOpen}>

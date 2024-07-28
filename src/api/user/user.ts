@@ -1,23 +1,7 @@
 import { request } from '@/lib/http'
+import type { BaseUser, NewUser, UserResponse } from '@/types/user'
 
-export type UserForLogin = {
-  username: string;
-  password: string;
-}
-
-export type UserForSignup = {
-  username: string;
-  email: string;
-  password: string;
-  captchaCode: string;
-}
-
-export type UserResponse = {
-  username: string;
-  token: string;
-}
-
-export function loginApi(data: UserForLogin) {
+export function loginApi(data: BaseUser) {
   return request<UserResponse>({
     url: '/api/auth/login',
     method: 'post',
@@ -25,7 +9,7 @@ export function loginApi(data: UserForLogin) {
   })
 }
 
-export function signupApi(data: UserForSignup) {
+export function signupApi(data: NewUser) {
   return request({
     url: '/api/auth/signup',
     method: 'post',
