@@ -1,14 +1,11 @@
-import { useLoaderData, useParams } from 'react-router-dom'
+import { useLoaderData } from 'react-router-dom'
 import { SharedNotesPage } from '../shared-notes-page/shared-notes-page'
-import type { NoteListLoaderData } from '@/lib/loaders/shared-note-loader'
+import type { NotePageLoaderData } from '@/types/note'
 
 export function Project() {
-  const params = useParams()
-  const paramsId = params.projectId
-
-  const projectLoaderData = useLoaderData() as NoteListLoaderData
+  const notePageData = useLoaderData() as NotePageLoaderData
 
   return (
-    <SharedNotesPage title={paramsId} loaderData={projectLoaderData} />
+    <SharedNotesPage initialNotePage={notePageData} />
   )
 }

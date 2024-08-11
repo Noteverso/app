@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { Form } from 'react-router-dom'
+import { Form, Navigate, useActionData } from 'react-router-dom'
 import { Input } from '@/components/input/input'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/form'
 import { Button } from '@/components/button/button'
-import { ROUTER_PATHS } from '@/routes/path'
+import { ROUTER_PATHS } from '@/constants'
+import type { UserResponse } from '@/types/user'
 
 const formSchema = z.object({
   username: z.string().email(),
@@ -24,13 +25,14 @@ export function LoginPage() {
     },
   })
 
-  // if (authProvider.isAuthenticated()) {
-  //   return <Navigate to={ROUTER_PATHS.INBOX.path} replace />
-  // }
+  const actionData = useActionData() as UserResponse
+  if (actionData?.token) {
+    return <Navigate to={ROUTER_PATHS.INBOX.path} replace />
+  }
 
   return (
-    <div className="w-full h-full max-w-sm mx-auto">
-      <h2 className="text-3xl font-bold mb-4">Log in</h2>
+    <div className="w-full h-full max-w-sm mx-auto mt-48">
+      <h2 className="text-3xl font-bold mb-4">登陆</h2>
       <FormProvider {...form}>
         <Form method="post" action={ROUTER_PATHS.LOGIN.path} className="space-y-4">
           <FormField
@@ -38,7 +40,7 @@ export function LoginPage() {
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>邮箱</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -58,7 +60,7 @@ export function LoginPage() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>密码</FormLabel>
                 <FormControl>
                   <Input
                     {...field}

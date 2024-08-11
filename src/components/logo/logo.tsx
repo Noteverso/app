@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ROUTER_PATHS } from '@/routes/path'
+import { ROUTER_PATHS } from '@/constants'
 
 export function Logo({ className }: { className?: string }) {
   return (

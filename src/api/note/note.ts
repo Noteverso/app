@@ -1,9 +1,11 @@
 import { request } from '@/lib/http'
-import type { FullNote } from '@/types/note'
+import type { NotePageLoaderData, NotePageRequestParams } from '@/types/note'
 
-export function getNotesApi() {
-  return request<FullNote[]>({
-    url: '/api/v1/notes',
+// 获取笔记列表
+export function getNotesApi(params: NotePageRequestParams) {
+  return request<NotePageLoaderData>({
+    url: '/api/v1/notes/project',
     method: 'get',
+    params,
   })
 }

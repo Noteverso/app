@@ -7,6 +7,13 @@ export interface BaseProject {
 
 export interface FullProject extends BaseProject {
   projectId: string;
+  inboxProject: boolean;
 }
 
 export type NewProject = BaseProject
+
+export type ProjectOutletContext = {
+  projects: FullProject[];
+  inboxProject: FullProject;
+}
+

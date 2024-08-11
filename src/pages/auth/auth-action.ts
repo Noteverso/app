@@ -1,7 +1,7 @@
-import { type ActionFunctionArgs, json, redirect } from 'react-router-dom'
-import type { BaseUser, UserResponse } from '@/types/user'
-import { authProvider } from '@/lib/auth'
-import { ROUTER_PATHS } from '@/routes/path'
+import { type ActionFunctionArgs, json } from 'react-router-dom'
+import type { BaseUser } from '@/types/user'
+import { loginApi } from '@/api/user/user'
+import { setIsLoginStorageItem, setUserStorageItem } from '@/lib/storage'
 
 export async function loginAction({ request }: ActionFunctionArgs) {
   const formData = await request.formData()
@@ -11,13 +11,12 @@ export async function loginAction({ request }: ActionFunctionArgs) {
     password: formData.get('password') as string,
   }
 
-  const userResponse: UserResponse = await authProvider.login(user)
-  if (userResponse && userResponse.token) {
-    return redirect(ROUTER_PATHS.INBOX.path)
+  const response = await loginApi(user)
+  if (!response.ok) {
+    throw json(response.data, { status: response.status })
   }
 
-  return json({
-    ok: false,
-    error: 'df',
-  })
+  setUserStorageItem(response.data)
+  setIsLoginStorageItem(true)
+  return response.data
 }

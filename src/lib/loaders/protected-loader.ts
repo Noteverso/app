@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from 'react-router-dom'
 import { redirect } from 'react-router-dom'
-import { ROUTER_PATHS } from '@/routes/path'
+import { ROUTER_PATHS } from '@/constants'
 import { authProvider } from '@/lib/auth'
 
 export function protectedLoader<T>(loader: (arg: LoaderFunctionArgs) => Promise<T>) {

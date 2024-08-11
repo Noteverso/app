@@ -1,3 +1,4 @@
+import { json, redirect } from 'react-router-dom'
 import {
   clearStorage,
   getIsLoginStorageItem,
@@ -5,13 +6,15 @@ import {
   setIsLoginStorageItem,
   setUserStorageItem,
 } from './storage'
+import type { ApiResponse } from './http'
 import { loginApi } from '@/api/user/user'
+import { ROUTER_PATHS } from '@/constants'
 import type { BaseUser, UserResponse } from '@/types/user'
 
 interface AuthProvider {
   isAuthenticated(): boolean | null;
   user(): UserResponse | null;
-  login(user: BaseUser): Promise<UserResponse>;
+  login(user: BaseUser): Promise<ApiResponse<UserResponse>>;
   logout(): void;
 }
 
@@ -23,10 +26,15 @@ export const authProvider: AuthProvider = {
     return getUserStorageItem()
   },
   async login(user: BaseUser) {
-    const userResponse = await loginApi(user)
-    setUserStorageItem(userResponse)
+    const response = await loginApi(user)
+    if (!response.ok) {
+      throw json(response.data, { status: response.status })
+    }
+
+    setUserStorageItem(response.data)
     setIsLoginStorageItem(true)
-    return userResponse
+    redirect(ROUTER_PATHS.INBOX.path)
+    return response
   },
   logout() {
     clearStorage()

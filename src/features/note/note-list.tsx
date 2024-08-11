@@ -1,19 +1,23 @@
 import { NoteCard } from './note-card'
-import type { NoteListLoaderData } from '@/lib/loaders/shared-note-loader'
+import type { FullNote } from '@/types/note'
 
-export function NoteList({ noteList }: NoteListLoaderData) {
+export function NoteList({ notes, refFunc }: { notes: FullNote[], refFunc: (node: HTMLElement | null) => void }) {
   return (
     <ul className="flex flex-col gap-x-4">
-      {noteList.map(note => (
-        <li key={note.noteId} className="last:pt-0 pt-8 pb-8 border-b">
+      {notes.map((note, index) => (
+        <li
+          key={note.noteId}
+          className="pt-8 pb-8 border-b first:border-t"
+          ref={index === notes.length - 1 ? refFunc : null}
+        >
           <NoteCard
             labels={note.labels}
             content={note.content}
-            timeStamp={note.timeStamp}
+            addedAt={note.addedAt}
             project={note.project}
-            fileNumber={note.fileNumber}
-            linkedNoteNumber={note.linkedNoteNumber}
-            linkingNoteNumber={note.linkingNoteNumber}
+            attachmentCount={note.attachmentCount}
+            referencedCount={note.referencedCount}
+            referencingCount={note.referencingCount}
           />
         </li>
       ))}

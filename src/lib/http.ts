@@ -35,7 +35,7 @@ export class Http {
       (config) => {
         const user = authProvider.user()
         config.headers = config.headers ?? {}
-        if (user !== null) {
+        if (user !== null && user.token) {
           const token = user.token
           config.headers.Authorization = `Bearer ${token}`
         }
@@ -79,14 +79,36 @@ export class Http {
   }
 }
 
-export interface ApiSuccessResponse<T = any> {
+export enum HttpStatusCode {
+  Success = 200,
+  NoContent = 204,
+  MultipleChoices = 300,
+  BadRequest = 400,
+  Unauthorized = 401,
+  Forbidden = 403,
+  NotFound = 404,
+  ExpiredAccessToken = 498,
+  InternalServerError = 500,
+}
+
+export interface HttpResponseBase {
+  status: HttpStatusCode;
+  // headers?: Map<string, string | null>;
+}
+
+export interface ApiSuccessResponse<T = any> extends HttpResponseBase {
   ok: true;
   data: T
 }
 
-export interface ApiErrorResponse {
+export interface ApiErrorResponse extends HttpResponseBase {
   ok: false;
-  error: string
+  data: {
+    error: {
+      message: string;
+      payload?: Record<string, unknown>;
+    }
+  };
 }
 
 export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse
@@ -94,23 +116,20 @@ export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse
 export async function request<T = any>(options: RequestOptions): Promise<ApiResponse<T>> {
   try {
     const response: AxiosResponse<T> = await Http.getInstance().axiosInstance(options)
-    return { ok: true, data: response.data }
+    return { ok: true, status: response.status, data: response.data }
   } catch (error) {
-    return handleError(error)
+    return {
+      ok: false,
+      status: (error as { status: number }).status,
+      // headers: new Map<string, string | null>(),
+      data: {
+        error: {
+          message: 'message' in (error as { message: string }) ? (error as { message: string }).message : 'An unknown error occurred',
+          payload: (error as { data: Record<string, unknown> }).data,
+        },
+      },
+    }
   }
-}
-
-export function handleError(error: unknown): ApiErrorResponse {
-  let errorMessage: string
-  if (error instanceof Error) {
-    errorMessage = error.message
-  } else if (typeof error === 'string') {
-    errorMessage = error
-  } else {
-    errorMessage = 'An unknow error occurred'
-  }
-
-  return { ok: false, error: errorMessage }
 }
 
 export type ApiMethod = 'get' | 'post' | 'put' | 'delete'
@@ -126,9 +145,18 @@ export function createApi(method: ApiMethod) {
         response = await Http.getInstance().axiosInstance[method]<T>(url, options?.data, options)
       }
 
-      return { ok: true, data: response.data }
+      return { ok: true, status: response.status, data: response.data }
     } catch (error) {
-      return handleError(error)
+      return {
+        ok: false,
+        status: HttpStatusCode.InternalServerError,
+        // headers: new Map<string, string | null>(),
+        data: {
+          error: {
+            message: 'message' in (error as { message: string }) ? (error as { message: string }).message : 'An unknown error occurred',
+          },
+        },
+      }
     }
   }
 }

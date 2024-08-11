@@ -2,11 +2,11 @@ import { ArrowDownLeft, ArrowUpRight, Hash, Paperclip, Tag } from 'lucide-react'
 import parse from 'html-react-parser'
 import { useNavigate } from 'react-router-dom'
 import { NoteMetaButton } from './note-meta-button'
-import { ROUTER_PATHS } from '@/routes/path'
+import { ROUTER_PATHS } from '@/constants'
 
 export interface NoteCardProps {
   content: string;
-  timeStamp: string;
+  addedAt: string;
   labels?: {
     name: string,
     labelId: string
@@ -15,9 +15,9 @@ export interface NoteCardProps {
     name: string,
     projectId: string
   };
-  fileNumber?: number | null;
-  linkedNoteNumber?: number | null;
-  linkingNoteNumber?: number | null;
+  attachmentCount?: number | null;
+  referencedCount?: number | null;
+  referencingCount?: number | null;
 }
 
 export function NoteCard(props: NoteCardProps) {
@@ -26,17 +26,17 @@ export function NoteCard(props: NoteCardProps) {
   const {
     labels,
     content,
-    timeStamp,
+    addedAt,
     project,
-    fileNumber,
-    linkedNoteNumber,
-    linkingNoteNumber,
+    attachmentCount,
+    referencedCount,
+    referencingCount,
   } = props
 
   return (
     <>
       <p className="text-gray-600">
-        <time dateTime={timeStamp}>{timeStamp}</time>
+        <time dateTime={addedAt}>{addedAt}</time>
       </p>
       <div className="flex flex-wrap gap-x-4">
         <NoteMetaButton
@@ -48,17 +48,17 @@ export function NoteCard(props: NoteCardProps) {
         />
         <NoteMetaButton
           icon={Paperclip}
-          text={fileNumber ?? 0}
+          text={attachmentCount ?? 0}
           className="w-auto gap-x-1 text-gray-400"
         />
         <NoteMetaButton
           icon={ArrowUpRight}
-          text={linkingNoteNumber ?? 0}
+          text={referencingCount ?? 0}
           className="w-auto gap-x-1 text-gray-400"
         />
         <NoteMetaButton
           icon={ArrowDownLeft}
-          text={linkedNoteNumber ?? 0}
+          text={referencedCount ?? 0}
           className="w-auto gap-x-1 text-gray-400"
         />
         {labels && labels.map(label => (

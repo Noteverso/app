@@ -26,7 +26,7 @@ import {
 import { useEffect, useState } from 'react'
 import { NavMainButton } from './nav-main-button'
 import { BreadcrumbButton } from './nav-breadcrumb-button'
-import { ROUTER_PATHS } from '@/routes/path'
+import { PROJECT_COLORS, ROUTER_PATHS } from '@/constants'
 import type { FullProject } from '@/types/project'
 import { Button } from '@/components/button/button'
 
@@ -96,17 +96,16 @@ import {
   CommandShortcut,
 } from '@/components/command/command'
 
-import { PROJECT_COLORS } from '@/lib/config/project'
 import { Switch } from '@/components/switch/switch'
-import { Badge } from '@/components/badge/badge'
+// import { Badge } from '@/components/badge/badge'
 
 export type SidebarProprs = {
-  projectList: FullProject[];
+  projects: FullProject[];
   onToggle?: () => void;
 }
 
 export function Nav({
-  projectList,
+  projects,
   onToggle,
 }: SidebarProprs) {
   const [isCollaOpen, setIsCollaOpen] = useState(true)
@@ -157,7 +156,7 @@ export function Nav({
   }
 
   return (
-    <div className="flex flex-col max-h-screen">
+    <div className="flex flex-col max-h-screen select-none">
       <div className="flex items-center min-h-[60px] px-3">
         <div className="flex items-center w-full px-2">
           <DropdownMenu>
@@ -219,22 +218,20 @@ export function Nav({
             </Button>
 
             <NavMainButton
-              routePath={ROUTER_PATHS.INBOX.path}
-              routeName={ROUTER_PATHS.INBOX.name}
+              route={{ routePath: ROUTER_PATHS.INBOX.path, routeName: ROUTER_PATHS.INBOX.name }}
               icon={Inbox}
             />
 
             <NavMainButton
-              routePath={ROUTER_PATHS.LABELS.path}
-              routeName={ROUTER_PATHS.LABELS.name}
+              route={{ routePath: ROUTER_PATHS.LABELS.path, routeName: ROUTER_PATHS.LABELS.name }}
               icon={Tag}
-
+              showBadge={false}
             />
 
             <NavMainButton
-              routePath={ROUTER_PATHS.ATTACHMENTS.path}
-              routeName={ROUTER_PATHS.ATTACHMENTS.name}
+              route={{ routePath: ROUTER_PATHS.ATTACHMENTS.path, routeName: ROUTER_PATHS.ATTACHMENTS.name }}
               icon={Paperclip}
+              showBadge={false}
             />
           </div>
 
@@ -267,20 +264,20 @@ export function Nav({
             <CollapsibleContent className="space-y-2">
               <div className="grid items-start">
                 {
-                  projectList.map(project => (
-
+                  projects.map(project => (
                     <ContextMenu key={project.projectId}>
                       <ContextMenuTrigger>
                         <NavLink
                           to={`${ROUTER_PATHS.PROJECTS.path}/${project.projectId}`}
                           key={project.projectId}
-                          className="group flex items-center gap-3 py-2 px-2 transition-all hover:text-primary"
-                        >
-                          <HashIcon className="h-4 w-4 group-[.active]:text-blue-500" />
-                          <span className="group-[.active]:text-blue-500">{project.name}</span>
-                          <Badge className="ml-auto bg-transparent text-muted-foreground flex h-6 w-6 shrink-0 items-center justify-center">
+                          className={({ isActive }) => `group flex items-center gap-3 py-2 px-2 transition-all hover:text-primary select-none rounded ${isActive ? 'active bg-gray-200' : ''}`}>
+                          <HashIcon className="h-4 w-4 group-[.active]:text-blue-500"
+                            style={{ color: `var(--named-color-${project.color.replace('_', '-')})` }}
+                          />
+                          <span>{project.name}</span>
+                          <span className="ml-auto bg-transparent text-muted-foreground flex h-6 w-6 shrink-0 items-center justify-center">
                             {project.noteCount ?? 0}
-                          </Badge>
+                          </span>
                         </NavLink>
                       </ContextMenuTrigger>
                       <ContextMenuContent className="w-64">

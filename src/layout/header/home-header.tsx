@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import styles from './header.module.css'
-import type { UserResponse } from '@/api/user/user'
+import type { UserResponse } from '@/types/user'
 import { Logo } from '@/components/logo/logo'
-import { ROUTER_PATHS } from '@/routes/path'
+import { ROUTER_PATHS } from '@/constants'
 
 export function HomeHeader({ user }: { user: UserResponse }) {
   return (

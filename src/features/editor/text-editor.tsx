@@ -127,7 +127,7 @@ export function TextEditor({ className = '', onChange }: TextEditorProps) {
 
   return (
     <div className={`${className}`}>
-      <div className="border-2 border-black rounded">
+      <div className="border border-gray-300 rounded">
         <div className="p-4 flex items-center">
           {editor && <div className="Button-group">
             <Button
@@ -394,8 +394,8 @@ export function TextEditor({ className = '', onChange }: TextEditorProps) {
           </div>}
         </div>
 
-        <div className="h-32 max-h-64 overflow-auto bg-white relative">
-          <EditorContent editor={editor} className="p-4 h-40" />
+        <div className="overflow-auto bg-white relative">
+          <EditorContent editor={editor} className="p-4" />
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 export const PROJECT_COLORS = [
   { name: 'Berry Red', value: 'berry_red' },
-  { name: 'Read', value: 'red' },
+  { name: 'Red', value: 'red' },
   { name: 'Orange', value: 'orange' },
   { name: 'Yellow', value: 'yellow' },
   { name: 'Olive Green', value: 'olive_green' },
