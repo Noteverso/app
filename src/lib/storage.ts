@@ -1,4 +1,4 @@
-import type { UserResponse } from '@/api/user/user'
+import type { UserResponse } from '@/types/user'
 
 enum StorageKeys {
   CURRENT_USER = 'user',
