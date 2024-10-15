@@ -67,8 +67,8 @@ jobs:
       - name: ✅ Verify build output
         shell: bash
         run: |
-          if [ ! -d "./.next" ]; then
-            echo "Build failed: .next directory not found."
+          if [ ! -d "./dist" ]; then
+            echo "Build failed: dist directory not found."
             exit 1
           else
             echo "Build succeeded! 🎉"

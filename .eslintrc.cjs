@@ -26,5 +26,6 @@ module.exports = {
 
     // 确保只导入类型时使用 import type
     "@typescript-eslint/no-import-type-side-effects": "error",
+    "react-refresh/only-export-components": "off"
   },
 }
