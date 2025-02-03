@@ -13,4 +13,11 @@ public class NotePageRequest extends PageRequest {
 
     @Schema(description = "view type (0: project, 1: upcoming, 2: today, 3: past, 4: attachment, 5: label)", hidden = true)
     private Integer viewType;
+
+    private Integer isDeleted = 0;
+
+    private Integer isArchived = 0;
+
+    private boolean showPinned = false;
+
 }

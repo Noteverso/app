@@ -39,7 +39,7 @@ public class AuthController {
 
     @Operation(description = "Login with username and password", tags = {"POST"})
     @PostMapping("/login")
-    public ApiResult<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+    public LoginResponse login(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
         );
@@ -49,12 +49,12 @@ public class AuthController {
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setUsername(loginRequest.getUsername());
         loginResponse.setToken(token);
-        return ApiResult.success(loginResponse);
+        return loginResponse;
     }
 
     @Operation(description = "Sign up with username and password", tags = {"POST"})
     @PostMapping("/signup")
-    public ApiResult<String> signup(@RequestBody @Valid CreateUserRequest createUserRequest) {
+    public String signup(@RequestBody @Valid CreateUserRequest createUserRequest) {
         String email = createUserRequest.getEmail();
 
         if (userService.existsByEmail(email)) {
@@ -69,12 +69,12 @@ public class AuthController {
         }
 
         userService.createUser(createUserRequest.getEmail(), createUserRequest.getUsername(), createUserRequest.getPassword());
-        return ApiResult.success("User created successfully");
+        return "User created successfully";
     }
 
     @Operation(description = "verify captcha", tags = {"Get"})
     @GetMapping("/verify-captcha")
-    public ApiResult<String> getCaptcha(String email) {
+    public String getCaptcha(String email) {
         if (userService.existsByEmail(email)) {
             throw new DuplicateRecordException("Email already exists");
         }
@@ -109,7 +109,7 @@ public class AuthController {
         redisUtils.set(String.format(CACHE_VERIFICATION_CAPTCHA_CODE_CREATE_TIME, email), String.valueOf(System.currentTimeMillis()));
         emailService.sendSimpleMessage(email, "Noteverso verification code", "Your verification code: " + captcha);
 
-        return ApiResult.success("Captcha sent successfully");
+        return "Captcha sent successfully";
     }
 
 }

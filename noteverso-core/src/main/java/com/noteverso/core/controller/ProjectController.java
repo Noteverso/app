@@ -18,7 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid ;
 import java.util.List;
 
 @Tag(name = "Project", description = "Project management APIs")
@@ -34,64 +34,64 @@ public class ProjectController {
     @Operation(summary = "Create a Project", description = "Create a Project", tags = { "POST" })
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResult<String> createProject(Authentication authentication, @Valid @RequestBody ProjectCreateRequest request) {
+    public String createProject(Authentication authentication, @Valid @RequestBody ProjectCreateRequest request) {
         String projectId = projectService.createProject(request, authManager.getPrincipal(authentication).getUserId());
-        return ApiResult.success(projectId);
+        return projectId;
     }
 
     @Operation(summary = "Update a Project", description = "Update a Project", tags = { "PATCH" })
     @PatchMapping("/{projectId}")
-    public ApiResult<Void> updateProject(Authentication authentication ,@PathVariable("projectId") String projectId, @Valid @RequestBody ProjectUpdateRequest request) {
+    public Void updateProject(Authentication authentication ,@PathVariable("projectId") String projectId, @Valid @RequestBody ProjectUpdateRequest request) {
         projectService.updateProject(projectId, request, authManager.getPrincipal(authentication).getUserId());
-        return ApiResult.success(null);
+        return null;
     }
 
     @Operation(summary = "Archive a Project", description = "Archive a Project", tags = { "PATCH" })
     @PatchMapping("/{projectId}/archive")
-    public ApiResult<Void> archiveProject(Authentication authentication, @PathVariable("projectId") String projectId) {
+    public Void archiveProject(Authentication authentication, @PathVariable("projectId") String projectId) {
         projectService.archiveProject(projectId, authManager.getPrincipal(authentication).getUserId());
-        return ApiResult.success(null);
+        return null;
     }
 
     @Operation(summary = "Unarchive a Project", description = "Unarchive a Project", tags = { "PATCH" })
     @PatchMapping("/{projectId}/unarchive")
-    public ApiResult<Void> unarchiveProject(Authentication authentication, @PathVariable("projectId") String projectId) {
+    public Void unarchiveProject(Authentication authentication, @PathVariable("projectId") String projectId) {
         projectService.unarchiveProject(projectId, authManager.getPrincipal(authentication).getUserId());
-        return ApiResult.success(null);
+        return null;
     }
 
     @Operation(summary = "Delete a Project", description = "Delete a Project", tags = { "DELETE" })
     @DeleteMapping("/{projectId}")
-    public ApiResult<Void> deleteProject(Authentication authentication, @PathVariable("projectId") String projectId) {
+    public Void deleteProject(Authentication authentication, @PathVariable("projectId") String projectId) {
         projectService.deleteProject(projectId, authManager.getPrincipal(authentication).getUserId());
-        return ApiResult.success(null);
+        return null;
     }
 
     @Operation(summary = "Favorite a Project", description = "Favorite a Project", tags = { "PATCH" })
     @PatchMapping("/{projectId}/favorite")
-    public ApiResult<Void> favoriteProject(Authentication authentication, @PathVariable("projectId") String projectId) {
+    public Void favoriteProject(Authentication authentication, @PathVariable("projectId") String projectId) {
         projectService.favoriteProject(projectId, authManager.getPrincipal(authentication).getUserId());
-        return ApiResult.success(null);
+        return null;
     }
 
     @Operation(summary = "UnFavorite a Project", description = "UnFavorite a Project", tags = { "PATCH" })
     @PatchMapping("/{projectId}/unfavorite")
-    public ApiResult<Void> unFavoriteProject(Authentication authentication, @PathVariable("projectId") String projectId) {
+    public Void unFavoriteProject(Authentication authentication, @PathVariable("projectId") String projectId) {
         projectService.unFavoriteProject(projectId, authManager.getPrincipal(authentication).getUserId());
-        return ApiResult.success(null);
+        return null;
     }
 
     @Operation(summary = "Get Project List", description = "Get Project List", tags = { "GET" })
     @GetMapping("")
-    public ApiResult<List<ProjectItem>> getProjectList(Authentication authentication) {
+    public List<ProjectItem> getProjectList(Authentication authentication) {
         UserDetailsImpl userDetails = authManager.getPrincipal(authentication) ;
-        return ApiResult.success(projectService.getProjectList(userDetails.getUserId()));
+        return projectService.getProjectList(userDetails.getUserId());
     }
 
     @Operation(summary = "Get Project Select items", description = "Get Project Select items", tags = { "GET" })
     @GetMapping("/select")
-    public ApiResult<List<SelectItem>> getProjectSelectItems(Authentication authentication, @jakarta.validation.Valid ProjectRequest request) {
+    public List<SelectItem> getProjectSelectItems(Authentication authentication, @Valid ProjectRequest request) {
         List<SelectItem> selectItems = projectService.getProjectSelectItems(request, authManager.getPrincipal(authentication).getUserId());
-        return ApiResult.success(selectItems);
+        return selectItems;
     }
 }

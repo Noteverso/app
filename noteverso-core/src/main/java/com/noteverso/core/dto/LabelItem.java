@@ -8,7 +8,7 @@ public class LabelItem {
 
     private String color;
 
-    private String labelName;
+    private String name;
 
     private Long noteCount;
 }

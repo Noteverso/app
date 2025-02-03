@@ -35,7 +35,7 @@ public class FileController {
     private final AttachmentService attachmentService;
 
     @PostMapping("/upload")
-    public ApiResult<UploadResponse> upload(Authentication authentication, @RequestPart("file") MultipartFile file, @RequestPart("resourceType") String resourceType) throws IOException {
+    public UploadResponse upload(Authentication authentication, @RequestPart("file") MultipartFile file, @RequestPart("resourceType") String resourceType) throws IOException {
         UserDetailsImpl principal = authManager.getPrincipal(authentication);
         String userId = principal.getUserId();
         UserConfig userConfig = userConfigManager.getUserConfig(principal.getUserId());
@@ -61,11 +61,11 @@ public class FileController {
         uploadResponse.setUrl(result.getFileName());
         uploadResponse.setResourceType(resourceType);
 
-        return ApiResult.success(uploadResponse);
+        return uploadResponse;
     }
 
     @PostMapping("/getUploadFileUrl")
-    public ApiResult<UploadFileGetResponse> getUploadFileUrl(Authentication authentication, @RequestBody AttachmentRequest request) {
+    public UploadFileGetResponse getUploadFileUrl(Authentication authentication, @RequestBody AttachmentRequest request) {
         UserDetailsImpl principal = authManager.getPrincipal(authentication);
         String userId = principal.getUserId();
         Long contentLength = request.getContentLength();
@@ -92,12 +92,12 @@ public class FileController {
         response.setSignedGetUrl(ossClient.getPrivateUrl(key, 60 * 5));
         response.setAttachmentUrl(key);
 
-        return ApiResult.success(response);
+        return response;
     }
 
     @Operation(description = "Create attachment", tags = {"POST"})
     @PostMapping("/attachments")
-    public ApiResult<String> saveAttachments(Authentication authentication, @RequestBody AttachmentRequest request) {
+    public String saveAttachments(Authentication authentication, @RequestBody AttachmentRequest request) {
         UserDetailsImpl principal = authManager.getPrincipal(authentication);
         String userId = principal.getUserId();
 
@@ -108,15 +108,13 @@ public class FileController {
         attachmentDTO.setUrl(request.getUrl());
         attachmentDTO.setResourceType(request.getResourceType());
 
-        String attachmentId = attachmentService.createAttachment(attachmentDTO, userId);
-        return ApiResult.success(attachmentId);
+        return attachmentService.createAttachment(attachmentDTO, userId);
     }
 
 
     @GetMapping("/{attachmentId}")
-    public ApiResult<String> getUrl(Authentication authentication, @PathVariable("attachmentId") String attachmentId) {
+    public String getUrl(Authentication authentication, @PathVariable("attachmentId") String attachmentId) {
         UserDetailsImpl principal = authManager.getPrincipal(authentication);
-        String url = attachmentService.getPreviewSignature(attachmentId, principal.getUserId());
-        return ApiResult.success(url);
+        return attachmentService.getPreviewSignature(attachmentId, principal.getUserId());
     }
 }

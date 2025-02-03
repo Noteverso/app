@@ -233,11 +233,16 @@ public class ProjectServiceImpl implements ProjectService {
     public List<ProjectItem> getProjectList(String userId) {
         LambdaQueryWrapper<Project> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Project::getCreator, userId);
-        queryWrapper.eq(Project::getIsInboxProject, NUM_O);
+//        queryWrapper.eq(Project::getIsInboxProject, NUM_O);
         queryWrapper.eq(Project::getIsArchived, NUM_O);
+        queryWrapper.orderByAsc(Project::getName);
         List<Project> projects = projectMapper.selectList(queryWrapper);
 
         List<String> projectIds = projects.stream().map(Project::getProjectId).collect(Collectors.toList());
+        List<ProjectItem> projectItems = new ArrayList<>();
+        if (projectIds.isEmpty()) {
+            return projectItems;
+        }
 
         // Get view option for each project
         HashMap<String, ViewOption> viewOptionsMap = viewOptionService.getViewOptionsMap(projectIds, userId);
@@ -260,7 +265,6 @@ public class ProjectServiceImpl implements ProjectService {
         // Get note count for each project
         HashMap<String, Long> noteCountMap = noteManager.getNoteCountByProjects(projectViewOptions, userId);
 
-        List<ProjectItem> projectItems = new ArrayList<>();
         for (Project project : projects) {
             ProjectItem projectItem = new ProjectItem();
             projectItem.setName(project.getName());
@@ -268,6 +272,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectItem.setColor(project.getColor());
             projectItem.setIsFavorite(project.getIsFavorite());
             projectItem.setNoteCount(noteCountMap.getOrDefault(project.getProjectId(), null));
+            projectItem.setInboxProject(project.getIsInboxProject() != 0);
             projectItems.add(projectItem);
         }
 

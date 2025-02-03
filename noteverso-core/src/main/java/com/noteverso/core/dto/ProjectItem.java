@@ -13,4 +13,6 @@ public class ProjectItem {
     private Integer isFavorite;
 
     private String color;
+
+    private boolean inboxProject;
 }

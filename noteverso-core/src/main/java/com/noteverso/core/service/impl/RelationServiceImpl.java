@@ -4,23 +4,22 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.noteverso.core.dao.AttachmentRelationMapper;
+import com.noteverso.core.dao.LabelMapper;
 import com.noteverso.core.dao.NoteLabelRelationMapper;
 import com.noteverso.core.dao.NoteRelationMapper;
-import com.noteverso.core.dto.AttachmentCount;
-import com.noteverso.core.dto.NoteCountForLabel;
-import com.noteverso.core.dto.ReferencedNoteCount;
-import com.noteverso.core.dto.ReferencingNoteCount;
+import com.noteverso.core.dto.*;
 import com.noteverso.core.model.AttachmentRelation;
+import com.noteverso.core.model.Label;
 import com.noteverso.core.model.NoteLabelRelation;
 import com.noteverso.core.model.NoteRelation;
+import com.noteverso.core.request.LabelRequest;
 import com.noteverso.core.service.RelationService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.noteverso.core.constant.StringConstants.KEY_ADDED_AT;
 import static com.noteverso.core.constant.StringConstants.KEY_NOTE_ID;
@@ -31,6 +30,7 @@ public class RelationServiceImpl implements RelationService {
     private final NoteLabelRelationMapper noteLabelRelationMapper;
     private final NoteRelationMapper noteRelationMapper;
     private final AttachmentRelationMapper attachmentRelationMapper;
+    private final LabelMapper labelMapper;
 
     @Override
     public void insertNoteLabelRelation(List<String> labels, String noteId, String userId) {
@@ -243,7 +243,7 @@ public class RelationServiceImpl implements RelationService {
     }
 
     @Override
-    public HashMap<String, List<String>> getLabelsByNoteIds(List<String> noteIds, String userId) {
+    public HashMap<String, List<LabelItem>> getLabelsByNoteIds(List<String> noteIds, String userId) {
         LambdaQueryWrapper<NoteLabelRelation> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(NoteLabelRelation::getNoteId, noteIds);
         queryWrapper.eq(NoteLabelRelation::getCreator, userId);
@@ -253,14 +253,31 @@ public class RelationServiceImpl implements RelationService {
             return new HashMap<>();
         }
 
-        HashMap<String, List<String>> noteLabelMap = new HashMap<>();
+        Set<String> labelIds = noteLabelRelations.stream().map(NoteLabelRelation::getLabelId).collect(Collectors.toSet());
+        LabelRequest labelRequest = new LabelRequest();
+        labelRequest.setLabelIds(new ArrayList<>(labelIds));
+        List<Label> labels = labelMapper.getLabels(labelRequest, userId);
+
+        Map<String, Label> labelMap = new HashMap<>();
+        for (Label label: labels) {
+            if (!labelMap.containsKey(label.getLabelId())) {
+                labelMap.put(label.getLabelId(), label);
+
+            }
+        }
+
+        HashMap<String, List<LabelItem>> noteLabelMap = new HashMap<>();
         for (NoteLabelRelation noteLabelRelation: noteLabelRelations) {
             String noteId = noteLabelRelation.getNoteId();
             String labelId = noteLabelRelation.getLabelId();
+            Label label = labelMap.get(labelId);
             if (!noteLabelMap.containsKey(noteId)) {
                 noteLabelMap.put(noteId, new ArrayList<>());
             }
-            noteLabelMap.get(noteId).add(labelId);
+            LabelItem labelItem = new LabelItem();
+            labelItem.setLabelId(labelId);
+            labelItem.setName(label != null ? label.getName() : "");
+            noteLabelMap.get(noteId).add(labelItem);
         }
 
         return noteLabelMap;

@@ -160,7 +160,7 @@ public class LabelServiceImpl implements LabelService {
         for (Label label : labels) {
             String labelId = label.getLabelId();
             LabelItem labelItem = new LabelItem();
-            labelItem.setLabelName(label.getName());
+            labelItem.setName(label.getName());
             labelItem.setColor(label.getColor());
             labelItem.setLabelId(labelId);
             labelItem.setNoteCount(noteCountMap.getOrDefault(labelId, null));

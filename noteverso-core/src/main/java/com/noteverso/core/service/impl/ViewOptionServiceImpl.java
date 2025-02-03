@@ -111,12 +111,16 @@ public class ViewOptionServiceImpl implements ViewOptionService {
 
     @Override
     public HashMap<String, ViewOption> getViewOptionsMap(List<String> objectIds, String userId) {
+        HashMap<String, ViewOption> viewOptionMap = new HashMap<>();
+        if (null == objectIds || objectIds.isEmpty()) {
+            return viewOptionMap;
+        }
+
         LambdaUpdateWrapper<ViewOption> viewOptionUpdateWrapper = new LambdaUpdateWrapper<>();
         viewOptionUpdateWrapper.in(ViewOption::getObjectId, objectIds);
         viewOptionUpdateWrapper.eq(ViewOption::getCreator, userId);
         List<ViewOption> viewOptions = viewOptionMapper.selectList(viewOptionUpdateWrapper);
 
-        HashMap<String, ViewOption> viewOptionMap = new HashMap<>();
         for (ViewOption viewOption : viewOptions) {
             viewOptionMap.put(viewOption.getObjectId(), viewOption);
         }

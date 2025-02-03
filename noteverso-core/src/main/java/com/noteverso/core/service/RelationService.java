@@ -1,5 +1,6 @@
 package com.noteverso.core.service;
 
+import com.noteverso.core.dto.LabelItem;
 import com.noteverso.core.model.NoteLabelRelation;
 
 import java.util.HashMap;
@@ -48,7 +49,7 @@ public interface RelationService {
 
     List<String> getLabelsByNoteId(String noteId, String userId);
 
-    HashMap<String, List<String>> getLabelsByNoteIds(List<String> noteIds, String userId);
+    HashMap<String, List<LabelItem>> getLabelsByNoteIds(List<String> noteIds, String userId);
 
     /**
      * 获取指定对象关联的附件数量

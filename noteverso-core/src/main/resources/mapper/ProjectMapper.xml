@@ -12,7 +12,12 @@
         <if test="request.name">
             AND LOWER(name) LIKE LOWER(CONCAT('%', TRIM('${request.name}'), '%'))
         </if>
-
+        <if test="request.projectIds != null and request.projectIds.size() > 0">
+            AND project_id IN
+            <foreach collection="request.projectIds" item="projectId" open="(" close=")" separator=",">
+                #{projectId}
+            </foreach>
+        </if>
         ORDER BY added_at DESC
     </select>
 </mapper>

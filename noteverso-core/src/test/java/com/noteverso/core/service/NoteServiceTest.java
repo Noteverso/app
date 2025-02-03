@@ -1,19 +1,20 @@
 package com.noteverso.core.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.noteverso.common.exceptions.NoSuchDataException;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
 import com.noteverso.core.dto.NoteDTO;
+import com.noteverso.core.dto.NoteItem;
 import com.noteverso.core.model.Note;
 import com.noteverso.core.model.NoteLabelRelation;
+import com.noteverso.core.model.Project;
 import com.noteverso.core.model.ViewOption;
 import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NotePageRequest;
-import com.noteverso.core.dto.NoteItem;
+import com.noteverso.core.request.ProjectRequest;
 import com.noteverso.core.service.impl.NoteServiceImpl;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
@@ -22,14 +23,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class NoteServiceTest {
@@ -153,21 +154,16 @@ class NoteServiceTest {
     void should_returnNotesPageByProject_whenViewOptionIsNull() {
         // Arrange
         String userId = "1";
+        String projectId = "123";
         NotePageRequest request = new NotePageRequest();
-        request.setObjectId("123");
+        request.setObjectId(projectId);
         request.setViewType(0);
         request.setPageSize(10L);
         request.setPageIndex(1L);
 
-        QueryWrapper<Note> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("project_id", "123");
-        queryWrapper.eq("is_deleted", 0);
-        queryWrapper.eq("is_archived", 0);
-        queryWrapper.orderByDesc("is_pinned", "added_at");
-
         Page<Note> notePage = new Page<>();
         List<String> noteIds = List.of("1", "2", "3", "4", "5");
-        List<Note> notes = constructNotesByNoteIds(noteIds, userId);
+        List<Note> notes = constructNotesByNoteIds(noteIds, userId, projectId);
         notePage.setRecords(notes);
         notePage.setCurrent(request.getPageIndex());
         notePage.setSize(request.getPageSize());
@@ -176,11 +172,18 @@ class NoteServiceTest {
         List<NoteLabelRelation> noteLabelRelations = new ArrayList<>();
 
         when(viewOptionService.getViewOption(any(ViewOption.class), any(String.class))).thenReturn(null);
-        when(relationService.getNoteLabelRelations(any(String.class), any(String.class))).thenReturn(noteLabelRelations);
         when(noteMapper.selectPage(any(), any())).thenReturn(notePage);
 
+        ProjectRequest projectRequest = new ProjectRequest();
+        projectRequest.setProjectIds(Collections.singleton(projectId));
+        Project project = new Project();
+        project.setProjectId(projectId);
+        project.setName("projectTestName");
+        project.setCreator(userId);
+        when(projectMapper.getProjects(projectRequest, userId)).thenReturn(List.of(project));
+
         // Act
-        PageResult<NoteItem> notePageResponsePage = noteService.getNotePageByLabel(request, userId);
+        PageResult<NoteItem> notePageResponsePage = noteService.getNotePageByProject(request, userId);
 
         // Assert
         verify(relationService, times(0)).getReferencedCountByReferencedNoteIds(noteIds, userId);
@@ -191,15 +194,16 @@ class NoteServiceTest {
     void should_returnNotesPageByProject_whenViewOptionIsNotNull() {
         // Arrange
         String userId = "1";
+        String projectId = "123";
         NotePageRequest request = new NotePageRequest();
-        request.setObjectId("123");
+        request.setObjectId(projectId);
         request.setViewType(0);
         request.setPageSize(10L);
         request.setPageIndex(1L);
 
         Page<Note> notePage = new Page<>();
         List<String> noteIds = List.of("1", "2", "3", "4", "5");
-        List<Note> notes = constructNotesByNoteIds(noteIds, userId);
+        List<Note> notes = constructNotesByNoteIds(noteIds, userId, projectId);
         notePage.setRecords(notes);
         notePage.setCurrent(request.getPageIndex());
         notePage.setSize(request.getPageSize());
@@ -210,6 +214,14 @@ class NoteServiceTest {
         viewOption.setShowRelationNoteCount(1);
         viewOption.setOrderedBy(0);
         when(viewOptionService.getViewOption(any(ViewOption.class), any(String.class))).thenReturn(viewOption);
+
+        ProjectRequest projectRequest = new ProjectRequest();
+        projectRequest.setProjectIds(Collections.singleton(projectId));
+        Project project = new Project();
+        project.setProjectId(projectId);
+        project.setName("projectTestName");
+        project.setCreator(userId);
+        when(projectMapper.getProjects(projectRequest, userId)).thenReturn(List.of(project));
 
         // Act
         PageResult<NoteItem> notePageResponsePage = noteService.getNotePageByProject(request, userId);
@@ -224,10 +236,11 @@ class NoteServiceTest {
         // Arrange
         String userId = "1";
         String labelId = "1";
+        String projectId = "123";
 
         Page<Note> notePage = new Page<>();
         List<String> noteIds = List.of("1", "2", "3", "4", "5");
-        List<Note> notes = constructNotesByNoteIds(noteIds, userId);
+        List<Note> notes = constructNotesByNoteIds(noteIds, userId, projectId);
         notePage.setRecords(notes);
         notePage.setTotal(notes.size());
         when(noteMapper.selectPage(any(), any())).thenReturn(notePage);
@@ -238,8 +251,15 @@ class NoteServiceTest {
             noteLabelRelations.add(noteLabelRelation);
         }
         when(relationService.getNoteLabelRelations(anyString(), anyString())).thenReturn(noteLabelRelations);
-
         when(viewOptionService.getViewOption(any(ViewOption.class), anyString())).thenReturn(null);
+
+        ProjectRequest projectRequest = new ProjectRequest();
+        projectRequest.setProjectIds(Collections.singleton(projectId));
+        Project project = new Project();
+        project.setProjectId(projectId);
+        project.setName("projectTestName");
+        project.setCreator(userId);
+        when(projectMapper.getProjects(projectRequest, userId)).thenReturn(List.of(project));
 
         NotePageRequest request = new NotePageRequest();
         request.setObjectId(labelId);
@@ -259,10 +279,11 @@ class NoteServiceTest {
         // Arrange
         String userId = "1";
         String labelId = "1";
+        String projectId = "123";
 
         Page<Note> notePage = new Page<>();
         List<String> noteIds = List.of("1", "2", "3", "4", "5");
-        List<Note> notes = constructNotesByNoteIds(noteIds, userId);
+        List<Note> notes = constructNotesByNoteIds(noteIds, userId, projectId);
         notePage.setRecords(notes);
         notePage.setTotal(notes.size());
         when(noteMapper.selectPage(any(), any())).thenReturn(notePage);
@@ -274,11 +295,18 @@ class NoteServiceTest {
         }
         when(relationService.getNoteLabelRelations(anyString(), anyString())).thenReturn(noteLabelRelations);
 
+        Project project = new Project();
+        project.setProjectId(projectId);
+        project.setName("projectTestName");
+        project.setCreator(userId);
+        when(projectMapper.getProjects(any(ProjectRequest.class), eq(userId))).thenReturn(List.of(project));
+
         ViewOption viewOption = new ViewOption();
         viewOption.setShowRelationNoteCount(1);
         viewOption.setViewType(5);
         viewOption.setOrderedBy(0);
         when(viewOptionService.getViewOption(any(ViewOption.class), anyString())).thenReturn(viewOption);
+
 
         NotePageRequest request = new NotePageRequest();
         request.setObjectId(labelId);
@@ -295,7 +323,7 @@ class NoteServiceTest {
     }
 
 
-    private List<Note> constructNotesByNoteIds(List<String> noteIds, String userId) {
+    private List<Note> constructNotesByNoteIds(List<String> noteIds, String userId, String projectId) {
         List<Note> notes = new ArrayList<>();
         for (String noteId : noteIds) {
             notes.add(Note.builder()
@@ -303,7 +331,11 @@ class NoteServiceTest {
                     .creator(userId)
                     .updater(userId)
                     .noteId(noteId)
-                    .isPinned(0).isFavorite(0).isArchived(0).isDeleted(0)
+                    .isPinned(0)
+                    .isFavorite(0)
+                    .isArchived(0)
+                    .isDeleted(0)
+                    .projectId(projectId)
                     .build());
         }
         return notes;
@@ -315,7 +347,6 @@ class NoteServiceTest {
         noteItem.setNoteId(note.getNoteId());
         noteItem.setContent("Hello World!");
         noteItem.setCreator(userId);
-        noteItem.setProjectId(note.getProjectId());
         noteItem.setIsDeleted(note.getIsDeleted());
         noteItem.setIsArchived(note.getIsArchived());
         noteItem.setIsPinned(note.getIsPinned());

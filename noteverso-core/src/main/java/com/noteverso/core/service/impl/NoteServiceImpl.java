@@ -9,8 +9,7 @@ import com.noteverso.common.util.IPUtils;
 import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
 import com.noteverso.common.util.SnowFlakeUtils;
-import com.noteverso.core.dto.NoteDTO;
-import com.noteverso.core.dto.SelectItem;
+import com.noteverso.core.dto.*;
 import com.noteverso.core.enums.ObjectOrderValueEnum;
 import com.noteverso.core.enums.ObjectOrderByEnum;
 import com.noteverso.core.enums.ObjectViewTypeEnum;
@@ -20,20 +19,18 @@ import com.noteverso.core.pagination.PageResult;
 import com.noteverso.core.request.NoteCreateRequest;
 import com.noteverso.core.request.NotePageRequest;
 import com.noteverso.core.request.NoteUpdateRequest;
-import com.noteverso.core.dto.NoteItem;
+import com.noteverso.core.request.ProjectRequest;
 import com.noteverso.core.service.RelationService;
 import com.noteverso.core.service.ViewOptionService;
 import lombok.AllArgsConstructor;
 import com.noteverso.core.service.NoteService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.noteverso.common.constant.NumConstants.*;
@@ -278,8 +275,12 @@ public class NoteServiceImpl implements NoteService {
         viewOptionRequest.setViewType(ObjectViewTypeEnum.PROJECT.getValue());
         ViewOption viewOption = viewOptionService.getViewOption(viewOptionRequest, userId);
 
-        QueryWrapper<Note> noteQueryWrapper = noteQueryWrapper(viewOption);
-        noteQueryWrapper.eq(KEY_PROJECT_ID, objectId);
+        LambdaQueryWrapper<Note> noteQueryWrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.isNotBlank(objectId)) {
+            noteQueryWrapper.eq(Note::getProjectId, objectId);
+        }
+        noteQueryWrapper.eq(Note::getCreator, userId);
+        noteQueryWrapper.orderByAsc(Note::getAddedAt);
 
         Page<Note> notePage = noteMapper.selectPage(new Page<>(request.getPageIndex(), request.getPageSize()), noteQueryWrapper);
         return getNoteItemPage(notePage, viewOption, userId);
@@ -312,6 +313,18 @@ public class NoteServiceImpl implements NoteService {
         }
 
         List<Note> notes = notePage.getRecords();
+
+        Map<String, Project> projectMap = new HashMap<>();
+        Set<String> projectIds = notes.stream().map(Note::getProjectId).collect(Collectors.toSet());
+
+        // get projects info
+        ProjectRequest projectRequest = new ProjectRequest();
+        projectRequest.setProjectIds(projectIds);
+        List<Project> projects = projectMapper.getProjects(projectRequest, userId);
+        for (Project project : projects) {
+            projectMap.put(project.getProjectId(), project);
+        }
+
         List<String> noteIds = notes.stream().map(Note::getNoteId).toList();
 
         // get referencing and referenced count for each note
@@ -329,10 +342,10 @@ public class NoteServiceImpl implements NoteService {
         }
 
         // get label ids for each note
-        HashMap<String, List<String>> labelMap = relationService.getLabelsByNoteIds(noteIds, userId);
+        HashMap<String, List<LabelItem>> labelMap = relationService.getLabelsByNoteIds(noteIds, userId);
         List<NoteItem> responseList = new ArrayList<>();
         for (Note note : notes) {
-            NoteItem response = constructNoteItem(note, attachmentCountMap, referencingCountMap, referencedCountMap, labelMap);
+            NoteItem response = constructNoteItem(note, attachmentCountMap, referencingCountMap, referencedCountMap, labelMap, projectMap.get(note.getProjectId()));
             responseList.add(response);
         }
 
@@ -381,23 +394,26 @@ public class NoteServiceImpl implements NoteService {
             HashMap<String, Long> attachmentCountMap,
             HashMap<String, Long> referencingCountMap,
             HashMap<String, Long> referencedCountMap,
-            HashMap<String, List<String>> noteLabelMap) {
+            HashMap<String, List<LabelItem>> noteLabelMap,
+            Project project) {
         NoteItem noteItem = new NoteItem();
-        String noteProjectId = note.getProjectId();
         String noteId = note.getNoteId();
         noteItem.setContent(note.getContent());
         noteItem.setNoteId(noteId);
-        noteItem.setProjectId(noteProjectId);
         noteItem.setIsPinned(note.getIsPinned());
         noteItem.setIsArchived(note.getIsArchived());
         noteItem.setIsDeleted(note.getIsDeleted());
         noteItem.setCreator(note.getCreator());
-        noteItem.setLabelIds(noteLabelMap.get(noteId) != null ? noteLabelMap.get(noteId) : null);
+        noteItem.setLabels(noteLabelMap.get(noteId) != null ? noteLabelMap.get(noteId) : null);
         noteItem.setAddedAt(note.getAddedAt() != null ? note.getAddedAt().toString() : null);
         noteItem.setUpdatedAt(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null);
         noteItem.setAttachmentCount(attachmentCountMap.get(noteId) != null ? attachmentCountMap.get(noteId) : null);
         noteItem.setReferencingCount(referencingCountMap.get(noteId) != null ? referencingCountMap.get(noteId) : null);
         noteItem.setReferencedCount(referencedCountMap.get(noteId) != null ? referencedCountMap.get(noteId) : null);
+        ProjectItem projectItem = new ProjectItem();
+        projectItem.setProjectId(project.getProjectId());
+        projectItem.setName(project.getName());
+        noteItem.setProject(projectItem);
         return noteItem;
     }
 
@@ -416,13 +432,22 @@ public class NoteServiceImpl implements NoteService {
         queryWrapper.orderByDesc(Note::getAddedAt);
         List<Note> notes = noteMapper.selectList(queryWrapper);
 
+        Map<String, Project> projectMap = new HashMap<>();
+        Set<String> projectIds = notes.stream().map(Note::getProjectId).collect(Collectors.toSet());
+        ProjectRequest projectRequest = new ProjectRequest();
+        projectRequest.setProjectIds(projectIds);
+        List<Project> projects = projectMapper.getProjects(projectRequest, userId);
+        for (Project project : projects) {
+            projectMap.put(project.getProjectId(), project);
+        }
+
         HashMap<String, Long> referencedCountMap = relationService.getReferencedCountByReferencedNoteIds(referencedNoteIds, userId);
         HashMap<String, Long> referencingCountMap = relationService.getReferencingCountByReferencingNoteIds(referencedNoteIds, userId);
         HashMap<String, Long> attachmentCountMap = relationService.getAttachmentCountByObjectIds(referencedNoteIds, userId);
 
-        HashMap<String, List<String>> labelMap = relationService.getLabelsByNoteIds(referencedNoteIds, userId);
+        HashMap<String, List<LabelItem>> labelMap = relationService.getLabelsByNoteIds(referencedNoteIds, userId);
         for (Note note : notes) {
-            NoteItem noteItem = constructNoteItem(note, attachmentCountMap, referencingCountMap, referencedCountMap, labelMap);
+            NoteItem noteItem = constructNoteItem(note, attachmentCountMap, referencingCountMap, referencedCountMap, labelMap, projectMap.get(note.getProjectId()));
             referencedNoteItems.add(noteItem);
         }
 

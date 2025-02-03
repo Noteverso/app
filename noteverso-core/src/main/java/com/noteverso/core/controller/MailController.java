@@ -34,44 +34,43 @@ public class MailController {
 
     @Operation(summary = "Send mail", description = "Send mail", tags = { "POST" })
     @PostMapping("")
-    public ApiResult<Void> sendMail(@Valid @RequestBody MailRequest request) {
+    public Void sendMail(@Valid @RequestBody MailRequest request) {
         emailService.sendSimpleMessage(request.getTo(), request.getSubject(), request.getBody());
-        return ApiResult.success(null);
+        return null;
     }
 
     @Operation(summary = "Send html mail", description = "Send html mail", tags = { "POST" })
     @PostMapping("/html")
-    public ApiResult<Void> sendHtmlMail(@Valid @RequestBody MailRequest request) {
+    public Void sendHtmlMail(@Valid @RequestBody MailRequest request) {
         emailService.sendHtmlMessage(request.getTo(), request.getSubject(), request.getBody());
-        return ApiResult.success(null);
+        return null;
     }
 
     @Operation(summary = "Send attachment mail", description = "Send attachment mail", tags = {"POST"})
     @PostMapping("/attachment")
-    public ApiResult<Void> sendAttachmentMail(@Valid @RequestBody MailRequest request) {
+    public Void sendAttachmentMail(@Valid @RequestBody MailRequest request) {
         emailService.sendMailWithAttachment(request.getTo(), request.getSubject(), request.getBody(), request.getFilePath());
-        return ApiResult.success(null);
+        return null;
     }
 
     @Operation(summary = "Send Inline mail", description = "Send Inline mail", tags = {"POST"})
     @PostMapping("/inline")
-    public ApiResult<Void> sendInlineMail(@Valid @RequestBody MailRequest request) {
+    public Void sendInlineMail(@Valid @RequestBody MailRequest request) {
         emailService.sendMailWithInlineResources(request.getTo(), request.getSubject(), request.getBody(), request.getFilePath());
-        return ApiResult.success(null);
+        return null;
     }
 
     @Operation(summary = "Redis test", description = "Redis test", tags = {"POST"})
     @PostMapping("/redis")
-    public ApiResult<Void> redisSaveTest(@Valid @RequestBody RedisRequest request) {
+    public Void redisSaveTest(@Valid @RequestBody RedisRequest request) {
         redisTemplate.opsForValue().set(request.getKey(), request.getValue());
-        return ApiResult.success(null);
+        return null;
     }
 
     @Operation(summary = "Redis test", description = "Redis test - GET KEY", tags = {"GET"})
     @GetMapping("/redis")
-    public ApiResult<Object> redisGetTest(String key) {
-        Object value = redisTemplate.opsForValue().get(key);
-        return ApiResult.success(value);
+    public Object redisGetTest(String key) {
+        return redisTemplate.opsForValue().get(key);
     }
 
     public static void main(String[] args) {

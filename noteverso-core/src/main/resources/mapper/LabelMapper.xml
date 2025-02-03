@@ -11,6 +11,12 @@
         <if test="request.labelId">
             AND label_id = #{request.labelId}
         </if>
+        <if test="request.labelIds != null and request.labelIds.size() > 0">
+            AND label_id IN
+            <foreach collection="request.labelIds" item="labelId" separator="," open="(" close=")">
+                #{labelId}
+            </foreach>
+        </if>
         ORDER BY added_at DESC
     </select>
 </mapper>

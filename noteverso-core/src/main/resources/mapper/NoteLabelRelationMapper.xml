@@ -12,10 +12,16 @@
 
     <select id="getNoteCountByLabels" resultType="com.noteverso.core.dto.NoteCountForLabel">
         SELECT label_id, COUNT(*) AS note_count FROM noteverso_note_label_map
-        WHERE creator = #{userId} AND
+        WHERE creator = #{userId}
+        <if test="labelIds != null and labelIds.size() > 0">
+            AND label_id IN
             <foreach collection="labelIds" item="labelId" open="(" close=")" separator=",">
-                label_id = #{labelId}
+                #{labelId}
             </foreach>
+        </if>
+        <if test="labelIds == null or labelIds.size() == 0">
+            AND 1 == 0 <!--ensure no row data-->
+        </if>
         GROUP BY label_id;
     </select>
 </mapper>

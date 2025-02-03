@@ -9,7 +9,6 @@ import java.util.List;
 public class NoteItem {
     private String content;
     private String noteId;
-    private String projectId;
     private Integer isPinned;
     private Integer isArchived;
     private Integer isDeleted;
@@ -20,5 +19,6 @@ public class NoteItem {
     private Long referencedCount;
     private Long attachmentCount;
     private String creator;
-    private List<String> labelIds;
+    private List<LabelItem> labels;
+    private ProjectItem project;
 }
