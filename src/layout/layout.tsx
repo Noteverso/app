@@ -44,11 +44,11 @@ export function Layout() {
         style={{ '--copmuted-sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
         id="app-nav"
         className={`relative hidden md:block flex-shrink-0 flex-grow-0 md:w-[var(--sidebar-width)] min-w-0 transition-[margin-left] duration-300 ease-in-out ${isSidebarVisible ? 'ml-0' : '-ml-[var(--copmuted-sidebar-width)]'}`}>
-        <Nav projects={otherProjects} onToggle={handleNavToggle} />
+        <Nav projects={projects} onToggle={handleNavToggle} />
       </div>
 
       <div id="app-layout__content" className="h-full flex-grow overflow-auto transition-all duration-300 ease-in-out">
-        <header className="flex h-14 items-center gap-4 px-4 lg:h-[60px] lg:px-6 mb-4">
+        <header className="flex h-[60px] items-center gap-4 px-4 lg:px-6 mb-4">
           {/* 移动端侧边栏 */}
           <Sheet>
             <SheetTrigger asChild>
@@ -69,7 +69,7 @@ export function Layout() {
                   The mobile device navigation
                 </SheetDescription>
               </SheetHeader>
-              <Nav projects={otherProjects} />
+              <Nav projects={projects} />
             </SheetContent>
           </Sheet>
         </header>

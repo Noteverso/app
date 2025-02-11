@@ -5,6 +5,7 @@ export interface NavMainButtonProps {
   route: {
     routeName: string;
     routePath: string;
+    state?: object
   },
   icon: LucideIcon;
   badge?: number;
@@ -20,7 +21,8 @@ export function NavMainButton({
   return (
     <NavLink
       to={route.routePath}
-      className={({ isActive }) => `group h-10 py-2 px-2 transition-all hover:text-primary rounded ${isActive ? 'active bg-gray-200' : ''}`}
+      className={({ isActive }) => `group h-10 py-2 px-2 transition-all text-foreground hover:bg-gray-100  rounded ${isActive ? 'active bg-gray-200' : ''}`}
+      state={route.state}
     >
       <div className="flex items-center gap-3">
         <Icon className="h-4 w-4" />

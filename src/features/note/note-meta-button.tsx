@@ -3,7 +3,7 @@ import { Button } from '@/components/button/button'
 
 export interface NoteMetaButtonProps {
   icon: LucideIcon;
-  text: string | number | null;
+  text: string;
   onClick?: () => void;
   className?: string;
   hover?: boolean;
@@ -18,7 +18,7 @@ export function NoteMetaButton({
 }: NoteMetaButtonProps) {
   return (
     <Button
-      variant="ghost"
+      variant="link"
       size="icon"
       className={`w-auto gap-x-1 text-gray-400 ${hover ? 'hover:underline' : ''} ${className}`}
       onClick={onClick}

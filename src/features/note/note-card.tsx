@@ -1,8 +1,9 @@
-import { ArrowDownLeft, ArrowUpRight, Hash, Paperclip, Tag } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, Paperclip, Tag } from 'lucide-react'
 import parse from 'html-react-parser'
 import { useNavigate } from 'react-router-dom'
 import { NoteMetaButton } from './note-meta-button'
 import { ROUTER_PATHS } from '@/constants'
+import { dateFormat } from '@/lib/utils'
 
 export interface NoteCardProps {
   content: string;
@@ -27,7 +28,7 @@ export function NoteCard(props: NoteCardProps) {
     labels,
     content,
     addedAt,
-    project,
+    // project,
     attachmentCount,
     referencedCount,
     referencingCount,
@@ -36,31 +37,35 @@ export function NoteCard(props: NoteCardProps) {
   return (
     <>
       <p className="text-gray-600">
-        <time dateTime={addedAt}>{addedAt}</time>
+        <time dateTime={addedAt}>{dateFormat(addedAt)}</time>
       </p>
       <div className="flex flex-wrap gap-x-4">
-        <NoteMetaButton
+        {/* <NoteMetaButton
           icon={Hash}
           text={project.name}
           className="w-auto gap-x-1 text-gray-400"
           onClick={() => navigate(`${ROUTER_PATHS.PROJECTS.path}/${project.projectId}`)}
           hover
-        />
-        <NoteMetaButton
-          icon={Paperclip}
-          text={attachmentCount ?? 0}
-          className="w-auto gap-x-1 text-gray-400"
-        />
-        <NoteMetaButton
-          icon={ArrowUpRight}
-          text={referencingCount ?? 0}
-          className="w-auto gap-x-1 text-gray-400"
-        />
-        <NoteMetaButton
-          icon={ArrowDownLeft}
-          text={referencedCount ?? 0}
-          className="w-auto gap-x-1 text-gray-400"
-        />
+        /> */}
+        { attachmentCount && <NoteMetaButton
+            icon={Paperclip}
+            text={`${attachmentCount} ${attachmentCount === 1 ? 'file' : 'files'}`}
+            className="w-auto gap-x-1 text-gray-400"
+          />
+        }
+        { referencingCount && <NoteMetaButton
+            icon={ArrowUpRight}
+            text={`${referencingCount} ${referencingCount === 1 ? 'link' : 'links'}`}
+            className="w-auto gap-x-1 text-gray-400"
+          />
+        }
+
+        { referencedCount && <NoteMetaButton
+            icon={ArrowDownLeft}
+            text={`${referencedCount} ${referencedCount === 1 ? 'backlink' : 'backlinks'}`}
+            className="w-auto gap-x-1 text-gray-400"
+          />
+        }
         {labels && labels.map(label => (
           <NoteMetaButton
             key={label?.labelId}

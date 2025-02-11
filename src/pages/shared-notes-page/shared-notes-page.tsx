@@ -83,7 +83,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
 
     setLoading(true)
     getNotesApi({
-      objectId: projectId || '',
+      objectId: projectId,
       pageSize: 10,
       pageIndex: page,
     }).then((response) => {

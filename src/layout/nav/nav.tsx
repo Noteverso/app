@@ -116,6 +116,9 @@ export function Nav({
   const [operation, setOperation] = useState<'archive' | 'delete'>('archive')
   const [isCommandDialogOpen, setIsCommandDialogOpen] = useState(false)
 
+  const inbox = projects.find(project => project.inboxProject) as FullProject
+  const [inboxProject] = useState<FullProject>(inbox)
+
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === 'j' && (e.metaKey || e.ctrlKey)) {
@@ -195,7 +198,7 @@ export function Nav({
           <Button
             variant="ghost"
             size="lg"
-            className="flex items-center justify-start gap-3 h-10 py-2 px-2 transition-all hover:text-primary"
+            className="flex items-center justify-start gap-3 h-10 py-2 px-2 transition-all text-foreground hover:bg-gray-100"
             onClick={() => handleNoteAdd('')}
           >
             <CirclePlus className="h-4 w-4" />
@@ -210,7 +213,7 @@ export function Nav({
             <Button
               variant="ghost"
               size="lg"
-              className="flex items-center justify-start gap-3 h-10 py-2 px-2 transition-all hover:text-primary"
+              className="flex items-center justify-start gap-3 h-10 py-2 px-2 transition-all text-foreground hover:bg-gray-100"
               onClick={() => handleSearch('')}
             >
               <Search className="h-4 w-4" />
@@ -220,6 +223,7 @@ export function Nav({
             <NavMainButton
               route={{ routePath: ROUTER_PATHS.INBOX.path, routeName: ROUTER_PATHS.INBOX.name }}
               icon={Inbox}
+              badge={inboxProject?.noteCount}
             />
 
             <NavMainButton
@@ -240,7 +244,7 @@ export function Nav({
             onOpenChange={setIsCollaOpen}
             className="space-y-2"
           >
-            <div className="flex items-center justify-between space-x-4 py-2 px-2 sticky top-0 bg-muted">
+            <div className="flex items-center justify-between space-x-4 py-2 px-2 sticky top-0">
               <h4 className="text-sm font-semibold">
                 项目
               </h4>
@@ -264,13 +268,15 @@ export function Nav({
             <CollapsibleContent className="space-y-2">
               <div className="grid items-start">
                 {
-                  projects.map(project => (
+                  projects
+                    .filter(project => !project.inboxProject)
+                    .map(project => (
                     <ContextMenu key={project.projectId}>
                       <ContextMenuTrigger>
                         <NavLink
                           to={`${ROUTER_PATHS.PROJECTS.path}/${project.projectId}`}
                           key={project.projectId}
-                          className={({ isActive }) => `group flex items-center gap-3 py-2 px-2 transition-all hover:text-primary select-none rounded ${isActive ? 'active bg-gray-200' : ''}`}>
+                          className={({ isActive }) => `group flex items-center gap-3 py-2 px-2 transition-all text-foreground hover:bg-gray-100 select-none rounded ${isActive ? 'active bg-gray-200' : ''}`}>
                           <HashIcon className="h-4 w-4 group-[.active]:text-blue-500"
                             style={{ color: `var(--named-color-${project.color.replace('_', '-')})` }}
                           />
@@ -316,7 +322,7 @@ export function Nav({
                         </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>
-                  ))
+                    ))
                 }
               </div>
             </CollapsibleContent>
