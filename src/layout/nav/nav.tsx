@@ -23,7 +23,7 @@ import {
   Trash2,
   User,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NavMainButton } from './nav-main-button'
 import { BreadcrumbButton } from './nav-breadcrumb-button'
 import { PROJECT_COLORS, ROUTER_PATHS } from '@/constants'
@@ -112,12 +112,25 @@ export function Nav({
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false)
   const [isCreateProject, setIsCreateProject] = useState(false)
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false)
-  const [project, setProject] = useState<FullProject | null>(null)
+  const [curProject, setCurProject] = useState<FullProject | null>(null)
   const [operation, setOperation] = useState<'archive' | 'delete'>('archive')
   const [isCommandDialogOpen, setIsCommandDialogOpen] = useState(false)
 
-  const inbox = projects.find(project => project.inboxProject) as FullProject
-  const [inboxProject] = useState<FullProject>(inbox)
+  // const initialInbox = projects.find(project => project.inboxProject) as FullProject
+  const [inboxProject, setInboxProject] = useState<FullProject | null>(null)
+
+  const inbox = useMemo(() => {
+    return projects.find(project => project.inboxProject) as FullProject
+  }, [projects])
+
+  useEffect(() => {
+    setInboxProject(inbox)
+  }, [inbox])
+
+  useEffect(() => {
+    const inbox = projects.find(project => project.inboxProject) as FullProject
+    setInboxProject(inbox)
+  }, [projects])
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -140,14 +153,14 @@ export function Nav({
 
   function archiveProject(project: FullProject) {
     setIsAlertDialogOpen(true)
-    setProject(project)
+    setCurProject(project)
     setOperation('archive')
   }
 
   function deleteProject(project: FullProject) {
     setIsAlertDialogOpen(true)
     setOperation('delete')
-    setProject(project)
+    setCurProject(project)
   }
 
   function handleSearch(_arg0: string): void {
@@ -224,6 +237,7 @@ export function Nav({
               route={{ routePath: ROUTER_PATHS.INBOX.path, routeName: ROUTER_PATHS.INBOX.name }}
               icon={Inbox}
               badge={inboxProject?.noteCount}
+              showBadge={!!inboxProject && inboxProject.noteCount > 0}
             />
 
             <NavMainButton
@@ -281,9 +295,10 @@ export function Nav({
                             style={{ color: `var(--named-color-${project.color.replace('_', '-')})` }}
                           />
                           <span>{project.name}</span>
-                          <span className="ml-auto bg-transparent text-muted-foreground flex h-6 w-6 shrink-0 items-center justify-center">
-                            {project.noteCount ?? 0}
-                          </span>
+                          { project.noteCount && <span className="ml-auto bg-transparent text-muted-foreground flex h-6 w-6 shrink-0 items-center justify-center">
+                            {project.noteCount}
+                            </span>
+                          }
                         </NavLink>
                       </ContextMenuTrigger>
                       <ContextMenuContent className="w-64">
@@ -420,8 +435,8 @@ export function Nav({
             <AlertDialogTitle>{operation === 'archive' ? '归档项目' : '删除项目'}</AlertDialogTitle>
             <AlertDialogDescription>
               {operation === 'archive'
-                ? `这将归档 ${project?.name} 和它的所有笔记。`
-                : `这将永久删除 ${project?.name} 和它的所有笔记。这是不可逆的。`}
+                ? `这将归档 ${curProject?.name} 和它的所有笔记。`
+                : `这将永久删除 ${curProject?.name} 和它的所有笔记。这是不可逆的。`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

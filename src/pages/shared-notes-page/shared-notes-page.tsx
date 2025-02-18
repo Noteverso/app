@@ -1,14 +1,16 @@
 import { json, useFetcher, useLocation, useOutletContext, useParams } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { HashIcon, Inbox } from 'lucide-react'
+import { v4 as uuidv4 } from 'uuid'
 import { NoteList } from '@/features/note'
 import { TextEditor } from '@/features/editor'
 import { Button } from '@/components/button/button'
 import { ROUTER_PATHS } from '@/constants'
-import type { NotePageLoaderData } from '@/types/note'
+import type { FullNote, NotePageLoaderData } from '@/types/note'
 import { getNotesApi } from '@/api/note/note'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/select/select'
 import type { ProjectOutletContext } from '@/types/project'
+import type { EditorMethods } from '@/features/editor/text-editor'
 
 interface ProjectPageProps {
   title?: string;
@@ -29,7 +31,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     curProjectId = inboxProject?.projectId
   } else {
     actionPath = `${ROUTER_PATHS.PROJECTS.path}/${projectId}`
-    projectName = projects.find(project => project.projectId === projectId)?.name
+    projectName = projects.find(project => project.projectId === projectId)?.name as string
     curProjectId = projectId
   }
 
@@ -40,6 +42,9 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
   const [notes, setNotes] = useState(initialNotePage.records)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [uuid, setUuid] = useState('')
+  const editorRef = useRef<EditorMethods>(null)
+
   // 避免执行多余请求
   const [hasMore, setHasMore] = useState(initialNotePage.total > initialNotePage.records.length)
   const observer = useRef<IntersectionObserver>()
@@ -65,14 +70,12 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     }
   }, [loading, hasMore])
 
+  // /app/projects/:projectId 路由之间切换更新数据
   useEffect(() => {
-    setSelectedProjectId(curProjectId)
-  }, [curProjectId])
-
-  useEffect(() => {
-    // initialNotes changed
-    setNotes(initialNotePage.records)
-  }, [initialNotePage])
+    if (projectId) {
+      setNotes(initialNotePage.records)
+    }
+  }, [projectId, initialNotePage])
 
   // Effect to load more notes when page changes
   useEffect(() => {
@@ -86,7 +89,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
       objectId: projectId,
       pageSize: 10,
       pageIndex: page,
-    }).then((response) => {
+    }, isInbox).then((response) => {
       if (!response.ok) {
         throw json(response.data, { status: response.status })
       }
@@ -97,38 +100,60 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
       setHasMore(data.total > page * 10)
       setLoading(false)
     })
-  }, [page, projectId])
+  }, [isInbox, page, projectId])
 
+  // 清空编辑器内容
   useEffect(() => {
+    if (fetcher.formData && fetcher.state === 'submitting') {
+      const tempUuid = uuidv4()
+      setUuid(tempUuid)
+      const content = fetcher.formData.get('content') as string
+      const optimisticNote: FullNote = {
+        noteId: tempUuid,
+        content,
+        addedAt: new Date().toISOString(),
+        labels: [],
+        project: { projectId: curProjectId, name: projectName },
+        attachmentCount: null,
+        referencedCount: null,
+        referencingCount: null,
+        updatedAt: new Date().toISOString(),
+        isDeleted: 0,
+        isPinned: 0,
+        isArchived: 0,
+        creator: '',
+      }
+
+      // 在前端更新乐观 UI（显示临时 noteId）
+      setNotes(prevNotes => [optimisticNote, ...prevNotes])
+    }
+
     if (fetcher.state === 'idle' && fetcher.data) {
-      // setNotes(prevNotes => [actionData, ...prevNotes])
+      const res = fetcher.data as { ok: boolean, note: string }
+      if (res.ok) {
+        const updatedNotes = notes.map((note) => {
+          if (note.noteId === uuid) {
+            return { ...note, noteId: res.note }
+          }
+          return note
+        })
+
+        setNotes(updatedNotes)
+        handleContentChange('', false)
+        editorRef.current?.reset()
+      } else {
+        // 回滚数据
+        const failedNote = notes.find(note => note.noteId === uuid)
+        if (failedNote) {
+          handleContentChange(failedNote.content, true)
+          editorRef.current?.setContent(failedNote.content)
+
+          const filteredNotes = notes.filter(n => n.noteId !== uuid)
+          setNotes(filteredNotes)
+        }
+      }
     }
   }, [fetcher])
-
-  // // 计算优化更新后的笔记列表
-  // const optimisticNotes = useMemo(() => {
-  //   if (fetcher.formData) {
-  //     const content = fetcher.formData.get('content') as string
-  //     const optimisticNote: FullNote = {
-  //       noteId: uuidv4(),
-  //       content,
-  //       addedAt: new Date().toISOString(),
-  //       labels: [],
-  //       project: { projectId: '', name: '' },
-  //       attachmentCount: 0,
-  //       referencedCount: 0,
-  //       referencingCount: 0,
-  //       updatedAt: new Date().toISOString(),
-  //       isDeleted: 0,
-  //       isPinned: 0,
-  //       isArchived: 0,
-  //       creator: '',
-  //     }
-  //     return [optimisticNote, ...noteList]
-  //   }
-  //
-  //   return noteList
-  // }, [fetcher.formData, noteList])
 
   function handleContentChange(content: string, hasContent: boolean) {
     setEditorContent(content)
@@ -138,7 +163,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
   return (
     <div className="flex flex-col">
       <h1 className="text-2xl mb-4">{projectName ?? title}</h1>
-      <TextEditor className="mb-4" onChange={handleContentChange} />
+      <TextEditor ref={editorRef} className="mb-4" onChange={handleContentChange} />
       <fetcher.Form method="post" action={actionPath} className="mb-4">
         <input type="hidden" name="content" value={editorContent} />
         <div className="flex">

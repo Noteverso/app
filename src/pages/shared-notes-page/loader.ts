@@ -1,6 +1,6 @@
 import { type LoaderFunctionArgs, json } from 'react-router-dom'
 import type { NotePageLoaderData } from '@/types/note'
-import { getInboxNotesApi, getNotesApi } from '@/api/note/note'
+import { getNotesApi } from '@/api/note/note'
 
 // const content = '<p> Note the :contactId URL segment. The colon (:) has special meaning, turning it into a "dynamic segment". Dynamic segments will match dynamic (changing) values in that position of the URL, like the contact ID. We call these values in the URL "URL Params", or just "params" for short. </p>'
 // const noteList = []
@@ -18,21 +18,14 @@ import { getInboxNotesApi, getNotesApi } from '@/api/note/note'
 // }
 
 export async function sharedNotesLoader({ params }: LoaderFunctionArgs): Promise<NotePageLoaderData> {
+  // 收件箱项目不存在路径参数
   const { projectId } = params
 
-  let response
-  if (projectId) {
-    response = await getNotesApi({
-      objectId: projectId,
-      pageSize: 10,
-      pageIndex: 1,
-    })
-  } else {
-    response = await getInboxNotesApi({
-      pageSize: 10,
-      pageIndex: 1,
-    })
-  }
+  const response = await getNotesApi({
+    objectId: projectId,
+    pageSize: 10,
+    pageIndex: 1,
+  }, !projectId)
 
   if (!response.ok) {
     throw json(response.data, { status: response.status })
