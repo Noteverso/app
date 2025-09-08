@@ -2,6 +2,7 @@ import { ArrowDownLeft, ArrowUpRight, Paperclip, Tag } from 'lucide-react'
 import parse from 'html-react-parser'
 import { useNavigate } from 'react-router-dom'
 import { NoteMetaButton } from './note-meta-button'
+import { NoteActions } from './note-actions'
 import { ROUTER_PATHS } from '@/constants'
 import { dateFormat } from '@/lib/utils'
 
@@ -35,10 +36,14 @@ export function NoteCard(props: NoteCardProps) {
   } = props
 
   return (
-    <>
-      <p className="text-gray-600">
-        <time dateTime={addedAt}>{dateFormat(addedAt)}</time>
-      </p>
+    <div className="group/item">
+      <div className="flex justify-between">
+        <div className="text-gray-600 mb-2">
+          <time dateTime={addedAt}>{dateFormat(addedAt)}</time>
+        </div>
+        <NoteActions onDelete={() => {}} onEdit={() => {}} onFavorite={() => {}} className="" />
+      </div>
+
       <div className="flex flex-wrap gap-x-4">
         {/* <NoteMetaButton
           icon={Hash}
@@ -78,6 +83,6 @@ export function NoteCard(props: NoteCardProps) {
         ))}
       </div>
       <div className="prose prose-sm sm:prose-base focus:outline-none max-w-full tiptap">{parse(content)}</div>
-    </>
+    </div>
   )
 }

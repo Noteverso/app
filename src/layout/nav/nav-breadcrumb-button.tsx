@@ -1,5 +1,5 @@
 import { PanelLeft } from 'lucide-react'
-import { Button } from '@/components/button/button'
+import { Button } from '@/components/ui/button/button'
 
 export function BreadcrumbButton({
   onClick,

@@ -7,7 +7,7 @@ export function NoteList({ notes, refFunc }: { notes: FullNote[], refFunc: (node
       {notes.map((note, index) => (
         <li
           key={note.noteId}
-          className="pt-8 pb-8 border-b first:border-t"
+          className="pt-8 pb-8 border-b first:border-t hover:cursor-pointer"
           ref={index === notes.length - 1 ? refFunc : null}
         >
           <NoteCard

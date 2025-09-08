@@ -28,13 +28,13 @@ import { NavMainButton } from './nav-main-button'
 import { BreadcrumbButton } from './nav-breadcrumb-button'
 import { PROJECT_COLORS, ROUTER_PATHS } from '@/constants'
 import type { FullProject } from '@/types/project'
-import { Button } from '@/components/button/button'
+import { Button } from '@/components/ui/button/button'
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/collapsible/collapsible'
+} from '@/components/ui/collapsible/collapsible'
 
 import {
   ContextMenu,
@@ -43,7 +43,7 @@ import {
   ContextMenuSeparator,
   ContextMenuShortcut,
   ContextMenuTrigger,
-} from '@/components/context-menu/context-menu'
+} from '@/components/ui/context-menu/context-menu'
 
 import {
   DropdownMenu,
@@ -52,7 +52,7 @@ import {
   // DropdownMenuLabel,
   // DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/dropdown-menu/dropdown-menu'
+} from '@/components/ui/dropdown-menu/dropdown-menu'
 
 import {
   Dialog,
@@ -62,16 +62,16 @@ import {
   DialogHeader,
   DialogTitle,
   // DialogTrigger,
-} from '@/components/dialog/dialog'
-import { Input } from '@/components/input/input'
-import { Label } from '@/components/label/label'
+} from '@/components/ui/dialog/dialog'
+import { Input } from '@/components/ui/input/input'
+import { Label } from '@/components/ui/label/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/select/select'
+} from '@/components/ui/select/select'
 
 import {
   AlertDialog,
@@ -83,7 +83,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   // AlertDialogTrigger,
-} from '@/components/alert-dialog/alert-dialog'
+} from '@/components/ui/alert-dialog/alert-dialog'
 
 import {
   CommandDialog,
@@ -94,9 +94,9 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from '@/components/command/command'
+} from '@/components/ui/command/command'
 
-import { Switch } from '@/components/switch/switch'
+import { Switch } from '@/components/ui/switch/switch'
 // import { Badge } from '@/components/badge/badge'
 
 export type SidebarProprs = {

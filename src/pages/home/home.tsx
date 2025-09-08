@@ -12,7 +12,7 @@ import {
 import { HomeHeader } from '@/layout/header/home-header'
 import type { UserResponse } from '@/types/user'
 import { Footer } from '@/layout/footer/footer'
-import { Button } from '@/components/button/button'
+import { Button } from '@/components/ui/button/button'
 
 import HeroImage from '@/assets/svg/hero.svg'
 import Feature1 from '@/assets/svg/feature_1.svg'

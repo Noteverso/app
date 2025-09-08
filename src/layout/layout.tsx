@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Nav } from './nav/nav'
 import type { FullProject } from '@/types/project'
 
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/sheet/sheet'
-import { Button } from '@/components/button/button'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet/sheet'
+import { Button } from '@/components/ui/button/button'
 
 export function Layout() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true)
