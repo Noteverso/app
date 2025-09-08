@@ -1,16 +1,15 @@
 package com.noteverso.core.controller;
 
-import com.noteverso.common.api.ApiResult;
 import com.noteverso.common.exceptions.BusinessException;
 import com.noteverso.common.exceptions.NoSuchDataException;
-import com.noteverso.core.dto.AttachmentDTO;
+import com.noteverso.core.model.dto.AttachmentDTO;
 import com.noteverso.core.manager.AuthManager;
 import com.noteverso.core.manager.UserConfigManager;
-import com.noteverso.core.model.UploadResult;
-import com.noteverso.core.model.UserConfig;
-import com.noteverso.core.request.AttachmentRequest;
-import com.noteverso.core.response.UploadFileGetResponse;
-import com.noteverso.core.response.UploadResponse;
+import com.noteverso.core.model.entity.UploadResult;
+import com.noteverso.core.model.entity.UserConfig;
+import com.noteverso.core.model.request.AttachmentRequest;
+import com.noteverso.core.model.response.UploadFileGetResponse;
+import com.noteverso.core.model.response.UploadResponse;
 import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.AttachmentService;
 import com.noteverso.core.service.component.OssClient;

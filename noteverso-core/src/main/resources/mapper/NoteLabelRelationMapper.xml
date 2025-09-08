@@ -10,7 +10,7 @@
         </foreach>
     </insert>
 
-    <select id="getNoteCountByLabels" resultType="com.noteverso.core.dto.NoteCountForLabel">
+    <select id="getNoteCountByLabels" resultType="com.noteverso.core.model.dto.NoteCountForLabel">
         SELECT label_id, COUNT(*) AS note_count FROM noteverso_note_label_map
         WHERE creator = #{userId}
         <if test="labelIds != null and labelIds.size() > 0">

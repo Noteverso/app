@@ -1,7 +1,7 @@
 package com.noteverso.core.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.noteverso.core.model.NoteProjectRelation;
+import com.noteverso.core.model.entity.NoteProjectRelation;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

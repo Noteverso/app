@@ -1,18 +1,16 @@
 package com.noteverso.core.controller;
 
 import cn.hutool.core.util.RandomUtil;
-import com.noteverso.common.api.ApiResult;
 import com.noteverso.common.exceptions.BusinessException;
 import com.noteverso.common.exceptions.DuplicateRecordException;
-import com.noteverso.core.request.CreateUserRequest;
-import com.noteverso.core.request.LoginRequest;
-import com.noteverso.core.response.LoginResponse;
+import com.noteverso.core.model.request.CreateUserRequest;
+import com.noteverso.core.model.request.LoginRequest;
+import com.noteverso.core.model.response.LoginResponse;
 import com.noteverso.core.security.jwt.JwtUtils;
 import com.noteverso.core.service.EmailService;
 import com.noteverso.core.service.UserService;
 import com.noteverso.core.util.RedisUtils;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;

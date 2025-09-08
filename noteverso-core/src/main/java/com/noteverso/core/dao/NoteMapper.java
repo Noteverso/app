@@ -1,9 +1,9 @@
 package com.noteverso.core.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.noteverso.core.dto.NoteCountForProject;
-import com.noteverso.core.dto.ProjectViewOption;
-import com.noteverso.core.model.Note;
+import com.noteverso.core.model.dto.NoteCountForProject;
+import com.noteverso.core.model.dto.ProjectViewOption;
+import com.noteverso.core.model.entity.Note;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

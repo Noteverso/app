@@ -1,12 +1,12 @@
 package com.noteverso.core.service;
 
-import com.noteverso.core.dto.ProjectDTO;
-import com.noteverso.core.dto.ProjectItem;
-import com.noteverso.core.dto.SelectItem;
-import com.noteverso.core.model.Project;
-import com.noteverso.core.request.ProjectCreateRequest;
-import com.noteverso.core.request.ProjectRequest;
-import com.noteverso.core.request.ProjectUpdateRequest;
+import com.noteverso.core.model.dto.NoteItem;
+import com.noteverso.core.model.dto.ProjectDTO;
+import com.noteverso.core.model.dto.ProjectItem;
+import com.noteverso.core.model.dto.SelectItem;
+import com.noteverso.core.model.entity.Project;
+import com.noteverso.core.model.pagination.PageResult;
+import com.noteverso.core.model.request.*;
 
 import java.util.List;
 
@@ -29,7 +29,17 @@ public interface ProjectService {
 
     Project constructInboxProject(String userId);
 
-    List<ProjectItem> getProjectList(String userId);
+    List<ProjectItem> getProjectList(String userId, ProjectListRequest request);
 
     List<SelectItem> getProjectSelectItems(ProjectRequest request, String userId);
+
+    /**
+     * modify the note view option and return the page of notes
+     * @param request
+     * @param userId
+     * @return
+     */
+    PageResult<NoteItem> getNotePageByProject(String projectId, NotePageRequest request, String userId);
+
+    PageResult<NoteItem> getInboxNotePage(NotePageRequest request, String userId);
 }

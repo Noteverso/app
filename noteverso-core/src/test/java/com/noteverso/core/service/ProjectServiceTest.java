@@ -1,26 +1,30 @@
 package com.noteverso.core.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.noteverso.common.exceptions.BaseException;
 import com.noteverso.common.exceptions.BusinessException;
 import com.noteverso.common.exceptions.NoSuchDataException;
 import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
-import com.noteverso.core.dto.ProjectItem;
 import com.noteverso.core.manager.NoteManager;
 import com.noteverso.core.manager.UserConfigManager;
-import com.noteverso.core.model.Project;
-import com.noteverso.core.model.ViewOption;
-import com.noteverso.core.request.ProjectCreateRequest;
-import com.noteverso.core.request.ProjectUpdateRequest;
-import com.noteverso.core.request.ViewOptionCreate;
+import com.noteverso.core.model.dto.NoteItem;
+import com.noteverso.core.model.dto.ProjectItem;
+import com.noteverso.core.model.entity.Note;
+import com.noteverso.core.model.entity.Project;
+import com.noteverso.core.model.entity.ViewOption;
+import com.noteverso.core.model.pagination.PageResult;
+import com.noteverso.core.model.request.*;
 import com.noteverso.core.service.impl.ProjectServiceImpl;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +33,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,6 +57,9 @@ class ProjectServiceTest {
     @Spy
     @InjectMocks
     ProjectServiceImpl projectService;
+
+    @Mock
+    RelationService relationService;
 
     @Test
     void should_createProjectSuccessfully_withProjectRequest() {
@@ -207,7 +215,9 @@ class ProjectServiceTest {
         when(noteManager.getNoteCountByProjects(any(), any())).thenReturn(new HashMap<>());
 
         // Act
-        List<ProjectItem> result = projectService.getProjectList(userId);
+        ProjectListRequest request = new ProjectListRequest();
+        request.setShowNoteCount(true);
+        List<ProjectItem> result = projectService.getProjectList(userId, request);
 
         // Assert
         assertThat(result).hasSize(nonInboxProjectIds.size());
@@ -236,11 +246,122 @@ class ProjectServiceTest {
         when(noteManager.getNoteCountByProjects(any(), any())).thenReturn(noteCountMap);
 
         // Act
-        List<ProjectItem> result = projectService.getProjectList(userId);
+        ProjectListRequest request = new ProjectListRequest();
+        request.setShowNoteCount(true);
+        List<ProjectItem> result = projectService.getProjectList(userId, request);
 
         // Assert
         assertThat(result).hasSize(nonInboxProjectIds.size());
         assertThat(result.get(0).getNoteCount()).isEqualTo(10);
+    }
+
+    @Test
+    void should_returnNotesPageByProject_whenViewOptionIsNull() {
+        // Arrange
+        String userId = "1";
+        String projectId = "123";
+        NotePageRequest request = new NotePageRequest();
+        request.setObjectId(projectId);
+        request.setViewType(0);
+        request.setPageSize(10L);
+        request.setPageIndex(1L);
+
+        Page<Note> notePage = new Page<>();
+        List<String> noteIds = List.of("1", "2", "3", "4", "5");
+        List<Note> notes = constructNotesByNoteIds(noteIds, userId, projectId);
+        notePage.setRecords(notes);
+        notePage.setCurrent(request.getPageIndex());
+        notePage.setSize(request.getPageSize());
+        notePage.setTotal(notes.size());
+
+        when(viewOptionService.getViewOption(any(ViewOption.class), any(String.class))).thenReturn(null);
+        when(noteMapper.selectPage(any(), any())).thenReturn(notePage);
+
+        List<NoteItem> noteList = new ArrayList<>();
+        for (Note note : notes) {
+            NoteItem noteItem = new NoteItem();
+            noteItem.setNoteId(note.getNoteId());
+            noteList.add(noteItem);
+        }
+
+        PageResult<NoteItem> responsePage = new PageResult<>();
+        responsePage.setRecords(noteList);
+        responsePage.setTotal(notePage.getTotal());
+        responsePage.setPageIndex(notePage.getCurrent());
+        responsePage.setPageSize(notePage.getSize());
+        ViewOption viewOption = null;
+        when(noteManager.getNoteItemPage(notePage, viewOption, userId)).thenReturn(responsePage);
+
+        // Act
+        PageResult<NoteItem> notePageResponsePage = projectService.getNotePageByProject(projectId, request, userId);
+
+        // Assert
+//        verify(relationService, times(0)).getReferencedCountByReferencedNoteIds(noteIds, userId);
+        assertThat(notePageResponsePage.getTotal()).isEqualTo(notePage.getTotal());
+    }
+
+    @Test
+    void should_returnNotesPageByProject_whenViewOptionIsNotNull() {
+        // Arrange
+        String userId = "1";
+        String projectId = "123";
+        NotePageRequest request = new NotePageRequest();
+        request.setObjectId(projectId);
+        request.setViewType(0);
+        request.setPageSize(10L);
+        request.setPageIndex(1L);
+
+        Page<Note> notePage = new Page<>();
+        List<String> noteIds = List.of("1", "2", "3", "4", "5");
+        List<Note> notes = constructNotesByNoteIds(noteIds, userId, projectId);
+        notePage.setRecords(notes);
+        notePage.setCurrent(request.getPageIndex());
+        notePage.setSize(request.getPageSize());
+        notePage.setTotal(notes.size());
+        when(noteMapper.selectPage(any(), any())).thenReturn(notePage);
+
+        ViewOption viewOption = new ViewOption();
+        viewOption.setShowRelationNoteCount(1);
+        viewOption.setOrderedBy(0);
+        when(viewOptionService.getViewOption(any(ViewOption.class), any(String.class))).thenReturn(viewOption);
+
+        List<NoteItem> noteList = new ArrayList<>();
+        for (Note note : notes) {
+            NoteItem noteItem = new NoteItem();
+            noteItem.setNoteId(note.getNoteId());
+            noteList.add(noteItem);
+        }
+
+        PageResult<NoteItem> responsePage = new PageResult<>();
+        responsePage.setRecords(noteList);
+        responsePage.setTotal(notePage.getTotal());
+        responsePage.setPageIndex(notePage.getCurrent());
+        responsePage.setPageSize(notePage.getSize());
+        when(noteManager.getNoteItemPage(notePage, viewOption, userId)).thenReturn(responsePage);
+
+        // Act
+        PageResult<NoteItem> notePageResponsePage = projectService.getNotePageByProject(projectId, request, userId);
+
+        // Assert
+        assertThat(notePageResponsePage.getTotal()).isEqualTo(notePage.getTotal());
+    }
+
+    private List<Note> constructNotesByNoteIds(List<String> noteIds, String userId, String projectId) {
+        List<Note> notes = new ArrayList<>();
+        for (String noteId : noteIds) {
+            notes.add(Note.builder()
+                    .content("Hello World" + noteId + "!")
+                    .creator(userId)
+                    .updater(userId)
+                    .noteId(noteId)
+                    .isPinned(0)
+                    .isFavorite(0)
+                    .isArchived(0)
+                    .isDeleted(0)
+                    .projectId(projectId)
+                    .build());
+        }
+        return notes;
     }
 
     private Project constructProject(String name, String projectId, Integer isInboxProject) {

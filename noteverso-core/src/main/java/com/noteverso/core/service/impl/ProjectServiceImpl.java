@@ -1,6 +1,7 @@
 package com.noteverso.core.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.noteverso.common.exceptions.BusinessException;
 import com.noteverso.common.exceptions.NoSuchDataException;
 import com.noteverso.common.util.IPUtils;
@@ -8,24 +9,20 @@ import com.noteverso.common.util.IPUtils;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
-import com.noteverso.core.dto.ProjectDTO;
-import com.noteverso.core.dto.ProjectItem;
-import com.noteverso.core.dto.ProjectViewOption;
-import com.noteverso.core.dto.SelectItem;
-import com.noteverso.core.enums.ObjectViewTypeEnum;
+import com.noteverso.core.model.dto.*;
+import com.noteverso.core.model.entity.Note;
+import com.noteverso.core.model.enums.ObjectViewTypeEnum;
 import com.noteverso.core.manager.NoteManager;
 import com.noteverso.core.manager.UserConfigManager;
-import com.noteverso.core.model.Label;
-import com.noteverso.core.model.Project;
-import com.noteverso.core.model.UserConfig;
-import com.noteverso.core.model.ViewOption;
-import com.noteverso.core.request.ProjectCreateRequest;
-import com.noteverso.core.request.ProjectRequest;
-import com.noteverso.core.request.ProjectUpdateRequest;
-import com.noteverso.core.request.ViewOptionCreate;
+import com.noteverso.core.model.entity.Project;
+import com.noteverso.core.model.entity.UserConfig;
+import com.noteverso.core.model.entity.ViewOption;
+import com.noteverso.core.model.pagination.PageResult;
+import com.noteverso.core.model.request.*;
 import com.noteverso.core.service.ProjectService;
 import com.noteverso.core.service.ViewOptionService;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +30,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.noteverso.common.constant.NumConstants.*;
@@ -230,7 +228,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ProjectItem> getProjectList(String userId) {
+    public List<ProjectItem> getProjectList(String userId, ProjectListRequest request) {
         LambdaQueryWrapper<Project> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Project::getCreator, userId);
 //        queryWrapper.eq(Project::getIsInboxProject, NUM_O);
@@ -263,7 +261,10 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         // Get note count for each project
-        HashMap<String, Long> noteCountMap = noteManager.getNoteCountByProjects(projectViewOptions, userId);
+        HashMap<String, Long> noteCountMap = new HashMap<>();
+        if (request.isShowNoteCount()) {
+            noteCountMap = noteManager.getNoteCountByProjects(projectViewOptions, userId);
+        }
 
         for (Project project : projects) {
             ProjectItem projectItem = new ProjectItem();
@@ -297,5 +298,54 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         return projectSelectItems;
+    }
+
+    @Override
+    public PageResult<NoteItem> getNotePageByProject(String projectId, NotePageRequest request, String userId) {
+        ViewOption viewOptionRequest = new ViewOption();
+        viewOptionRequest.setObjectId(projectId);
+        viewOptionRequest.setViewType(ObjectViewTypeEnum.PROJECT.getValue());
+        ViewOption viewOption = viewOptionService.getViewOption(viewOptionRequest, userId);
+
+        LambdaQueryWrapper<Note> noteQueryWrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.isNotBlank(projectId)) {
+            noteQueryWrapper.eq(Note::getProjectId, projectId);
+        }
+        noteQueryWrapper.eq(Note::getCreator, userId);
+        noteQueryWrapper.eq(Note::getIsDeleted, 0);
+        noteQueryWrapper.orderByDesc(Note::getAddedAt);
+
+        Page<Note> notePage = noteMapper.selectPage(new Page<>(request.getPageIndex(), request.getPageSize()), noteQueryWrapper);
+        return noteManager.getNoteItemPage(notePage, viewOption, userId);
+    }
+
+    @Override
+    public PageResult<NoteItem> getInboxNotePage(NotePageRequest request, String userId) {
+        LambdaQueryWrapper<Project> projectQw = new LambdaQueryWrapper<>();
+        projectQw.eq(Project::getIsInboxProject, 1);
+        projectQw.eq(Project::getCreator, userId);
+        Project inboxProject = projectMapper.selectOne(projectQw);
+        String inboxId = inboxProject.getProjectId();
+
+        ViewOption viewOptionRequest = new ViewOption();
+        viewOptionRequest.setObjectId(inboxId);
+        viewOptionRequest.setViewType(ObjectViewTypeEnum.PROJECT.getValue());
+        ViewOption viewOption = viewOptionService.getViewOption(viewOptionRequest, userId);
+
+        LambdaQueryWrapper<Note> noteQueryWrapper = new LambdaQueryWrapper<>();
+        noteQueryWrapper.eq(Note::getProjectId, inboxId);
+        noteQueryWrapper.eq(Note::getCreator, userId);
+        if (viewOption == null || Objects.equals(viewOption.getShowArchived(), 0)) {
+            noteQueryWrapper.eq(Note::getIsArchived, 0);
+        }
+
+        if (viewOption == null || Objects.equals(viewOption.getShowDeleted(), 0)) {
+            noteQueryWrapper.eq(Note::getIsDeleted, 0);
+        }
+
+        noteQueryWrapper.orderByDesc(Note::getAddedAt);
+
+        Page<Note> notePage = noteMapper.selectPage(new Page<>(request.getPageIndex(), request.getPageSize()), noteQueryWrapper);
+        return noteManager.getNoteItemPage(notePage, viewOption, userId);
     }
 }

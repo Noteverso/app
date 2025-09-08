@@ -2,22 +2,17 @@ package com.noteverso.core.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.noteverso.core.dao.ViewOptionMapper;
-import com.noteverso.core.enums.*;
-import com.noteverso.core.model.Note;
-import com.noteverso.core.model.ViewOption;
-import com.noteverso.core.request.ViewOptionCreate;
-import com.noteverso.core.request.ViewOptionUpdate;
+import com.noteverso.core.model.entity.ViewOption;
+import com.noteverso.core.model.enums.ObjectViewModeEnum;
+import com.noteverso.core.model.request.ViewOptionCreate;
+import com.noteverso.core.model.request.ViewOptionUpdate;
 import com.noteverso.core.service.ViewOptionService;
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
-
-import static com.noteverso.common.constant.NumConstants.NUM_1;
-import static com.noteverso.common.constant.NumConstants.NUM_O;
 
 @Service
 @AllArgsConstructor

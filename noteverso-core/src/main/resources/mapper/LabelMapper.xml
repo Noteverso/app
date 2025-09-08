@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.noteverso.core.dao.LabelMapper">
-    <select id="getLabels" resultType="com.noteverso.core.model.Label">
+    <select id="getLabels" resultType="com.noteverso.core.model.entity.Label">
         SELECT name, label_id, color FROM noteverso_label
         WHERE creator = #{userId}
         <if test="request.name">

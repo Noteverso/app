@@ -2,10 +2,10 @@ package com.noteverso.core.manager.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.noteverso.core.dao.UserConfigMapper;
-import com.noteverso.core.dto.UserDTO;
+import com.noteverso.core.model.dto.UserDTO;
 import com.noteverso.core.manager.UserConfigManager;
-import com.noteverso.core.model.User;
-import com.noteverso.core.model.UserConfig;
+import com.noteverso.core.model.entity.User;
+import com.noteverso.core.model.entity.UserConfig;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

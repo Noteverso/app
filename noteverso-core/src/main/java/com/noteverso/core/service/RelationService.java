@@ -1,7 +1,7 @@
 package com.noteverso.core.service;
 
-import com.noteverso.core.dto.LabelItem;
-import com.noteverso.core.model.NoteLabelRelation;
+import com.noteverso.core.model.dto.LabelItem;
+import com.noteverso.core.model.entity.NoteLabelRelation;
 
 import java.util.HashMap;
 import java.util.List;

@@ -1,8 +1,8 @@
 package com.noteverso.core.dao;
 
 import com.baomidou.mybatisplus.test.autoconfigure.MybatisPlusTest;
-import com.noteverso.core.model.Project;
-import com.noteverso.core.request.ProjectRequest;
+import com.noteverso.core.model.entity.Project;
+import com.noteverso.core.model.request.ProjectRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;

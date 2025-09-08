@@ -1,7 +1,7 @@
 package com.noteverso.core.service;
 
-import com.noteverso.core.model.Note;
-import com.noteverso.core.request.NoteCreateRequest;
+import com.noteverso.core.model.entity.Note;
+import com.noteverso.core.model.request.NoteCreateRequest;
 
 import java.util.List;
 

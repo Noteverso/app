@@ -1,10 +1,9 @@
 package com.noteverso.core.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.noteverso.core.dao.LabelMapper;
-import com.noteverso.core.model.User;
-import com.noteverso.core.request.LabelCreateRequest;
-import com.noteverso.core.request.LabelUpdateRequest;
+import com.noteverso.core.model.entity.User;
+import com.noteverso.core.model.request.LabelCreateRequest;
+import com.noteverso.core.model.request.LabelUpdateRequest;
 import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.LabelService;
 import org.junit.jupiter.api.BeforeEach;

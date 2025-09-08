@@ -1,18 +1,17 @@
 package com.noteverso.core.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.noteverso.core.dao.AttachmentRelationMapper;
 import com.noteverso.core.dao.LabelMapper;
 import com.noteverso.core.dao.NoteLabelRelationMapper;
 import com.noteverso.core.dao.NoteRelationMapper;
-import com.noteverso.core.dto.*;
-import com.noteverso.core.model.AttachmentRelation;
-import com.noteverso.core.model.Label;
-import com.noteverso.core.model.NoteLabelRelation;
-import com.noteverso.core.model.NoteRelation;
-import com.noteverso.core.request.LabelRequest;
+import com.noteverso.core.model.dto.*;
+import com.noteverso.core.model.entity.AttachmentRelation;
+import com.noteverso.core.model.entity.Label;
+import com.noteverso.core.model.entity.NoteLabelRelation;
+import com.noteverso.core.model.entity.NoteRelation;
+import com.noteverso.core.model.request.LabelRequest;
 import com.noteverso.core.service.RelationService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,9 +19,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.noteverso.core.constant.StringConstants.KEY_ADDED_AT;
-import static com.noteverso.core.constant.StringConstants.KEY_NOTE_ID;
 
 @Service
 @AllArgsConstructor
@@ -262,7 +258,6 @@ public class RelationServiceImpl implements RelationService {
         for (Label label: labels) {
             if (!labelMap.containsKey(label.getLabelId())) {
                 labelMap.put(label.getLabelId(), label);
-
             }
         }
 

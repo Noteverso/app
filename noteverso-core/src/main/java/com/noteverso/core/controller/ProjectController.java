@@ -1,13 +1,12 @@
 package com.noteverso.core.controller;
 
-import com.noteverso.common.api.ApiResult;
-import com.noteverso.core.dto.ProjectItem;
-import com.noteverso.core.dto.SelectItem;
+import com.noteverso.core.model.dto.NoteItem;
+import com.noteverso.core.model.dto.ProjectItem;
+import com.noteverso.core.model.dto.SelectItem;
 import com.noteverso.core.manager.AuthManager;
 import com.noteverso.core.manager.impl.AuthManagerImpl;
-import com.noteverso.core.request.ProjectCreateRequest;
-import com.noteverso.core.request.ProjectRequest;
-import com.noteverso.core.request.ProjectUpdateRequest;
+import com.noteverso.core.model.pagination.PageResult;
+import com.noteverso.core.model.request.*;
 import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -83,9 +82,9 @@ public class ProjectController {
 
     @Operation(summary = "Get Project List", description = "Get Project List", tags = { "GET" })
     @GetMapping("")
-    public List<ProjectItem> getProjectList(Authentication authentication) {
-        UserDetailsImpl userDetails = authManager.getPrincipal(authentication) ;
-        return projectService.getProjectList(userDetails.getUserId());
+    public List<ProjectItem> getProjectList(Authentication authentication, @Valid ProjectListRequest request) {
+        UserDetailsImpl userDetails = authManager.getPrincipal(authentication);
+        return projectService.getProjectList(userDetails.getUserId(), request);
     }
 
     @Operation(summary = "Get Project Select items", description = "Get Project Select items", tags = { "GET" })
@@ -93,5 +92,19 @@ public class ProjectController {
     public List<SelectItem> getProjectSelectItems(Authentication authentication, @Valid ProjectRequest request) {
         List<SelectItem> selectItems = projectService.getProjectSelectItems(request, authManager.getPrincipal(authentication).getUserId());
         return selectItems;
+    }
+
+    @Operation(summary = "Get Notes Page by Project", description = "Get Notes Page by Project", tags = { "GET" })
+    @GetMapping("/{projectId}/notes")
+    public PageResult<NoteItem> getNotesByProject(Authentication authentication, @PathVariable("projectId") String projectId,  @Valid NotePageRequest request) {
+        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
+        return projectService.getNotePageByProject(projectId, request, principal.getUserId());
+    }
+
+    @Operation(summary = "Get inbox notes", description = "Get inbox notes", tags = { "GET" })
+    @GetMapping("/inbox/notes")
+    public PageResult<NoteItem> getInboxNotes(Authentication authentication,  @Valid NotePageRequest request) {
+        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
+        return projectService.getInboxNotePage(request, principal.getUserId());
     }
 }

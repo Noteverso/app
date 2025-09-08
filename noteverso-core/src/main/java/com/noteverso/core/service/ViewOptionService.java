@@ -1,8 +1,8 @@
 package com.noteverso.core.service;
 
-import com.noteverso.core.model.ViewOption;
-import com.noteverso.core.request.ViewOptionCreate;
-import com.noteverso.core.request.ViewOptionUpdate;
+import com.noteverso.core.model.entity.ViewOption;
+import com.noteverso.core.model.request.ViewOptionCreate;
+import com.noteverso.core.model.request.ViewOptionUpdate;
 
 import java.util.HashMap;
 import java.util.List;

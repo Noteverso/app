@@ -1,8 +1,8 @@
 package com.noteverso.core.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.noteverso.core.model.User;
-import com.noteverso.core.request.ProjectCreateRequest;
+import com.noteverso.core.model.entity.User;
+import com.noteverso.core.model.request.ProjectCreateRequest;
 import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.ProjectService;
 import org.junit.jupiter.api.BeforeEach;

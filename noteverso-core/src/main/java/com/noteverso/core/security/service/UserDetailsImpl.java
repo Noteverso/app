@@ -1,6 +1,6 @@
 package com.noteverso.core.security.service;
 
-import com.noteverso.core.model.User;
+import com.noteverso.core.model.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

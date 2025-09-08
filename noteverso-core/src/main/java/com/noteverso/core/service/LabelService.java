@@ -1,10 +1,13 @@
 package com.noteverso.core.service;
 
-import com.noteverso.core.dto.LabelItem;
-import com.noteverso.core.dto.SelectItem;
-import com.noteverso.core.request.LabelCreateRequest;
-import com.noteverso.core.request.LabelRequest;
-import com.noteverso.core.request.LabelUpdateRequest;
+import com.noteverso.core.model.dto.LabelItem;
+import com.noteverso.core.model.dto.NoteItem;
+import com.noteverso.core.model.dto.SelectItem;
+import com.noteverso.core.model.pagination.PageResult;
+import com.noteverso.core.model.request.LabelCreateRequest;
+import com.noteverso.core.model.request.LabelRequest;
+import com.noteverso.core.model.request.LabelUpdateRequest;
+import com.noteverso.core.model.request.NotePageRequest;
 
 import java.util.List;
 
@@ -20,4 +23,6 @@ public interface LabelService {
     List<LabelItem> getLabels(String userId);
 
     List<SelectItem> getLabelSelectItems(LabelRequest request, String userId);
+
+    PageResult<NoteItem> getNotePageByLabel(String labelId, NotePageRequest request, String userId);
 }

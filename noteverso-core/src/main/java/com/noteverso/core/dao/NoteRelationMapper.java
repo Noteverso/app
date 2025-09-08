@@ -1,9 +1,9 @@
 package com.noteverso.core.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.noteverso.core.dto.ReferencedNoteCount;
-import com.noteverso.core.dto.ReferencingNoteCount;
-import com.noteverso.core.model.NoteRelation;
+import com.noteverso.core.model.dto.ReferencedNoteCount;
+import com.noteverso.core.model.dto.ReferencingNoteCount;
+import com.noteverso.core.model.entity.NoteRelation;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

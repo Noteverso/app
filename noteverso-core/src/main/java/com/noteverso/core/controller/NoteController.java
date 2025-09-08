@@ -1,15 +1,14 @@
 package com.noteverso.core.controller;
 
-import com.noteverso.common.api.ApiResult;
-import com.noteverso.core.dto.NoteDTO;
+import com.noteverso.core.model.dto.NoteDTO;
 import com.noteverso.core.manager.AuthManager;
 import com.noteverso.core.manager.impl.AuthManagerImpl;
-import com.noteverso.core.model.Note;
-import com.noteverso.core.pagination.PageResult;
-import com.noteverso.core.request.NoteCreateRequest;
-import com.noteverso.core.request.NotePageRequest;
-import com.noteverso.core.request.NoteUpdateRequest;
-import com.noteverso.core.dto.NoteItem;
+import com.noteverso.core.model.entity.Note;
+import com.noteverso.core.model.pagination.PageResult;
+import com.noteverso.core.model.request.NoteCreateRequest;
+import com.noteverso.core.model.request.NotePageRequest;
+import com.noteverso.core.model.request.NoteUpdateRequest;
+import com.noteverso.core.model.dto.NoteItem;
 import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.NoteService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,20 +38,6 @@ public class NoteController {
     public String createNote(Authentication authentication, @Valid @RequestBody NoteCreateRequest request) {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
         return noteService.createNote(request, principal.getUserId());
-    }
-
-    @Operation(summary = "Get Notes Page by Project", description = "Get Notes Page by Project", tags = { "GET" })
-    @GetMapping("/project")
-    public PageResult<NoteItem> getNotesByProject(Authentication authentication, @Valid NotePageRequest request) {
-        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
-        return noteService.getNotePageByProject(request, principal.getUserId());
-    }
-
-    @Operation(summary = "Get Notes Page by Label", description = "Get Notes Page by Label", tags = { "GET" })
-    @GetMapping("/label")
-    public PageResult<NoteItem> getNotesByLabel(Authentication authentication, @Valid NotePageRequest request) {
-        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
-        return noteService.getNotePageByLabel(request, principal.getUserId());
     }
 
     @Operation(summary = "Get a Note", description = "Get a Note", tags = { "GET" })

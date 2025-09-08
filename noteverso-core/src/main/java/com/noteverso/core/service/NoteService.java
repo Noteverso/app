@@ -1,11 +1,11 @@
 package com.noteverso.core.service;
 
-import com.noteverso.core.dto.NoteDTO;
-import com.noteverso.core.pagination.PageResult;
-import com.noteverso.core.request.NoteCreateRequest;
-import com.noteverso.core.request.NotePageRequest;
-import com.noteverso.core.request.NoteUpdateRequest;
-import com.noteverso.core.dto.NoteItem;
+import com.noteverso.core.model.dto.NoteDTO;
+import com.noteverso.core.model.pagination.PageResult;
+import com.noteverso.core.model.request.NoteCreateRequest;
+import com.noteverso.core.model.request.NotePageRequest;
+import com.noteverso.core.model.request.NoteUpdateRequest;
+import com.noteverso.core.model.dto.NoteItem;
 
 import java.util.List;
 
@@ -52,16 +52,6 @@ public interface NoteService {
     void deleteNote(String id, String userId);
 
     NoteDTO getNoteDetail(String noteId, String userId);
-
-    /**
-     * modify the note view option and return the page of notes
-     * @param request
-     * @param userId
-     * @return
-     */
-    PageResult<NoteItem> getNotePageByProject(NotePageRequest request, String userId);
-
-    PageResult<NoteItem> getNotePageByLabel(NotePageRequest request, String userId);
 
     List<NoteItem> getReferencedNotes(String noteId, String userId);
 }

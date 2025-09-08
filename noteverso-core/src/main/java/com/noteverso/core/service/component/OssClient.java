@@ -19,7 +19,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.noteverso.common.exceptions.OssException;
 import com.noteverso.core.config.OssClientProperties;
 import com.noteverso.core.constant.OssConstants;
-import com.noteverso.core.model.UploadResult;
+import com.noteverso.core.model.entity.UploadResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;

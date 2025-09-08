@@ -1,13 +1,16 @@
 package com.noteverso.core.controller;
 
-import com.noteverso.common.api.ApiResult;
-import com.noteverso.core.dto.LabelItem;
-import com.noteverso.core.dto.SelectItem;
+import com.noteverso.core.model.dto.LabelItem;
+import com.noteverso.core.model.dto.NoteItem;
+import com.noteverso.core.model.dto.SelectItem;
 import com.noteverso.core.manager.AuthManager;
 import com.noteverso.core.manager.impl.AuthManagerImpl;
-import com.noteverso.core.request.LabelCreateRequest;
-import com.noteverso.core.request.LabelRequest;
-import com.noteverso.core.request.LabelUpdateRequest;
+import com.noteverso.core.model.pagination.PageResult;
+import com.noteverso.core.model.request.LabelCreateRequest;
+import com.noteverso.core.model.request.LabelRequest;
+import com.noteverso.core.model.request.LabelUpdateRequest;
+import com.noteverso.core.model.request.NotePageRequest;
+import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.LabelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -76,5 +79,12 @@ public class LabelController {
     public Void unFavoriteLabel(@PathVariable("id") String labelId) {
         labelService.updateIsFavoriteStatus(labelId, NUM_O);
         return null;
+    }
+
+    @Operation(summary = "Get Notes Page by Label", description = "Get Notes Page by Label", tags = { "GET" })
+    @GetMapping("/{labelId}/notes")
+    public PageResult<NoteItem> getNotesByLabel(Authentication authentication, @PathVariable("labelId") String labelId, @Valid NotePageRequest request) {
+        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
+        return labelService.getNotePageByLabel(labelId, request, principal.getUserId());
     }
 }

@@ -1,7 +1,6 @@
 package com.noteverso.core.service;
 
-import com.noteverso.core.dto.AttachmentDTO;
-import com.noteverso.core.request.AttachmentRequest;
+import com.noteverso.core.model.dto.AttachmentDTO;
 
 import java.util.List;
 
