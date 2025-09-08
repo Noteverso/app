@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: noteverso
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST_PORT}/${DATABASE_DB}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  output:
+    ansi:
+      enabled: always
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.transport.protocol: smtp
+    templates:
+      path: mail-templates
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      lettuce:
+        pool:
+          max-active: 32
+          max-idle: 16
+          min-idle: 8
+server:
+  port: 8080
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+#springdoc:
+#  swagger-ui:
+#    path: /noteverso/swagger
+#    tagsSorter: alpha
+#    filter: true
+#  api-docs:
+#    path: /noteverso/api-docs
+
+logging:
+  level:
+    root: INFO
+    com.noteverso: DEBUG
+    org.springframework.security: trace
+  file:
+    path: ./logs
+
+noteverso:
+  jwtSecret: ${JWT_SECRET}
+  jwtExpirationDays: ${JWT_EXPIRATION_DAYS}
+  openapi :
+    dev-url: http://localhost:8080
+    prod-url: http://api.noteverso.com/docs
+oss:
+  accessKey: ${OSS_ACCESS_KEY}
+  accessKeySecret: ${OSS_ACCESS_KEY_SECRET}
+  endpoint: ${OSS_END_POINT}
+  bucketName: ${OSS_BUCKET_NAME}
+  isHttps: ${OSS_IS_HTTPS}
+#  token: qPbQ-XUwfUnY4d9kf7SPrtUacmdVlUQ1CLNgupF5

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.noteverso.core.dao.AttachmentRelationMapper">
+    <insert id="batchInsert">
+        INSERT INTO noteverso_attachment_map (attachment_id, object_id, creator, updater, added_at, updated_at)
+        VALUES
+            <foreach collection="attachmentRelations" item="item" separator=",">
+                (#{item.attachmentId}, #{item.objectId}, #{item.creator}, #{item.updater}, #{item.addedAt}, #{item.updatedAt})
+            </foreach>
+    </insert>
+
+    <select id="getAttachmentCountByObjectIds" resultType="com.noteverso.core.model.dto.AttachmentCount">
+        SELECT object_id AS object_id, COUNT(*) AS attachment_count FROM noteverso_attachment_map
+        WHERE object_id IN
+            <foreach collection="objectIds" item="objectId" open="(" close=")" separator=",">
+                #{objectId}
+            </foreach>
+        AND creator = #{userId}
+        GROUP BY object_id;
+    </select>
+</mapper>

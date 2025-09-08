@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
+<!-- color: https://logback.qos.ch/manual/layouts.html#coloring -->
+<!-- configuration: https://logback.qos.ch/manual/configuration.html -->
+<!-- Spring Boot feature: https://docs.spring.io/spring-boot/docs/2.1.13.RELEASE/reference/html/boot-features-logging.html -->
+<configuration>
+    <import class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"/>
+    <import class="ch.qos.logback.core.ConsoleAppender"/>
+    <import class="ch.qos.logback.core.status.OnConsoleStatusListener"/>
+    <import class="ch.qos.logback.core.FileAppender"/>
+    <import class="ch.qos.logback.core.rolling.RollingFileAppender"/>
+    <import class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy" />
+    <import class="ch.qos.logback.classic.filter.LevelFilter" />
+    <import class="ch.qos.logback.classic.filter.ThresholdFilter" />
+
+    <!-- Recommendation: place status listeners towards the top of the configuration file -->
+    <statusListener class="OnConsoleStatusListener"/>
+    <springProperty scope="context" name="logging.path" source="logging.path" defaultValue="./logs"/>
+    <springProperty scope="context" name="FILE_NAME" source="spring.application.name"/>
+    <appender name="consoleLog" class="ConsoleAppender">
+        <encoder class="PatternLayoutEncoder">
+            <!--格式化输出（配色）：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
+            <pattern>%yellow(%d{yyyy-MM-dd HH:mm:ss}) [%thread] %highlight(%-5level) %cyan(%logger{50}) - %magenta(%msg) %n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+    <logger name="org.springframework.security" level="trace" additivity="false">
+        <appender-ref ref="Console" />
+    </logger>
+
+    <!--根据日志级别分离日志，分别输出到不同的文件-->
+    <appender name="InfoLog" class="RollingFileAppender">
+        <filter class="LevelFilter">
+            <!-- 设置拦截的对象为INFO级别日志 -->
+            <level>INFO</level>
+            <!-- 当匹配到了INFO级别时，启用该段配置 -->
+            <onMatch>ACCEPT</onMatch>
+            <!-- 没有匹配到INFO级别日志时，屏蔽该段配置 -->
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder class="PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} | %thread | %-5level | %logger{50} | %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <file>${logging.path}/${FILE_NAME}.info.log</file>
+        <!--滚动策略-->
+        <rollingPolicy class="SizeAndTimeBasedRollingPolicy">
+            <!--按时间保存日志 修改格式可以按小时、按天、月来保存-->
+            <fileNamePattern>${logging.path}/${FILE_NAME}.info.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!--单个文件大小 注意：除了 %d 之外还有 %i。这两个占位符都是强制要求的。在当前时间还没有到达周期轮转之前，日志文件达到了 maxFileSize 指定的大小，会进行归档，递增索引从 0 开始-->
+            <maxFileSize>1GB</maxFileSize>
+            <!--保存时长-->
+            <MaxHistory>90</MaxHistory>
+            <!--总文件大小，使用此属性必须配置MaxHistory，且MaxHistory第一优先级，totalSizeCap第二优先级-->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="WarnLog" class="RollingFileAppender">
+        <filter class="LevelFilter">
+            <!-- 设置拦截的对象为INFO级别日志 -->
+            <level>WARN</level>
+            <!-- 当匹配到了WARN级别时，启用该段配置 -->
+            <onMatch>ACCEPT</onMatch>
+            <!-- 没有匹配到WARN级别日志时，屏蔽该段配置 -->
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder class="PatternLayoutEncoder">
+            <pattern>
+                %d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n
+            </pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <file>${logging.path}/${FILE_NAME}.warn.log</file>
+        <!--滚动策略-->
+        <rollingPolicy class="SizeAndTimeBasedRollingPolicy">
+            <!--按时间保存日志 修改格式可以按小时、按天、月来保存-->
+            <fileNamePattern>${logging.path}/${FILE_NAME}.warn.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!--单个文件大小 注意：除了 %d 之外还有 %i。这两个占位符都是强制要求的。在当前时间还没有到达周期轮转之前，日志文件达到了 maxFileSize 指定的大小，会进行归档，递增索引从 0 开始-->
+            <maxFileSize>1GB</maxFileSize>
+            <!--保存时长-->
+            <MaxHistory>90</MaxHistory>
+            <!--总文件大小，使用此属性必须配置MaxHistory，且MaxHistory第一优先级，totalSizeCap第二优先级-->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="ErrorLog" class="RollingFileAppender">
+        <!-- 基于给定的临界值来过滤事件。如果事件的级别等于或高于给定的临界值,将抛弃 -->
+        <filter class="ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <encoder>
+            <pattern>
+                %d{yyyy-MM-dd HH:mm:ss} | %thread | %-5level | %logger{50} | %msg%n
+            </pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <file>${logging.path}/${FILE_NAME}.error.log</file>
+        <!--滚动策略-->
+        <rollingPolicy class="SizeAndTimeBasedRollingPolicy">
+            <!--路径-->
+            <fileNamePattern>${logging.path}/${FILE_NAME}.error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!--单个文件大小 注意：除了 %d 之外还有 %i。这两个占位符都是强制要求的。在当前时间还没有到达周期轮转之前，日志文件达到了 maxFileSize 指定的大小，会进行归档，递增索引从 0 开始-->
+            <maxFileSize>1GB</maxFileSize>
+            <!--保存时长-->
+            <MaxHistory>90</MaxHistory>
+            <!--总文件大小，使用此属性必须配置MaxHistory，且MaxHistory第一优先级，totalSizeCap第二优先级-->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!--过滤器的配置在配置级别的基础上过滤，即root标签的配置级别。本例中，是对大于等于info级别的日志过滤-->
+    <root level="info">
+        <appender-ref ref="consoleLog"/>
+        <appender-ref ref="InfoLog"/>
+        <appender-ref ref="WarnLog"/>
+        <appender-ref ref="ErrorLog"/>
+    </root>
+
+</configuration>

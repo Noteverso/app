@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.noteverso.core.dao.LabelMapper">
+    <select id="getLabels" resultType="com.noteverso.core.model.entity.Label">
+        SELECT name, label_id, color FROM noteverso_label
+        WHERE creator = #{userId}
+        <if test="request.name">
+            AND LOWER(name) LIKE LOWER(CONCAT('%', TRIM('${request.name}'), '%'))
+        </if>
+
+        <if test="request.labelId">
+            AND label_id = #{request.labelId}
+        </if>
+        <if test="request.labelIds != null and request.labelIds.size() > 0">
+            AND label_id IN
+            <foreach collection="request.labelIds" item="labelId" separator="," open="(" close=")">
+                #{labelId}
+            </foreach>
+        </if>
+        ORDER BY added_at DESC
+    </select>
+</mapper>
