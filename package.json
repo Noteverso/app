@@ -1,0 +1,24 @@
+{
+  "name": "app",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "web:install": "pnpm --filter @noteverso/web install",
+    "web:dev": "pnpm --filter @noteverso/web dev",
+    "web:build": "pnpm --filter @noteverso/web build",
+    "web:test": "pnpm --filter @noteverso/web test"
+  },
+  "keywords": [
+    "noteverso",
+    "notetoking",
+    "monorepo",
+    "pnpm",
+    "workspace"
+  ],
+  "author": "byodian",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/byodian/noteverso"
+  }
+}

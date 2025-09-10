@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   release:
-    if: github.repository == 'Noteverso/client'
+    if: github.repository == 'Noteverso/app'
     runs-on: ubuntu-latest
 
     steps:

@@ -32,18 +32,23 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'pnpm'
+        cache-dependency-path: '.frontend/web/pnpm-lock.yaml'
 
     - name: Install dependencies
-      run: pnpm install
+      run: |
+        cd frontend/web
+        pnpm install
       
     - name: Build dist
-      run: pnpm run build
+      run: |
+        cd frontend/web
+        pnpm run build
 
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
       with:
         name: build
-        path: dist
+        path: frontend/web/dist
 
   deploy:
     name: Deploy
@@ -64,7 +69,7 @@ jobs:
       run: |
         mkdir -p /data/www/noteverso/bak
         mv /data/www/noteverso/build /data/www/noteverso/bak/build-${{ github.event.repository.updated_at}}
-        cp -r dist/ /data/www/noteverso/build
+        cp -r frontend/web/dist/ /data/www/noteverso/build
 
     - name: Delete _work
       shell: bash
