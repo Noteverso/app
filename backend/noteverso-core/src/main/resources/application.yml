@@ -43,6 +43,7 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
+##default: http://localhost:8080/swagger-ui/index.html
 #springdoc:
 #  swagger-ui:
 #    path: /noteverso/swagger
