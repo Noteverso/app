@@ -283,3 +283,98 @@ export const PROJECT_COLORS = [
 - Project names must be unique per user
 - Favorite projects appear first in sidebar
 - Archived projects hidden from main view but accessible
+
+## Mobile Considerations
+
+### Responsive List Display
+- **Mobile**: Show project name + note count only (compact view)
+- **Desktop**: Show project name, color indicator, note count, favorite icon
+
+```tsx
+// Mobile-optimized project list
+function ProjectListMobile({ projects }: { projects: FullProject[] }) {
+  return (
+    <div className="space-y-1">
+      {projects.map(project => (
+        <Link
+          key={project.projectId}
+          to={`/projects/${project.projectId}`}
+          className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-100"
+        >
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: `var(--color-${project.color})` }}
+            />
+            <span className="text-sm font-medium truncate max-w-[180px]">
+              {project.name}
+            </span>
+          </div>
+          {project.noteCount > 0 && (
+            <span className="text-xs text-gray-500">{project.noteCount}</span>
+          )}
+        </Link>
+      ))}
+    </div>
+  )
+}
+```
+
+### Color Picker Optimization
+On mobile, use simplified color picker:
+```tsx
+// Full grid on desktop, horizontal scroll on mobile
+<div className="grid grid-cols-5 gap-2 lg:grid-cols-10">
+  {PROJECT_COLORS.map(color => (
+    <button
+      key={color}
+      className="w-10 h-10 rounded-full lg:w-8 lg:h-8"
+      style={{ backgroundColor: `var(--color-${color})` }}
+      onClick={() => setColor(color)}
+    />
+  ))}
+</div>
+```
+
+### Touch Interactions
+- Long-press project item → context menu (rename, archive, delete)
+- Swipe left → quick archive
+- Swipe right → favorite toggle
+
+```typescript
+// Project item with swipe actions
+function ProjectItem({ project }: { project: FullProject }) {
+  const { archive, favorite } = useProjectActions()
+  
+  const swipeHandlers = useSwipeActions({
+    onSwipeLeft: () => archive.mutate(project.projectId),
+    onSwipeRight: () => favorite.mutate(project.projectId),
+  })
+  
+  const longPressHandlers = useLongPress({
+    onLongPress: () => openContextMenu(project),
+  })
+  
+  return (
+    <div {...swipeHandlers} {...longPressHandlers}>
+      {/* Project content */}
+    </div>
+  )
+}
+```
+
+### Performance
+- **Pagination**: Not needed for projects (typically < 50 per user)
+- **Cache**: Aggressive caching (projects change infrequently)
+- **Prefetch**: Prefetch project notes on hover (desktop) or tap (mobile with delay)
+
+```typescript
+export function useProjects() {
+  return useQuery({
+    queryKey: ['projects'],
+    queryFn: getProjects,
+    staleTime: 300000, // 5 minutes (projects change rarely)
+    cacheTime: 600000, // 10 minutes
+  })
+}
+```

@@ -351,39 +351,97 @@ const { query, setQuery, results } = useSearch({
 
 **TipTap output formats**:
 - **HTML**: `<p><strong>Bold</strong> text</p>`
-- **JSON**: `{ type: 'doc', content: [...] }`
+- **JSON**: `{ type: 'doc', content: [{ type: 'paragraph', content: [...] }] }` (Block-based structure)
 - **Markdown**: `**Bold** text`
 
-**Backend storage** (from `NoteDTO.java`):
-```java
-private String content;  // Plain string field
+**Backend storage** (PostgreSQL JSONB):
+```sql
+-- notes table
+content JSONB NOT NULL  -- Block-based JSON, NOT string
 ```
 
+**Block-based structure benefits**:
+- Structured data queries (find headings, code blocks, etc.)
+- Efficient partial updates (modify single block)
+- Rich metadata per block (timestamps, authors, comments)
+- Platform-independent format
+- Future-proof for different editors
+
 **Security considerations**:
-- HTML injection risk
-- XSS vulnerabilities
-- Need sanitization
+- JSON structure validation required
+- Block type whitelisting
+- Content sanitization per block type
+- XSS prevention in text content
 
 ### Decision
 
-**Store as HTML with client-side sanitization**
+**Store as Block-Based JSON structure (Notion/Editor.js style) in PostgreSQL JSONB**
 
 **Rationale**:
-1. No backend schema changes needed
-2. Preserves formatting completely
-3. Compatible with TipTap's natural output
-4. Sanitization handled by TipTap on render
+1. **Backend requirement**: PostgreSQL JSONB is the proper field type for structured content
+2. **Query capabilities**: Can query within blocks (find all code blocks, headings, etc.)
+3. **Partial updates**: Modify single blocks without reprocessing entire document
+4. **Platform independence**: Not tied to HTML rendering
+5. **Future extensibility**: Add block metadata, collaboration features, block-level permissions
+6. **TipTap native format**: TipTap outputs JSON natively, no conversion needed
 
 **Implementation**:
-- TipTap outputs HTML
-- Store directly in content field
-- TipTap sanitizes on render
-- No additional parsing needed
+- TipTap outputs block-based JSON structure
+- Each block has: `{ id, type, content, attrs, metadata }`
+- Backend stores in JSONB column with validation
+- Frontend renders blocks via TipTap from JSON
+- No HTML persistence (HTML only for rendering)
 
-**Alternative considered**: JSON format
-- Rejected: More complex, no clear benefit
-- Backend would need to parse/validate
-- HTML is simpler and sufficient
+**Block structure example**:
+```typescript
+{
+  blocks: [
+    {
+      id: "block-1",
+      type: "heading",
+      attrs: { level: 1 },
+      content: [{ type: "text", text: "Title" }]
+    },
+    {
+      id: "block-2",
+      type: "paragraph",
+      content: [
+        { type: "text", text: "Bold ", marks: [{ type: "bold" }] },
+        { type: "text", text: "text" }
+      ]
+    },
+    {
+      id: "block-3",
+      type: "codeBlock",
+      attrs: { language: "javascript" },
+      content: [{ type: "text", text: "console.log('hello')" }]
+    }
+  ],
+  version: "1.0"
+}
+```
+
+**TipTap integration**:
+```typescript
+// Editor outputs JSON
+const json = editor.getJSON()  // Block-based structure
+
+// Store to backend
+await updateNote(noteId, { content: json })
+
+// Load from backend and render
+editor.commands.setContent(noteContent)  // TipTap parses JSON
+```
+
+**Alternatives considered**:
+- **HTML string**: REJECTED - No structure, hard to query, XSS risks, monolithic
+- **Markdown**: REJECTED - Limited formatting, no rich metadata
+- **Hybrid (HTML + metadata)**: REJECTED - Redundant, sync issues
+
+**Migration path** (if existing HTML content):
+1. Parse HTML to TipTap JSON on first edit
+2. Store as block-based JSON
+3. Discard original HTML
 
 ## 8. Component Architecture Patterns
 
@@ -534,6 +592,94 @@ tests/
 3. TanStack Query handles 80% of perf issues
 4. Virtual scrolling overkill for pagination
 
+## 11. Mobile Optimization Strategy
+
+### Current State
+- Desktop-first design
+- No mobile-specific considerations
+- Fixed layouts not optimized for small screens
+- No touch gesture support
+
+### Research Findings
+
+**Mobile-first CSS approach**:
+- Start with mobile styles (320px+)
+- Progressive enhancement for tablet (768px+) and desktop (1024px+)
+- Tailwind's responsive prefixes (`sm:`, `md:`, `lg:`)
+- Touch-friendly tap targets (44px minimum)
+
+**Responsive Design Patterns**:
+
+1. **Navigation**: Collapsible sidebar → Bottom navigation on mobile
+   ```tsx
+   // Desktop: Fixed sidebar
+   <aside className="hidden lg:block w-64 fixed">
+   
+   // Mobile: Bottom nav bar
+   <nav className="lg:hidden fixed bottom-0 w-full">
+   ```
+
+2. **Layout**: Three-column (sidebar + list + detail) → Single column stacked
+   ```tsx
+   <div className="grid grid-cols-1 lg:grid-cols-[256px_1fr] xl:grid-cols-[256px_400px_1fr]">
+   ```
+
+3. **Touch Interactions**:
+   - Swipe gestures for actions (archive, delete)
+   - Pull-to-refresh for note list
+   - Long-press for context menu
+   - Prevent 300ms tap delay
+
+4. **Typography**: Responsive font sizes
+   ```css
+   html { font-size: 16px; } /* Mobile base */
+   @media (min-width: 768px) { html { font-size: 18px; } }
+   ```
+
+**Mobile Performance**:
+- Reduce initial JS bundle (<100KB gzipped)
+- Code splitting by route
+- Lazy load images/attachments
+- Optimize for 3G/4G networks
+- Service worker for static assets
+
+**Touch Gesture Library**:
+- **Use React ARIA** (already via Radix UI) for accessible touch interactions
+- **Avoid** hammer.js (large), react-swipeable (unnecessary)
+- Native touch events sufficient for basic gestures
+
+### Decision
+
+**Implement mobile-first responsive design with native touch support**
+
+**Rationale**:
+1. Mobile usage growing (50%+ of web traffic)
+2. Tailwind CSS perfect for responsive design
+3. Radix UI components already touch-accessible
+4. Native events avoid dependencies
+5. Progressive enhancement maintains desktop experience
+
+**Implementation approach**:
+- Start mobile (320px) → enhance to desktop
+- Collapsible navigation on mobile
+- Touch-optimized tap targets (44px+)
+- Responsive typography (16px base mobile)
+- Gesture support: swipe, long-press, pull-to-refresh
+- Code splitting for mobile performance
+
+**Alternatives considered**:
+- **Desktop-first**: REJECTED (doesn't prioritize mobile)
+- **Separate mobile app**: REJECTED (maintenance overhead)
+- **Third-party gesture library**: REJECTED (bundle size)
+- **CSS-only responsive**: REJECTED (needs JS for gestures)
+
+**Mobile-specific features**:
+- Bottom navigation bar (< 768px)
+- Swipe to archive/delete notes
+- Pull-to-refresh on note list
+- Touch-friendly dialogs (full-screen on mobile)
+- Optimized for portrait orientation
+
 ## Summary of Decisions
 
 | Area | Decision | Alternatives Rejected |
@@ -544,10 +690,11 @@ tests/
 | Optimistic Updates | TanStack Query pattern | Manual (error-prone) |
 | Error Handling | Error boundary + Toast | Global modal (disruptive), Silent failures (bad UX) |
 | Search | Client-side filtering (MVP) | Backend search (needs implementation) |
-| Content Storage | HTML | JSON (complex), Markdown (parsing overhead) |
+| **Content Storage** | **Block-based JSON (PostgreSQL JSONB)** | **HTML (monolithic), Markdown (limited), Hybrid (complex)** |
 | Component Architecture | Feature-based + custom hooks | Page-based (poor scalability), Smart/Dumb (outdated pattern) |
 | Testing | Vitest + RTL | Jest (slower), Enzyme (deprecated) |
 | Performance | Progressive enhancement | Virtual scrolling (premature), SSR (not needed) |
+| **Mobile Strategy** | **Mobile-first responsive + native touch** | **Desktop-first, Separate app, Gesture libraries** |
 
 ## Validation Checklist
 
@@ -558,6 +705,10 @@ tests/
 - ✅ Testing strategy covers critical paths
 - ✅ Architecture supports incremental development
 - ✅ No vendor lock-in for critical functionality
+- ✅ Mobile-first approach with progressive enhancement
+- ✅ Touch interactions use native browser APIs
+- ✅ **Block-based content storage in PostgreSQL JSONB**
+- ✅ **Structured content enables rich queries and partial updates**
 
 ## Next Steps
 

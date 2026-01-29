@@ -307,6 +307,96 @@ export function useMyHook(initialValue: string) {
 }
 ```
 
+### Working with Block-Based Content
+
+**IMPORTANT**: Notes use block-based JSON structure (Notion/Editor.js style), NOT HTML strings.
+
+```typescript
+// types/note.ts - Content structure
+import type { NoteContent } from '@/types/note'
+
+// Example: Creating a note with block-based content
+const newNoteContent: NoteContent = {
+  type: 'doc',
+  content: [
+    {
+      id: 'block-1',
+      type: 'heading',
+      attrs: { level: 1 },
+      content: [{ type: 'text', text: 'My First Note' }]
+    },
+    {
+      id: 'block-2',
+      type: 'paragraph',
+      content: [
+        { type: 'text', text: 'This is ' },
+        { type: 'text', text: 'bold', marks: [{ type: 'bold' }] },
+        { type: 'text', text: ' text.' }
+      ]
+    },
+    {
+      id: 'block-3',
+      type: 'codeBlock',
+      attrs: { language: 'javascript' },
+      content: [{ type: 'text', text: 'console.log("Hello World")' }]
+    }
+  ],
+  version: '1.0'
+}
+
+// Using TipTap editor (handles block-based JSON natively)
+import { useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+
+function NoteEditor() {
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: note.content,  // TipTap accepts block-based JSON directly
+    onUpdate: ({ editor }) => {
+      const json = editor.getJSON() as NoteContent  // Get block structure
+      saveNote({ content: json })  // Save as JSON, NOT HTML
+    },
+  })
+  
+  return <EditorContent editor={editor} />
+}
+
+// Extract plain text from blocks (for previews, search)
+import { extractPlainText } from '@/types/note'
+
+function NotePreview({ note }: { note: FullNote }) {
+  const preview = extractPlainText(note.content, 200)  // First 200 chars
+  return <p className="line-clamp-3">{preview}</p>
+}
+
+// DON'T: Store HTML
+const wrongContent = "<p><strong>Bold</strong> text</p>"  // ❌ Wrong
+
+// DO: Store block-based JSON
+const correctContent: NoteContent = {  // ✅ Correct
+  type: 'doc',
+  content: [
+    {
+      id: 'block-1',
+      type: 'paragraph',
+      content: [
+        { type: 'text', text: 'Bold', marks: [{ type: 'bold' }] },
+        { type: 'text', text: ' text' }
+      ]
+    }
+  ],
+  version: '1.0'
+}
+```
+
+**Why block-based JSON?**
+- ✅ Structured data in PostgreSQL JSONB
+- ✅ Query specific blocks (find all code blocks, headings)
+- ✅ Partial updates (modify single blocks)
+- ✅ Platform-independent format
+- ✅ TipTap native format (no conversion)
+- ❌ HTML is monolithic, hard to query, XSS risks
+
 ### Adding Radix UI Component
 
 ```bash
@@ -500,6 +590,306 @@ test('renders label list', () => {
 5. **Optimize images** in `public/` directory
 6. **Use production build** for realistic performance testing
 
+## Mobile Development
+
+### Testing on Mobile Devices
+
+**Option 1: Network Access (Recommended)**
+
+```bash
+# Find your local IP address
+# Windows
+ipconfig | findstr IPv4
+
+# Start dev server with network access
+pnpm dev --host
+
+# Access from mobile device at:
+# http://192.168.x.x:5173
+```
+
+**Option 2: Browser DevTools**
+
+```bash
+# Chrome DevTools Device Emulation
+# 1. Open DevTools (F12)
+# 2. Click device toggle (Ctrl+Shift+M)
+# 3. Select device preset or custom dimensions
+
+# Common test devices:
+# - iPhone 12 Pro (390x844)
+# - iPhone SE (375x667)
+# - iPad Air (820x1180)
+# - Samsung Galaxy S20 (360x800)
+```
+
+**Option 3: Real Device Testing**
+
+Use Chrome Remote Debugging:
+```bash
+# 1. Enable USB debugging on Android device
+# 2. Connect via USB
+# 3. Open chrome://inspect in desktop Chrome
+# 4. Select device and inspect page
+```
+
+### Responsive Design Workflow
+
+**1. Mobile-First Development**
+
+Start with mobile styles, enhance for desktop:
+
+```tsx
+// ❌ Wrong: Desktop-first
+<div className="w-96 md:w-64"> // Scales down on mobile
+
+// ✅ Correct: Mobile-first
+<div className="w-full md:w-96"> // Scales up on desktop
+```
+
+**2. Test Breakpoints**
+
+```css
+/* Tailwind breakpoints */
+sm: 640px  /* Mobile landscape */
+md: 768px  /* Tablet */
+lg: 1024px /* Desktop */
+xl: 1280px /* Large desktop */
+```
+
+**3. Touch Target Guidelines**
+
+```tsx
+// Minimum 44px tap targets
+<button className="min-h-[44px] min-w-[44px] p-3">
+  <Icon className="w-5 h-5" />
+</button>
+
+// Increase spacing on mobile
+<div className="space-y-3 lg:space-y-2">
+  {items.map(item => <Item key={item.id} {...item} />)}
+</div>
+```
+
+**4. Responsive Typography**
+
+```css
+/* globals.css */
+html {
+  font-size: 16px; /* Mobile base */
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 18px; /* Desktop base */
+  }
+}
+```
+
+### Mobile-Specific Testing
+
+**Touch Gestures**
+
+```typescript
+// Test swipe actions
+// 1. Add swipe handlers to component
+// 2. Test on real device (simulators may not work well)
+// 3. Verify swipe distance threshold (50px recommended)
+
+// Test in DevTools:
+// 1. Enable touch simulation
+// 2. Use mouse to simulate swipe
+// 3. Check console logs for debug info
+```
+
+**Performance Testing**
+
+```bash
+# Test on slow 3G network
+# Chrome DevTools > Network tab > Throttling > Slow 3G
+
+# Lighthouse mobile audit
+pnpm build
+pnpm preview
+# DevTools > Lighthouse > Mobile > Generate report
+
+# Target scores:
+# Performance: >90
+# Accessibility: >95
+# Best Practices: >90
+```
+
+### Common Mobile Issues
+
+**Issue 1: 300ms tap delay**
+
+```css
+/* Add to globals.css */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+```
+
+**Issue 2: Viewport on iOS**
+
+```html
+<!-- index.html -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+```
+
+**Issue 3: Input zoom on iOS**
+
+```css
+/* Prevent input zoom on iOS */
+input, textarea, select {
+  font-size: 16px; /* Minimum to prevent zoom */
+}
+```
+
+**Issue 4: Horizontal scroll**
+
+```css
+/* Prevent horizontal overflow */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+```
+
+### Mobile Performance Optimization
+
+**Code Splitting by Route**
+
+```typescript
+// routes/routes.tsx
+import { lazy } from 'react'
+
+const NoteEditor = lazy(() => import('@/features/note/note-editor'))
+const ProjectPage = lazy(() => import('@/pages/project/project'))
+
+// Heavy components load only when needed
+```
+
+**Conditional Loading**
+
+```typescript
+// Only load TipTap on desktop or when needed
+const isMobile = useMediaQuery('(max-width: 768px)')
+
+return (
+  <Suspense fallback={<EditorSkeleton />}>
+    {!isMobile && <RichTextEditor />}
+    {isMobile && <SimplifiedEditor />}
+  </Suspense>
+)
+```
+
+**Image Optimization**
+
+```tsx
+// Lazy load images
+<img
+  loading="lazy"
+  src={imageUrl}
+  alt={alt}
+  className="w-full h-auto"
+/>
+
+// Or use intersection observer
+const { ref, inView } = useInView({ triggerOnce: true })
+
+return (
+  <div ref={ref}>
+    {inView && <img src={imageUrl} alt={alt} />}
+  </div>
+)
+```
+
+### Mobile Debug Tools
+
+**Console Logging**
+
+```typescript
+// Add mobile debug overlay
+function DebugOverlay() {
+  const [info, setInfo] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+    online: navigator.onLine,
+  })
+  
+  useEffect(() => {
+    const update = () => setInfo({
+      width: window.innerWidth,
+      height: window.innerHeight,
+      online: navigator.onLine,
+    })
+    
+    window.addEventListener('resize', update)
+    window.addEventListener('online', update)
+    window.addEventListener('offline', update)
+    
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('online', update)
+      window.removeEventListener('offline', update)
+    }
+  }, [])
+  
+  if (import.meta.env.PROD) return null
+  
+  return (
+    <div className="fixed bottom-0 left-0 p-2 bg-black/80 text-white text-xs font-mono">
+      <div>Viewport: {info.width}x{info.height}</div>
+      <div>Network: {info.online ? 'Online' : 'Offline'}</div>
+    </div>
+  )
+}
+```
+
+**Touch Event Visualization**
+
+```typescript
+// Visualize touch points (development only)
+function TouchDebugger() {
+  const [touches, setTouches] = useState<Array<{ x: number; y: number }>>([])
+  
+  useEffect(() => {
+    const handleTouch = (e: TouchEvent) => {
+      const points = Array.from(e.touches).map(touch => ({
+        x: touch.clientX,
+        y: touch.clientY,
+      }))
+      setTouches(points)
+    }
+    
+    window.addEventListener('touchstart', handleTouch)
+    window.addEventListener('touchmove', handleTouch)
+    window.addEventListener('touchend', () => setTouches([]))
+    
+    return () => {
+      window.removeEventListener('touchstart', handleTouch)
+      window.removeEventListener('touchmove', handleTouch)
+      window.removeEventListener('touchend', () => setTouches([]))
+    }
+  }, [])
+  
+  if (import.meta.env.PROD) return null
+  
+  return (
+    <>
+      {touches.map((touch, i) => (
+        <div
+          key={i}
+          className="fixed w-12 h-12 -ml-6 -mt-6 rounded-full bg-red-500/50 pointer-events-none"
+          style={{ left: touch.x, top: touch.y }}
+        />
+      ))}
+    </>
+  )
+}
+```
+
 ## Resources
 
 - **React Docs**: https://react.dev
@@ -508,6 +898,8 @@ test('renders label list', () => {
 - **Radix UI**: https://www.radix-ui.com/
 - **Tailwind CSS**: https://tailwindcss.com/
 - **Vite**: https://vitejs.dev/
+- **Mobile Web Best Practices**: https://web.dev/mobile/
+- **Touch Events**: https://developer.mozilla.org/en-US/docs/Web/API/Touch_events
 
 ## Getting Help
 

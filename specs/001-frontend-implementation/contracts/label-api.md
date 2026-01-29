@@ -247,3 +247,172 @@ updateNote(noteId, {
 - Maximum 10 labels per note (enforced by backend)
 - Favorite labels appear first in sidebar
 - Labels are sorted alphabetically within favorite/non-favorite groups
+
+## Mobile Considerations
+
+### Compact Label Display
+Mobile views show labels as chips with abbreviated text:
+
+```tsx
+// Desktop: Full label names
+// Mobile: Truncated labels with tooltip
+function LabelChip({ label }: { label: { labelId: string; name: string } }) {
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  
+  return (
+    <span 
+      className={cn(
+        "inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs",
+        isMobile && "max-w-[80px]"
+      )}
+      title={label.name}
+    >
+      <span className={isMobile ? "truncate" : ""}>
+        {label.name}
+      </span>
+    </span>
+  )
+}
+```
+
+### Label Selector Optimization
+On mobile, use bottom sheet instead of dropdown:
+
+```tsx
+// Mobile-optimized label selector
+function LabelSelectorMobile({ selectedLabels, onChange }) {
+  const { data: labels } = useLabels()
+  const [isOpen, setIsOpen] = useState(false)
+  
+  return (
+    <>
+      <button 
+        onClick={() => setIsOpen(true)}
+        className="flex items-center gap-2 p-3 w-full text-left"
+      >
+        <TagIcon className="w-5 h-5" />
+        <span className="text-sm">
+          {selectedLabels.length === 0 
+            ? "Add labels" 
+            : `${selectedLabels.length} labels`}
+        </span>
+      </button>
+      
+      <ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-h-[70vh] overflow-y-auto">
+          <DialogTitle>Select Labels</DialogTitle>
+          <div className="space-y-2">
+            {labels?.map(label => (
+              <label 
+                key={label.labelId}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedLabels.includes(label.labelId)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      onChange([...selectedLabels, label.labelId])
+                    } else {
+                      onChange(selectedLabels.filter(id => id !== label.labelId))
+                    }
+                  }}
+                  className="w-5 h-5"
+                />
+                <span className="flex-1 text-sm">{label.name}</span>
+              </label>
+            ))}
+          </div>
+        </DialogContent>
+      </ResponsiveDialog>
+    </>
+  )
+}
+```
+
+### Touch Gestures
+- **Swipe left** on label item → delete label
+- **Swipe right** on label item → toggle favorite
+- **Long press** → rename label dialog
+
+```typescript
+function LabelItem({ label }: { label: FullLabel }) {
+  const { remove, favorite } = useLabelActions()
+  
+  const swipeHandlers = useSwipeActions({
+    onSwipeLeft: () => {
+      if (confirm(`Delete "${label.name}"? This will remove it from all notes.`)) {
+        remove.mutate(label.labelId)
+      }
+    },
+    onSwipeRight: () => favorite.mutate(label.labelId),
+  })
+  
+  return (
+    <div {...swipeHandlers} className="touch-manipulation">
+      {/* Label content */}
+    </div>
+  )
+}
+```
+
+### Performance
+- **No pagination**: Labels typically < 100 per user
+- **Aggressive caching**: Labels change infrequently
+- **Prefetch**: Load labels on app initialization
+
+```typescript
+export function useLabels() {
+  return useQuery({
+    queryKey: ['labels'],
+    queryFn: getLabels,
+    staleTime: 300000, // 5 minutes
+    cacheTime: 600000, // 10 minutes
+  })
+}
+
+// Prefetch labels on app mount
+export function usePrefetchLabels() {
+  const queryClient = useQueryClient()
+  
+  useEffect(() => {
+    queryClient.prefetchQuery({
+      queryKey: ['labels'],
+      queryFn: getLabels,
+    })
+  }, [])
+}
+```
+
+### Label Creation on Mobile
+Simplified inline creation:
+
+```tsx
+function QuickLabelCreate() {
+  const [name, setName] = useState('')
+  const { mutate: createLabel } = useLabelCreate()
+  
+  return (
+    <div className="flex gap-2 p-3 border-t">
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="New label..."
+        className="flex-1 px-3 py-2 text-sm border rounded-lg"
+        maxLength={50}
+      />
+      <button
+        onClick={() => {
+          createLabel({ name })
+          setName('')
+        }}
+        disabled={!name.trim()}
+        className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg disabled:opacity-50"
+      >
+        Add
+      </button>
+    </div>
+  )
+}
+```

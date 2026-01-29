@@ -5,6 +5,16 @@
 **Status**: Draft  
 **Input**: User description: "The project is a note-taking monorepo. The note-taking manage notes using projects and labels (aka tags). The data model is one to one for note and project and one to multiple for note and labels. Every user must login with email to use this app. The backend service has already implemented basical api, like creating,updating,deleting for note, project and labels. But The frontend doesn't implement much more. Please read the existing project and make the spec doc."
 
+## Clarifications
+
+### Session 2026-01-28
+
+- Q: The specification states "desktop-only" but the implementation plan mandates mobile-first responsive design. Which approach should be implemented? → A: Mobile-first responsive design - 320px-2560px viewports, touch interactions, progressive enhancement to desktop
+- Q: How should bidirectional note links be displayed and managed? → A: Inline links + separate backlinks section - Links appear within content as clickable text; backlinks shown in dedicated panel/section at bottom
+- Q: Which note operations should use optimistic updates? → A: Mutations with instant rollback - Create, update, delete, pin, archive, label changes show instant UI updates; rollback on error with toast notification
+- Q: What is the search implementation approach? → A: Client-side filtering (MVP), backend later - Filter loaded notes in browser initially; migrate to backend search when needed
+- Q: What keyboard shortcuts are required for MVP? → A: Essential actions only - Save note (Ctrl+S), New note (Ctrl+N), Search (Ctrl+K), Quick project switch (Ctrl+P), Close/Escape dialogs (Esc)
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Complete Note Management (Priority: P1)
@@ -97,12 +107,13 @@ Users need to link notes together to create relationships between ideas and atta
 
 **Acceptance Scenarios**:
 
-1. **Given** I am editing a note, **When** I create a link to another note, **Then** the linked note is referenced and clickable within the note content
-2. **Given** I am viewing a note with linked notes, **When** I click on a note link, **Then** I navigate to the linked note
+1. **Given** I am editing a note, **When** I create a link to another note, **Then** the linked note is referenced as clickable text within the note content (inline link)
+2. **Given** I am viewing a note with linked notes, **When** I click on an inline note link, **Then** I navigate to the linked note
 3. **Given** I am editing a note, **When** I upload an image or file, **Then** the attachment is associated with the note and displayed inline or as a downloadable link
 4. **Given** I am viewing a note with attachments, **When** I click on an attachment, **Then** the file is downloaded or viewed
-5. **Given** I have a note with backlinks (other notes linking to it), **When** I view the note, **Then** I see a list of notes that reference this note
-6. **Given** I am viewing the attachments page, **When** I browse attachments, **Then** I see all attachments across all notes with options to view source notes
+5. **Given** I have a note with backlinks (other notes linking to it), **When** I view the note, **Then** I see a dedicated backlinks section/panel at the bottom showing all notes that reference this note
+6. **Given** I am viewing the backlinks section, **When** I click on a backlink, **Then** I navigate to the note that references the current note
+7. **Given** I am viewing the attachments page, **When** I browse attachments, **Then** I see all attachments across all notes with options to view source notes
 
 ---
 
@@ -172,7 +183,7 @@ Users must register with an email address, log in to access their notes, and log
 - **FR-029**: System MUST allow users to unarchive notes to restore them to active views
 - **FR-030**: System MUST provide a trash view showing all deleted notes
 - **FR-031**: System MUST allow users to filter notes by status (all, pinned, archived, deleted)
-- **FR-032**: System MUST allow users to search notes by text content
+- **FR-032**: System MUST allow users to search notes by text content using client-side filtering (searches within currently loaded notes in the active view)
 - **FR-033**: System MUST highlight search terms in search results
 - **FR-034**: System MUST allow users to create links between notes
 - **FR-035**: System MUST display clickable note links within note content
@@ -191,14 +202,14 @@ Users must register with an email address, log in to access their notes, and log
 - **FR-048**: System MUST display validation errors for invalid form inputs
 - **FR-049**: System MUST display loading states while fetching data from the backend
 - **FR-050**: System MUST display error messages when backend operations fail
-- **FR-051**: System MUST provide optimistic UI updates for note creation to improve perceived performance
-- **FR-052**: System MUST rollback optimistic updates if the backend operation fails
+- **FR-051**: System MUST provide optimistic UI updates for mutations (create, update, delete, pin, archive, label changes) to improve perceived performance
+- **FR-052**: System MUST rollback optimistic updates with toast notification if the backend operation fails
 - **FR-053**: System MUST display project colors consistently throughout the interface (sidebar, note cards, dropdowns)
 - **FR-054**: System MUST show note counts on project list items
 - **FR-055**: System MUST show the current project name as a page title when viewing project notes
 - **FR-056**: System MUST provide a responsive layout that works on desktop screens
 - **FR-057**: System MUST use a sidebar navigation for projects and labels
-- **FR-058**: System MUST provide keyboard shortcuts for common actions (save note, create project)
+- **FR-058**: System MUST provide keyboard shortcuts for essential actions: Save note (Ctrl+S/Cmd+S), New note (Ctrl+N/Cmd+N), Search (Ctrl+K/Cmd+K), Quick project switch (Ctrl+P/Cmd+P), Close/Escape dialogs (Esc)
 - **FR-059**: System MUST preserve note formatting when saving and retrieving notes
 - **FR-060**: System MUST display note metadata (creation date, update date, label count, attachment count)
 
@@ -242,10 +253,11 @@ Users must register with an email address, log in to access their notes, and log
 - Backend APIs are fully functional and documented with proper error handling
 - User authentication uses session-based cookies or JWT tokens (implementation determined by existing backend)
 - File upload size limits are enforced by the backend (assuming 10MB per file as industry standard)
-- Note content is stored as plain text, HTML, or Markdown (format determined by existing editor implementation)
-- Database supports pagination for efficient note loading (assumed page size of 10-20 notes)
+- Note content is stored as block-based JSON structure (Notion/Editor.js style) in PostgreSQL JSONB column, NOT as HTML strings or monolithic Markdown
+- Database supports pagination for efficient note loading (page size: 5 notes mobile, 7 tablet, 10 desktop)
 - Users understand basic note-taking concepts (projects, tags/labels, folders)
-- The application is primarily designed for desktop use; mobile optimization is not in scope unless specified
+- The application uses mobile-first responsive design (320px-2560px viewports) with touch interactions and progressive enhancement for desktop
+- Mobile browsers supported: iOS Safari 14+, Chrome Mobile 90+; touch-optimized UI with 44px+ tap targets
 - Real-time collaboration is not required; single-user editing is sufficient
 - Offline support is not required; application requires internet connection
 - Export/import functionality is not included in this phase

@@ -12,14 +12,40 @@ This document defines the frontend data models, TypeScript interfaces, state man
 
 ### 1. Note
 
-**Purpose**: Represents a single note with rich text content, project assignment, labels, and status flags.
+**Purpose**: Represents a single note with **block-based JSON content** (Notion/Editor.js style), project assignment, labels, and status flags.
+
+**Content Architecture**: Notes use structured block-based JSON stored in PostgreSQL JSONB, NOT HTML strings or monolithic Markdown.
 
 **TypeScript Interface**:
 ```typescript
 // types/note.ts
 
+// Block-based content structure
+export interface ContentBlock {
+  id: string  // Unique block ID
+  type: 'paragraph' | 'heading' | 'bulletList' | 'orderedList' | 'codeBlock' | 'blockquote' | 'image' | 'divider'
+  attrs?: Record<string, any>  // Block-specific attributes (e.g., level for headings, language for code)
+  content?: ContentNode[]  // Inline content (text, marks)
+}
+
+export interface ContentNode {
+  type: 'text' | 'hardBreak'
+  text?: string
+  marks?: Array<{
+    type: 'bold' | 'italic' | 'code' | 'strike' | 'link'
+    attrs?: Record<string, any>  // Mark-specific attributes (e.g., href for links)
+  }>
+}
+
+export interface NoteContent {
+  type: 'doc'
+  content: ContentBlock[]
+  version?: string  // Content schema version (default: '1.0')
+}
+
+// Base note with block-based content
 export interface BaseNote {
-  content: string
+  content: NoteContent  // Block-based JSON structure, NOT string
   labels: { labelId: string; name: string }[]
   project: { projectId: string; name: string }
 }
@@ -38,7 +64,7 @@ export interface FullNote extends BaseNote {
 }
 
 export interface NewNote {
-  content: string
+  content: NoteContent  // Block-based JSON
   projectId: string
   labels?: string[]  // Array of label IDs
   files?: string[]  // Array of attachment IDs
@@ -46,7 +72,7 @@ export interface NewNote {
 }
 
 export interface UpdateNote {
-  content?: string
+  content?: NoteContent  // Block-based JSON
   projectId?: string
   labels?: string[]
   files?: string[]
@@ -72,6 +98,61 @@ export interface NoteWithStatus extends FullNote {
   isArchivedBool: boolean
   isDeletedBool: boolean
   labelCount: number  // Derived from labels.length
+}
+
+// Helper: Extract plain text from block-based content
+export function extractPlainText(content: NoteContent, maxLength?: number): string {
+  let text = ''
+  
+  for (const block of content.content) {
+    if (block.content) {
+      for (const node of block.content) {
+        if (node.type === 'text' && node.text) {
+          text += node.text + ' '
+        }
+      }
+    }
+  }
+  
+  const trimmed = text.trim()
+  return maxLength ? trimmed.slice(0, maxLength) + (trimmed.length > maxLength ? '...' : '') : trimmed
+}
+
+// Example note content structure:
+const exampleContent: NoteContent = {
+  type: 'doc',
+  content: [
+    {
+      id: 'block-1',
+      type: 'heading',
+      attrs: { level: 1 },
+      content: [{ type: 'text', text: 'Meeting Notes' }]
+    },
+    {
+      id: 'block-2',
+      type: 'paragraph',
+      content: [
+        { type: 'text', text: 'Discussed ', marks: [] },
+        { type: 'text', text: 'important', marks: [{ type: 'bold' }] },
+        { type: 'text', text: ' topics' }
+      ]
+    },
+    {
+      id: 'block-3',
+      type: 'bulletList',
+      content: [
+        { type: 'text', text: 'Task 1' },
+        { type: 'text', text: 'Task 2' }
+      ]
+    },
+    {
+      id: 'block-4',
+      type: 'codeBlock',
+      attrs: { language: 'javascript' },
+      content: [{ type: 'text', text: 'console.log("hello")' }]
+    }
+  ],
+  version: '1.0'
 }
 ```
 
@@ -767,6 +848,362 @@ export const queryClient = new QueryClient({
 - **Update**: Modify in place
 - **Delete**: Remove from list, show undo toast for 5 seconds
 - **Rollback**: Automatic on API error
+
+## Mobile-Specific Patterns
+
+### Touch Gesture Handling
+
+**Swipe Actions**:
+```typescript
+// hooks/use-swipe-actions.ts
+
+interface SwipeHandlers {
+  onSwipeLeft?: () => void
+  onSwipeRight?: () => void
+  threshold?: number  // Minimum distance for swipe (default: 50px)
+}
+
+export function useSwipeActions(handlers: SwipeHandlers) {
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  
+  const minSwipeDistance = handlers.threshold || 50
+  
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+  
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+  
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+    
+    if (isLeftSwipe && handlers.onSwipeLeft) {
+      handlers.onSwipeLeft()
+    }
+    if (isRightSwipe && handlers.onSwipeRight) {
+      handlers.onSwipeRight()
+    }
+  }
+  
+  return { onTouchStart, onTouchMove, onTouchEnd }
+}
+
+// Usage in NoteCard
+function NoteCard({ note }: { note: FullNote }) {
+  const { archive } = useNoteActions()
+  const { remove } = useNoteActions()
+  
+  const swipeHandlers = useSwipeActions({
+    onSwipeLeft: () => archive.mutate(note.noteId),
+    onSwipeRight: () => remove.mutate(note.noteId),
+  })
+  
+  return (
+    <div {...swipeHandlers}>
+      {/* Note content */}
+    </div>
+  )
+}
+```
+
+**Long Press Context Menu**:
+```typescript
+// hooks/use-long-press.ts
+
+interface LongPressOptions {
+  onLongPress: () => void
+  delay?: number  // Default: 500ms
+}
+
+export function useLongPress(options: LongPressOptions) {
+  const [longPressTriggered, setLongPressTriggered] = useState(false)
+  const timeout = useRef<NodeJS.Timeout>()
+  const target = useRef<EventTarget>()
+  
+  const start = useCallback((event: React.TouchEvent | React.MouseEvent) => {
+    event.preventDefault()
+    target.current = event.target
+    timeout.current = setTimeout(() => {
+      options.onLongPress()
+      setLongPressTriggered(true)
+    }, options.delay || 500)
+  }, [options])
+  
+  const clear = useCallback(() => {
+    timeout.current && clearTimeout(timeout.current)
+    setLongPressTriggered(false)
+  }, [])
+  
+  return {
+    onMouseDown: start,
+    onTouchStart: start,
+    onMouseUp: clear,
+    onMouseLeave: clear,
+    onTouchEnd: clear,
+  }
+}
+```
+
+**Pull-to-Refresh**:
+```typescript
+// hooks/use-pull-to-refresh.ts
+
+interface PullToRefreshOptions {
+  onRefresh: () => Promise<void>
+  threshold?: number  // Default: 80px
+}
+
+export function usePullToRefresh(options: PullToRefreshOptions) {
+  const [isPulling, setIsPulling] = useState(false)
+  const [pullDistance, setPullDistance] = useState(0)
+  const touchStart = useRef<number | null>(null)
+  
+  const onTouchStart = (e: React.TouchEvent) => {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop
+    if (scrollTop === 0) {
+      touchStart.current = e.touches[0].clientY
+    }
+  }
+  
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (touchStart.current === null) return
+    
+    const currentY = e.touches[0].clientY
+    const distance = currentY - touchStart.current
+    
+    if (distance > 0) {
+      setIsPulling(true)
+      setPullDistance(Math.min(distance, options.threshold || 80))
+    }
+  }
+  
+  const onTouchEnd = async () => {
+    if (pullDistance >= (options.threshold || 80)) {
+      await options.onRefresh()
+    }
+    setIsPulling(false)
+    setPullDistance(0)
+    touchStart.current = null
+  }
+  
+  return {
+    isPulling,
+    pullDistance,
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd,
+  }
+}
+```
+
+### Responsive Layout Patterns
+
+**Navigation State**:
+```typescript
+// store/use-mobile-nav-store.ts
+
+import { create } from 'zustand'
+
+interface MobileNavState {
+  isOpen: boolean
+  activeView: 'projects' | 'labels' | 'search'
+  open: () => void
+  close: () => void
+  toggle: () => void
+  setActiveView: (view: 'projects' | 'labels' | 'search') => void
+}
+
+export const useMobileNavStore = create<MobileNavState>((set) => ({
+  isOpen: false,
+  activeView: 'projects',
+  open: () => set({ isOpen: true }),
+  close: () => set({ isOpen: false }),
+  toggle: () => set((state) => ({ isOpen: !state.isOpen })),
+  setActiveView: (view) => set({ activeView: view }),
+}))
+```
+
+**Responsive Dialog**:
+```typescript
+// components/ui/responsive-dialog.tsx
+
+import * as Dialog from '@radix-ui/react-dialog'
+import { useMediaQuery } from '@/hooks/use-media-query'
+
+export function ResponsiveDialog({ children, ...props }: Dialog.DialogProps) {
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  
+  return (
+    <Dialog.Root {...props}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/50" />
+        <Dialog.Content
+          className={cn(
+            "fixed bg-white rounded-lg",
+            isMobile
+              ? "inset-x-0 bottom-0 rounded-b-none" // Full-width bottom sheet on mobile
+              : "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-md" // Centered on desktop
+          )}
+        >
+          {children}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
+```
+
+### Mobile Performance
+
+**Lazy Load Heavy Components**:
+```typescript
+// Defer TipTap editor on mobile
+const TextEditor = lazy(() => import('@/features/editor/text-editor'))
+
+function NoteEditor() {
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  
+  return (
+    <Suspense fallback={<EditorSkeleton />}>
+      {isMobile ? (
+        <TextEditor placeholder="Tap to start writing..." />
+      ) : (
+        <TextEditor />
+      )}
+    </Suspense>
+  )
+}
+```
+
+**Reduce Mobile Payload**:
+```typescript
+// Fetch fewer notes per page on mobile
+export function useNotes(projectId: string) {
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  const pageSize = isMobile ? 5 : 10  // Smaller pages on mobile
+  
+  return useInfiniteQuery({
+    queryKey: ['notes', projectId, { pageSize }],
+    queryFn: ({ pageParam = 1 }) => 
+      getNotes({ projectId, pageIndex: pageParam, pageSize }),
+    // ...
+  })
+}
+```
+
+**Touch-Friendly Tap Targets**:
+```css
+/* Ensure minimum 44px tap targets */
+.mobile-tap-target {
+  @apply min-h-[44px] min-w-[44px] p-3;
+}
+
+/* Increase spacing on mobile */
+.note-list-mobile {
+  @apply space-y-3 lg:space-y-2;
+}
+
+/* Larger interactive elements */
+.button-mobile {
+  @apply h-12 px-6 text-base lg:h-10 lg:px-4 lg:text-sm;
+}
+```
+
+## Keyboard Shortcuts
+
+**Essential shortcuts for desktop productivity** (from spec clarifications):
+
+```typescript
+// hooks/use-keyboard-shortcuts.ts
+
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+interface KeyboardShortcuts {
+  onSave?: () => void
+  onNewNote?: () => void
+  onSearch?: () => void
+  onProjectSwitch?: () => void
+}
+
+export function useKeyboardShortcuts(handlers: KeyboardShortcuts) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+      const modifier = isMac ? e.metaKey : e.ctrlKey
+      
+      // Ctrl/Cmd + S: Save note
+      if (modifier && e.key === 's') {
+        e.preventDefault()
+        handlers.onSave?.()
+      }
+      
+      // Ctrl/Cmd + N: New note
+      if (modifier && e.key === 'n') {
+        e.preventDefault()
+        handlers.onNewNote?.()
+      }
+      
+      // Ctrl/Cmd + K: Search
+      if (modifier && e.key === 'k') {
+        e.preventDefault()
+        handlers.onSearch?.()
+      }
+      
+      // Ctrl/Cmd + P: Quick project switch
+      if (modifier && e.key === 'p') {
+        e.preventDefault()
+        handlers.onProjectSwitch?.()
+      }
+      
+      // Esc: Close dialogs
+      if (e.key === 'Escape') {
+        // Handled by dialog components
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handlers])
+}
+
+// Usage example
+function NotePage() {
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isProjectSwitchOpen, setIsProjectSwitchOpen] = useState(false)
+  const { mutate: saveNote } = useNoteSave()
+  
+  useKeyboardShortcuts({
+    onSave: () => saveNote(currentNote),
+    onNewNote: () => navigate('/notes/new'),
+    onSearch: () => setIsSearchOpen(true),
+    onProjectSwitch: () => setIsProjectSwitchOpen(true),
+  })
+  
+  return (
+    <>
+      {/* Page content */}
+      <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
+      <ProjectSwitchDialog open={isProjectSwitchOpen} onOpenChange={setIsProjectSwitchOpen} />
+    </>
+  )
+}
+```
+
+**Keyboard shortcuts summary**:
+- `Ctrl+S` / `Cmd+S`: Save note
+- `Ctrl+N` / `Cmd+N`: New note
+- `Ctrl+K` / `Cmd+K`: Search
+- `Ctrl+P` / `Cmd+P`: Quick project switch
+- `Esc`: Close/escape dialogs
 
 ## Next Steps
 
