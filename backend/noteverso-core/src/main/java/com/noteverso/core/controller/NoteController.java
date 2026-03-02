@@ -115,4 +115,23 @@ public class NoteController {
         noteService.deleteNote(id, authManager.getPrincipal(authentication).getUserId());
         return null;
     }
+
+    @Operation(summary = "Search notes", description = "Search notes with filters", tags = { "GET" })
+    @GetMapping("/search")
+    public PageResult<NoteItem> searchNotes(
+            Authentication authentication,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) List<String> labelIds,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false, defaultValue = "addedAt") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortOrder,
+            @RequestParam(defaultValue = "1") Integer pageIndex,
+            @RequestParam(defaultValue = "10") Integer pageSize
+    ) {
+        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
+        return noteService.searchNotes(principal.getUserId(), keyword, labelIds, status, 
+                                       startDate, endDate, sortBy, sortOrder, pageIndex, pageSize);
+    }
 }

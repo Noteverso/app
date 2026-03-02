@@ -13,6 +13,7 @@ import com.noteverso.core.model.dto.LabelItem;
 import com.noteverso.core.model.dto.NoteDTO;
 import com.noteverso.core.model.dto.NoteItem;
 import com.noteverso.core.model.entity.Note;
+import com.noteverso.core.model.pagination.PageResult;
 import com.noteverso.core.model.entity.Project;
 import com.noteverso.core.model.entity.UserConfig;
 import com.noteverso.core.model.request.NoteCreateRequest;
@@ -299,5 +300,111 @@ public class NoteServiceImpl implements NoteService {
         }
 
         return referencedNoteItems;
+    }
+
+    @Override
+    public PageResult<NoteItem> searchNotes(String userId, String keyword, List<String> labelIds, 
+                                            Integer status, String startDate, String endDate, 
+                                            String sortBy, String sortOrder, Integer pageIndex, Integer pageSize) {
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Note> page = 
+            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageIndex, pageSize);
+
+        LambdaQueryWrapper<Note> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Note::getCreator, userId);
+        queryWrapper.eq(Note::getIsDeleted, NUM_O);
+
+        // Keyword search in content
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            queryWrapper.like(Note::getContent, keyword.trim());
+        }
+
+        // Filter by status (pinned, archived, favorite)
+        if (status != null) {
+            if (status == 1) { // Pinned
+                queryWrapper.eq(Note::getIsPinned, NUM_1);
+            } else if (status == 2) { // Archived
+                queryWrapper.eq(Note::getIsArchived, NUM_1);
+            } else if (status == 3) { // Favorite
+                queryWrapper.eq(Note::getIsFavorite, NUM_1);
+            }
+        }
+
+        // Filter by date range
+        if (startDate != null && !startDate.isEmpty()) {
+            queryWrapper.ge(Note::getAddedAt, Instant.parse(startDate));
+        }
+        if (endDate != null && !endDate.isEmpty()) {
+            queryWrapper.le(Note::getAddedAt, Instant.parse(endDate));
+        }
+
+        // Sorting
+        if (sortBy != null && !sortBy.isEmpty()) {
+            boolean isAsc = "asc".equalsIgnoreCase(sortOrder);
+            switch (sortBy) {
+                case "addedAt":
+                    queryWrapper.orderBy(true, isAsc, Note::getAddedAt);
+                    break;
+                case "updatedAt":
+                    queryWrapper.orderBy(true, isAsc, Note::getUpdatedAt);
+                    break;
+                default:
+                    queryWrapper.orderByDesc(Note::getAddedAt);
+            }
+        } else {
+            queryWrapper.orderByDesc(Note::getAddedAt);
+        }
+
+        // Filter by labels if provided
+        List<String> noteIds = null;
+        if (labelIds != null && !labelIds.isEmpty()) {
+            noteIds = relationService.getNoteIdsByLabelIds(labelIds, userId);
+            if (noteIds.isEmpty()) {
+                // No notes with these labels
+                PageResult<NoteItem> emptyResult = new PageResult<>();
+                emptyResult.setRecords(new ArrayList<>());
+                emptyResult.setTotal(0L);
+                emptyResult.setPageIndex(pageIndex);
+                emptyResult.setPageSize(pageSize);
+                return emptyResult;
+            }
+            queryWrapper.in(Note::getNoteId, noteIds);
+        }
+
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Note> notePage = noteMapper.selectPage(page, queryWrapper);
+
+        // Convert to NoteItem with relations
+        List<Note> notes = notePage.getRecords();
+        List<String> resultNoteIds = notes.stream().map(Note::getNoteId).toList();
+
+        Map<String, Project> projectMap = new HashMap<>();
+        Set<String> projectIds = notes.stream().map(Note::getProjectId).collect(Collectors.toSet());
+        if (!projectIds.isEmpty()) {
+            ProjectRequest projectRequest = new ProjectRequest();
+            projectRequest.setProjectIds(projectIds);
+            List<Project> projects = projectMapper.getProjects(projectRequest, userId);
+            for (Project project : projects) {
+                projectMap.put(project.getProjectId(), project);
+            }
+        }
+
+        HashMap<String, Long> referencedCountMap = relationService.getReferencedCountByReferencedNoteIds(resultNoteIds, userId);
+        HashMap<String, Long> referencingCountMap = relationService.getReferencingCountByReferencingNoteIds(resultNoteIds, userId);
+        HashMap<String, Long> attachmentCountMap = relationService.getAttachmentCountByObjectIds(resultNoteIds, userId);
+        HashMap<String, List<LabelItem>> labelMap = relationService.getLabelsByNoteIds(resultNoteIds, userId);
+
+        List<NoteItem> noteItems = new ArrayList<>();
+        for (Note note : notes) {
+            NoteItem noteItem = noteManager.constructNoteItem(note, attachmentCountMap, referencingCountMap, 
+                                                              referencedCountMap, labelMap, projectMap.get(note.getProjectId()));
+            noteItems.add(noteItem);
+        }
+
+        PageResult<NoteItem> result = new PageResult<>();
+        result.setRecords(noteItems);
+        result.setTotal(notePage.getTotal());
+        result.setPageIndex(pageIndex);
+        result.setPageSize(pageSize);
+
+        return result;
     }
 }

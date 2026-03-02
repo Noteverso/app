@@ -1,0 +1,6 @@
+# Ignore production environment file (contains secrets)
+prod/.env
+
+# Ignore any local overrides
+*.local
+.env.local

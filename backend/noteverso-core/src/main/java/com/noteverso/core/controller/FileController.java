@@ -7,13 +7,16 @@ import com.noteverso.core.manager.AuthManager;
 import com.noteverso.core.manager.UserConfigManager;
 import com.noteverso.core.model.entity.UploadResult;
 import com.noteverso.core.model.entity.UserConfig;
+import com.noteverso.core.model.pagination.PageResult;
 import com.noteverso.core.model.request.AttachmentRequest;
+import com.noteverso.core.model.pagination.PageRequest;
 import com.noteverso.core.model.response.UploadFileGetResponse;
 import com.noteverso.core.model.response.UploadResponse;
 import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.AttachmentService;
 import com.noteverso.core.service.component.OssClient;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -110,10 +113,25 @@ public class FileController {
         return attachmentService.createAttachment(attachmentDTO, userId);
     }
 
+    @Operation(description = "Get user attachments", tags = {"GET"})
+    @GetMapping("/attachments")
+    public PageResult<AttachmentDTO> getUserAttachments(Authentication authentication, @Valid PageRequest pageRequest) {
+        UserDetailsImpl principal = authManager.getPrincipal(authentication);
+        return attachmentService.getUserAttachments(principal.getUserId(), pageRequest);
+    }
 
+    @Operation(description = "Get attachment URL", tags = {"GET"})
     @GetMapping("/{attachmentId}")
     public String getUrl(Authentication authentication, @PathVariable("attachmentId") String attachmentId) {
         UserDetailsImpl principal = authManager.getPrincipal(authentication);
         return attachmentService.getPreviewSignature(attachmentId, principal.getUserId());
+    }
+
+    @Operation(description = "Delete attachment", tags = {"DELETE"})
+    @DeleteMapping("/attachments/{attachmentId}")
+    public Void deleteAttachment(Authentication authentication, @PathVariable("attachmentId") String attachmentId) {
+        UserDetailsImpl principal = authManager.getPrincipal(authentication);
+        attachmentService.deleteAttachment(attachmentId, principal.getUserId());
+        return null;
     }
 }

@@ -339,4 +339,22 @@ public class RelationServiceImpl implements RelationService {
 
         return noteLabelRelations;
     }
+
+    @Override
+    public List<String> getNoteIdsByLabelIds(List<String> labelIds, String userId) {
+        if (labelIds == null || labelIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        LambdaQueryWrapper<NoteLabelRelation> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(NoteLabelRelation::getLabelId, labelIds);
+        queryWrapper.eq(NoteLabelRelation::getCreator, userId);
+        queryWrapper.select(NoteLabelRelation::getNoteId);
+
+        List<NoteLabelRelation> relations = noteLabelRelationMapper.selectList(queryWrapper);
+        return relations.stream()
+                .map(NoteLabelRelation::getNoteId)
+                .distinct()
+                .toList();
+    }
 }

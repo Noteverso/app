@@ -13,4 +13,6 @@ public class ExceptionConstants {
     public static final String FILE_SIZE_EXCEED = "File size exceeds limit";
 
     public static final String FILE_SIZE_SUM_EXCEED = "File size sum exceeds limit";
+
+    public static final String ATTACHMENT_NOT_FOUND = "Attachment not found";
 }

@@ -54,4 +54,8 @@ public interface NoteService {
     NoteDTO getNoteDetail(String noteId, String userId);
 
     List<NoteItem> getReferencedNotes(String noteId, String userId);
+
+    PageResult<NoteItem> searchNotes(String userId, String keyword, List<String> labelIds, 
+                                     Integer status, String startDate, String endDate, 
+                                     String sortBy, String sortOrder, Integer pageIndex, Integer pageSize);
 }

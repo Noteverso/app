@@ -1,4 +1,4 @@
-import { Form, NavLink } from 'react-router-dom'
+import { Form, NavLink, useNavigate } from 'react-router-dom'
 import {
   Archive,
   Calculator,
@@ -108,6 +108,7 @@ export function Nav({
   projects,
   onToggle,
 }: SidebarProprs) {
+  const navigate = useNavigate()
   const [isCollaOpen, setIsCollaOpen] = useState(true)
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false)
   const [isCreateProject, setIsCreateProject] = useState(false)
@@ -164,7 +165,7 @@ export function Nav({
   }
 
   function handleSearch(_arg0: string): void {
-    setIsCommandDialogOpen(true)
+    navigate('/app/search')
   }
 
   function handleNoteAdd(_arg0: string): void {

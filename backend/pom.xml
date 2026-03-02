@@ -22,9 +22,11 @@
 	</modules>
 
 	<properties>
-		<maven-compiler-plugin>3.11.0</maven-compiler-plugin>
+		<revision>0.0.1-SNAPSHOT</revision>
+		<maven-compiler-plugin>3.13.0</maven-compiler-plugin>
 		<maven-source-plugin>3.3.0</maven-source-plugin>
-		<java.version>17</java.version>
+		<java.version>21</java.version>
+		<lombok.version>1.18.30</lombok.version>
 		<project.version>0.0.1-SNAPSHOT</project.version>
 		<project.groupId>com.noteverso</project.groupId>
 		<spring.boot.version>3.1.1</spring.boot.version>

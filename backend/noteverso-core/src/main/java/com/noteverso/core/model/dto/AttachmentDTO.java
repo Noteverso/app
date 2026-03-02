@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.time.Instant;
+
 @Data
 public class AttachmentDTO {
     /**
@@ -36,4 +38,9 @@ public class AttachmentDTO {
      * 附件id
      */
     private String attachmentId;
+
+    /**
+     * 添加时间
+     */
+    private Instant addedAt;
 }

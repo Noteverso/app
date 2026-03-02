@@ -66,4 +66,6 @@ public interface RelationService {
     HashMap<String, Long> getNoteCountByLabels(List<String> labelIds, String userId);
 
     List<NoteLabelRelation> getNoteLabelRelations(String labelId, String userId);
+
+    List<String> getNoteIdsByLabelIds(List<String> labelIds, String userId);
 }

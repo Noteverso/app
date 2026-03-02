@@ -9,7 +9,10 @@ import { ErrorPage } from '@/pages/error/error'
 import { Project } from '@/pages/project/project'
 import { Inbox } from '@/pages/inbox/inbox'
 import { Label } from '@/pages/label/label'
+import { LabelDetail } from '@/pages/label/label-detail'
+import { labelDetailLoader } from '@/pages/label/loader'
 import { Attachment } from '@/pages/attachment/attachment'
+import { SearchPage } from '@/pages/search/search'
 import { Home } from '@/pages/home/home'
 import { sharedNotesLoader } from '@/pages/shared-notes-page/loader'
 import { sharedNotesAction } from '@/pages/shared-notes-page/action'
@@ -81,8 +84,18 @@ export const router = createBrowserRouter([
                 element: <Label />,
               },
               {
+                path: 'labels/:labelId',
+                element: <LabelDetail />,
+                loader: protectedLoader(labelDetailLoader),
+                action: protectedAction(sharedNotesAction),
+              },
+              {
                 path: 'attachments',
                 element: <Attachment />,
+              },
+              {
+                path: 'search',
+                element: <SearchPage />,
               },
               {
                 path: 'projects/:projectId',

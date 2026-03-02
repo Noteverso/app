@@ -35,3 +35,24 @@ export function addNote(newNote: NewNote) {
     data: newNote,
   })
 }
+
+// 搜索笔记
+export interface SearchNotesParams {
+  keyword?: string
+  labelIds?: string[]
+  status?: number
+  startDate?: string
+  endDate?: string
+  sortBy?: string
+  sortOrder?: string
+  pageIndex?: number
+  pageSize?: number
+}
+
+export function searchNotesApi(params: SearchNotesParams) {
+  return request<NotePageLoaderData>({
+    url: '/api/v1/notes/search',
+    method: 'get',
+    params,
+  })
+}
