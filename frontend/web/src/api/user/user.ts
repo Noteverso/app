@@ -10,9 +10,17 @@ export function loginApi(data: BaseUser) {
 }
 
 export function signupApi(data: NewUser) {
-  return request({
+  return request<string>({
     url: '/api/auth/signup',
     method: 'post',
     data,
+  })
+}
+
+export function sendCaptchaApi(email: string) {
+  return request<string>({
+    url: '/api/auth/verify-captcha',
+    method: 'get',
+    params: { email },
   })
 }

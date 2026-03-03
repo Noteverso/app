@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { Form, Navigate, useActionData } from 'react-router-dom'
+import { Form, Navigate, useActionData, Link } from 'react-router-dom'
 import { Input } from '@/components/ui/input/input'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
 import { Button } from '@/components/ui/button/button'
@@ -9,7 +9,7 @@ import { ROUTER_PATHS } from '@/constants'
 import type { UserResponse } from '@/types/user'
 
 const formSchema = z.object({
-  username: z.string().email(),
+  email: z.string().email(),
   password: z.string().min(8, {
     message: 'Password must be at least 8 characters',
   }),
@@ -20,7 +20,7 @@ export function LoginPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
     },
   })
@@ -37,7 +37,7 @@ export function LoginPage() {
         <Form method="post" action={ROUTER_PATHS.LOGIN.path} className="space-y-4">
           <FormField
             control={form.control}
-            name="username"
+            name="email"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>邮箱</FormLabel>
@@ -75,6 +75,12 @@ export function LoginPage() {
             )}
           />
           <Button type="submit">Submit</Button>
+          <p className="text-sm text-center text-gray-600">
+            Don't have an account?{' '}
+            <Link to={ROUTER_PATHS.SIGNUP.path} className="text-blue-600 hover:underline">
+              Sign up
+            </Link>
+          </p>
         </Form>
       </FormProvider>
     </div>

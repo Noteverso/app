@@ -10,8 +10,8 @@ import lombok.Setter;
 @Setter
 public class LoginRequest {
     @NotBlank
-    @Schema(description = "用户名", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String username;
+    @Schema(description = "邮箱地址", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String email;
 
     @NotBlank
     @Schema(description = "密码", requiredMode = Schema.RequiredMode.REQUIRED)

@@ -4,7 +4,7 @@ import { projectLoader, protectedLoader } from './loader'
 import { protectedAction } from './action'
 import { ROUTER_PATHS } from '@/constants'
 import { Layout } from '@/layout/layout'
-import { AuthLayout, LoginPage } from '@/pages/auth'
+import { AuthLayout, LoginPage, SignupPage } from '@/pages/auth'
 import { ErrorPage } from '@/pages/error/error'
 import { Project } from '@/pages/project/project'
 import { Inbox } from '@/pages/inbox/inbox'
@@ -49,6 +49,10 @@ export const router = createBrowserRouter([
             path: 'login',
             element: <LoginPage />,
             action: loginAction,
+          },
+          {
+            path: 'signup',
+            element: <SignupPage />,
           },
           {
             path: 'logout',

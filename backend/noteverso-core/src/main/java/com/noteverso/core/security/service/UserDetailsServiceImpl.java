@@ -12,10 +12,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserMapper userMapper;
 
     @Override
-    public UserDetailsImpl loadUserByUsername(String username) throws UsernameNotFoundException {
-        var user = userMapper.findUserByUsername(username).orElseThrow(
-            () -> new UsernameNotFoundException("User not found with username " + username)
-        );
+    public UserDetailsImpl loadUserByUsername(String email) throws UsernameNotFoundException {
+        var user = userMapper.findUserByEmail(email);
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found with email " + email);
+        }
 
         return UserDetailsImpl.build(user);
     }

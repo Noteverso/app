@@ -1,5 +1,5 @@
 export interface BaseUser {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -9,6 +9,6 @@ export interface NewUser extends BaseUser {
 }
 
 export interface UserResponse {
-  username: string;
+  email: string;
   token: string;
 }

@@ -7,6 +7,7 @@ import com.noteverso.core.model.request.CreateUserRequest;
 import com.noteverso.core.model.request.LoginRequest;
 import com.noteverso.core.model.response.LoginResponse;
 import com.noteverso.core.security.jwt.JwtUtils;
+import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.EmailService;
 import com.noteverso.core.service.UserService;
 import com.noteverso.core.util.RedisUtils;
@@ -35,17 +36,19 @@ public class AuthController {
     private final RedisUtils redisUtils;
     private final EmailService emailService;
 
-    @Operation(description = "Login with username and password", tags = {"POST"})
+    @Operation(description = "Login with email and password", tags = {"POST"})
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+            new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String token = jwtUtils.generateJwtToken(authentication);
         LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setUsername(loginRequest.getUsername());
+        
+        // Get the email from the login request
+        loginResponse.setEmail(loginRequest.getEmail());
         loginResponse.setToken(token);
         return loginResponse;
     }

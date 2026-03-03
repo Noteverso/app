@@ -1,6 +1,9 @@
 # Ignore production environment file (contains secrets)
 prod/.env
 
+# Ignore SMTP password files (contains credentials)
+*/mailpit-auth.txt
+
 # Ignore any local overrides
 *.local
 .env.local

@@ -7,7 +7,7 @@ export async function loginAction({ request }: ActionFunctionArgs) {
   const formData = await request.formData()
 
   const user: BaseUser = {
-    username: formData.get('username') as string,
+    email: formData.get('email') as string,
     password: formData.get('password') as string,
   }
 
