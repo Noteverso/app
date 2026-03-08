@@ -13,6 +13,7 @@ import com.noteverso.core.model.dto.NoteItem;
 import com.noteverso.core.model.entity.*;
 import com.noteverso.core.model.pagination.PageResult;
 import com.noteverso.core.model.request.LabelCreateRequest;
+import com.noteverso.core.model.request.LabelRequest;
 import com.noteverso.core.model.request.LabelUpdateRequest;
 import com.noteverso.core.model.request.NotePageRequest;
 import com.noteverso.core.model.request.ProjectRequest;
@@ -328,6 +329,37 @@ class LabelServiceTest {
         noteItem.setIsArchived(note.getIsArchived());
         noteItem.setIsPinned(note.getIsPinned());
         return noteItem;
+    }
+
+    @Test
+    void should_getLabelSelectItems_returnEmpty_whenEmptyName() {
+        // Arrange
+        String userId = "user1";
+        LabelRequest request = new LabelRequest();
+        request.setName("");
+        
+        when(labelMapper.getLabels(request, userId)).thenReturn(List.of());
+
+        // Act
+        var result = labelService.getLabelSelectItems(request, userId);
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void should_getLabels_returnEmpty_whenNoLabels() {
+        // Arrange
+        String userId = "user1";
+        
+        when(labelMapper.selectList(any())).thenReturn(List.of());
+        when(relationService.getNoteCountByLabels(any(), eq(userId))).thenReturn(new HashMap<>());
+
+        // Act
+        List<LabelItem> result = labelService.getLabels(userId);
+
+        // Assert
+        assertThat(result).isEmpty();
     }
 
     private NoteLabelRelation constructNoteLabelRelation(String noteId, String labelId) {

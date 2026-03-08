@@ -35,6 +35,23 @@ class LabelMapperTest {
         assertEquals(2, labels.size());
     }
 
+    @Test
+    void should_getLabels_returnAll_whenEmptyName() {
+        // Arrange
+        String userId = "1";
+        Label label1 = constructLabel("1", "label1", "red", userId);
+        labelMapper.insert(label1);
+        
+        LabelRequest labelRequest = new LabelRequest();
+        labelRequest.setName("");
+
+        // Act
+        List<Label> labels = labelMapper.getLabels(labelRequest, userId);
+
+        // Assert
+        assertTrue(labels.size() >= 1);
+    }
+
     private Label constructLabel(String labelId, String name, String color, String userId) {
         Label label = new Label();
         label.setLabelId(labelId);

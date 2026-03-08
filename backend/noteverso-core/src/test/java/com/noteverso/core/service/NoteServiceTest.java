@@ -136,4 +136,55 @@ class NoteServiceTest {
         // Assert
         assertThatThrownBy(callable).isInstanceOf(NoSuchDataException.class).hasMessage("Note not found");
     }
+
+    @Test
+    void should_createNote_withEmptyContent() {
+        // Arrange
+        NoteCreateRequest request = new NoteCreateRequest();
+        request.setContent("");
+        request.setProjectId("1");
+        String userId = "test";
+
+        // Act
+        noteService.createNote(request, userId);
+
+        // Assert
+        ArgumentCaptor<Note> noteCaptor = ArgumentCaptor.forClass(Note.class);
+        verify(noteMapper).insert(noteCaptor.capture());
+        assertThat(noteCaptor.getValue().getContent()).isEmpty();
+    }
+
+    @Test
+    void should_createNote_handleNullLabels() {
+        // Arrange
+        NoteCreateRequest request = new NoteCreateRequest();
+        request.setContent("Test");
+        request.setProjectId("1");
+        request.setLabels(null);
+        String userId = "test";
+
+        // Act
+        noteService.createNote(request, userId);
+
+        // Assert
+        verify(noteMapper).insert(any(Note.class));
+        verify(relationService).insertNoteLabelRelation(null, any(), eq(userId));
+    }
+
+    @Test
+    void should_createNote_handleEmptyLabels() {
+        // Arrange
+        NoteCreateRequest request = new NoteCreateRequest();
+        request.setContent("Test");
+        request.setProjectId("1");
+        request.setLabels(List.of());
+        String userId = "test";
+
+        // Act
+        noteService.createNote(request, userId);
+
+        // Assert
+        verify(noteMapper).insert(any(Note.class));
+        verify(relationService).insertNoteLabelRelation(eq(List.of()), any(), eq(userId));
+    }
 }

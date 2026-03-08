@@ -54,6 +54,20 @@ public class ProjectMapperTest {
         assertThat(projects.size()).isEqualTo(3);
     }
 
+    @Test
+    void should_getProjects_returnEmpty_whenEmptyProjectIds() {
+        // Arrange
+        String userId = "1";
+        ProjectRequest request = new ProjectRequest();
+        request.setProjectIds(new HashSet<>());
+
+        // Act
+        List<Project> projects = projectMapper.getProjects(request, userId);
+
+        // Assert
+        assertThat(projects).isEmpty();
+    }
+
 
     private Project constructProject(String projectId, String userId, String name) {
         Project project = new Project();

@@ -72,6 +72,10 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     @Override
     public void createAttachments(List<AttachmentDTO> request, String userId) {
+        if (request == null || request.isEmpty()) {
+            return;
+        }
+        
         List<Attachment> attachments = new ArrayList<>();
         for (AttachmentDTO file : request) {
             Attachment attachment = construcAttachment(file, userId);

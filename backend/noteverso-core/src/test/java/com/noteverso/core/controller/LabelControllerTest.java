@@ -1,9 +1,13 @@
 package com.noteverso.core.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.noteverso.core.model.dto.LabelItem;
+import com.noteverso.core.model.dto.NoteItem;
 import com.noteverso.core.model.entity.User;
+import com.noteverso.core.model.pagination.PageResult;
 import com.noteverso.core.model.request.LabelCreateRequest;
 import com.noteverso.core.model.request.LabelUpdateRequest;
+import com.noteverso.core.model.request.NotePageRequest;
 import com.noteverso.core.security.service.UserDetailsImpl;
 import com.noteverso.core.service.LabelService;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,9 +21,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.ArrayList;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -145,5 +154,37 @@ class LabelControllerTest {
 
         // Assert
         resultActions.andExpect(status().isOk());
+    }
+
+    @Test
+    void should_getLabels_whenEmpty() throws Exception {
+        // Arrange
+        when(labelService.getLabels(anyString())).thenReturn(new ArrayList<>());
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/labels"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void should_getNotesByLabel_whenEmpty() throws Exception {
+        // Arrange
+        String labelId = "label123";
+        PageResult<NoteItem> emptyResult = new PageResult<>();
+        emptyResult.setRecords(new ArrayList<>());
+        emptyResult.setTotal(0L);
+        emptyResult.setPageIndex(1);
+        emptyResult.setPageSize(10);
+
+        when(labelService.getNotePageByLabel(anyString(), any(NotePageRequest.class), anyString())).thenReturn(emptyResult);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/labels/{labelId}/notes", labelId)
+                        .param("pageIndex", "1")
+                        .param("pageSize", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.records").isEmpty());
     }
 }

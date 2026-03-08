@@ -92,4 +92,26 @@ class NoteControllerTest {
                         .param("pageSize", "10"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void should_searchNotes_whenNoResults() throws Exception {
+        // Arrange
+        PageResult<NoteItem> emptyResult = new PageResult<>();
+        emptyResult.setRecords(new ArrayList<>());
+        emptyResult.setTotal(0L);
+        emptyResult.setPageIndex(1);
+        emptyResult.setPageSize(10);
+
+        when(noteService.searchNotes(anyString(), anyString(), any(), any(), any(), any(), anyString(), anyString(), anyInt(), anyInt()))
+                .thenReturn(emptyResult);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/notes/search")
+                        .param("keyword", "nonexistent")
+                        .param("pageIndex", "1")
+                        .param("pageSize", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.records").isEmpty());
+    }
 }

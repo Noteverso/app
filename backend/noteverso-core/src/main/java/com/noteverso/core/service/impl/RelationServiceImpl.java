@@ -240,6 +240,10 @@ public class RelationServiceImpl implements RelationService {
 
     @Override
     public HashMap<String, List<LabelItem>> getLabelsByNoteIds(List<String> noteIds, String userId) {
+        if (noteIds == null || noteIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        
         LambdaQueryWrapper<NoteLabelRelation> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(NoteLabelRelation::getNoteId, noteIds);
         queryWrapper.eq(NoteLabelRelation::getCreator, userId);
@@ -280,6 +284,10 @@ public class RelationServiceImpl implements RelationService {
 
     @Override
     public HashMap<String, Long> getAttachmentCountByObjectIds(List<String> objectIds, String userId) {
+        if (objectIds == null || objectIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        
         HashMap<String, Long> attachmentCountMap = new HashMap<>();
         List<AttachmentCount> attachmentCountList = attachmentRelationMapper.getAttachmentCountByObjectIds(objectIds, userId);
         if (attachmentCountList != null && !attachmentCountList.isEmpty()) {
@@ -292,6 +300,10 @@ public class RelationServiceImpl implements RelationService {
 
     @Override
     public HashMap<String, Long> getReferencedCountByReferencedNoteIds(List<String> referencedNoteIds, String userId) {
+        if (referencedNoteIds == null || referencedNoteIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        
         HashMap<String, Long> referencedNoteCountMap = new HashMap<>();
         List<ReferencedNoteCount> referencedCountList = noteRelationMapper.getReferencedNoteCountByReferencedIds(referencedNoteIds, userId);
         if (referencedCountList != null && !referencedCountList.isEmpty()) {
@@ -304,6 +316,10 @@ public class RelationServiceImpl implements RelationService {
 
     @Override
     public HashMap<String, Long> getReferencingCountByReferencingNoteIds(List<String> referencingNoteIds, String userId) {
+        if (referencingNoteIds == null || referencingNoteIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        
         HashMap<String, Long> referencingNoteCountMap = new HashMap<>();
         List<ReferencingNoteCount> referencingNoteCountList = noteRelationMapper.getReferencingNoteCountByReferencingIds(referencingNoteIds, userId);
         if (referencingNoteCountList != null && !referencingNoteCountList.isEmpty()) {

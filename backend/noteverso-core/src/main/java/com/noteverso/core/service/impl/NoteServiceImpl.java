@@ -2,6 +2,7 @@ package com.noteverso.core.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.noteverso.common.exceptions.NoSuchDataException;
 import com.noteverso.common.util.IPUtils;
 import com.noteverso.common.util.SnowFlakeUtils;
@@ -306,8 +307,7 @@ public class NoteServiceImpl implements NoteService {
     public PageResult<NoteItem> searchNotes(String userId, String keyword, List<String> labelIds, 
                                             Integer status, String startDate, String endDate, 
                                             String sortBy, String sortOrder, Integer pageIndex, Integer pageSize) {
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Note> page = 
-            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageIndex, pageSize);
+        Page<Note> page = new Page<>(pageIndex, pageSize);
 
         LambdaQueryWrapper<Note> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Note::getCreator, userId);
@@ -370,7 +370,7 @@ public class NoteServiceImpl implements NoteService {
             queryWrapper.in(Note::getNoteId, noteIds);
         }
 
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Note> notePage = noteMapper.selectPage(page, queryWrapper);
+        Page<Note> notePage = noteMapper.selectPage(page, queryWrapper);
 
         // Convert to NoteItem with relations
         List<Note> notes = notePage.getRecords();

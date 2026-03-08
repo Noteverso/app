@@ -76,4 +76,30 @@ class NoteRelationMapperTest {
         assertThat(result.get(0).getReferencedNoteId()).isEqualTo("123");
         assertThat(result.get(0).getReferencedNoteCount()).isEqualTo(referencingNoteIds.size());
     }
+
+    @Test
+    void should_getReferencingNoteCount_returnEmpty_whenEmptyList() {
+        // Arrange
+        String userId = "1";
+        List<String> emptyList = List.of();
+
+        // Act
+        List<ReferencingNoteCount> result = noteRelationMapper.getReferencingNoteCountByReferencingIds(emptyList, userId);
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void should_getReferencedNoteCount_returnEmpty_whenEmptyList() {
+        // Arrange
+        String userId = "1";
+        List<String> emptyList = List.of();
+
+        // Act
+        List<ReferencedNoteCount> result = noteRelationMapper.getReferencedNoteCountByReferencedIds(emptyList, userId);
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
 }

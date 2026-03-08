@@ -20,7 +20,7 @@
             </foreach>
         </if>
         <if test="labelIds == null or labelIds.size() == 0">
-            AND 1 == 0 <!--ensure no row data-->
+            AND 1 = 0
         </if>
         GROUP BY label_id;
     </select>

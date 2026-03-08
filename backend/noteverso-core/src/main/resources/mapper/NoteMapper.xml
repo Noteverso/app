@@ -7,11 +7,18 @@
 
     <select id="batchSelectByNoteIds" resultType="com.noteverso.core.model.entity.Note">
         SELECT * FROM noteverso_note
-        WHERE note_id IN
-            <foreach collection="noteIds" item="noteId" open="(" close=")" separator=",">
-                #{noteId}
-            </foreach>
-        AND creator = #{userId} AND is_deleted = #{isDeleted}
+        <where>
+            <if test="noteIds != null and noteIds.size() > 0">
+                note_id IN
+                <foreach collection="noteIds" item="noteId" open="(" close=")" separator=",">
+                    #{noteId}
+                </foreach>
+            </if>
+            <if test="noteIds == null or noteIds.size() == 0">
+                AND 1 = 0
+            </if>
+            AND creator = #{userId} AND is_deleted = #{isDeleted}
+        </where>
         ORDER BY added_at DESC
     </select>
 
@@ -29,16 +36,22 @@
 
     <select id="getNoteCountByProjects" resultType="com.noteverso.core.model.dto.NoteCountForProject">
         SELECT project_id, COUNT(*) AS note_count FROM noteverso_note
-        WHERE creator = #{userId} AND
-        <foreach collection="projectViewOptions" item="projectViewOption" open="(" close=")" separator="or">
-           (project_id = #{projectViewOption.projectId}
-            <if test="projectViewOption.showArchived == null or projectViewOption.showArchived == 0">
-                AND is_archived = 0
-            </if>
-            <if test="projectViewOption.showDeleted == null or projectViewOption.showDeleted == 0">
-                AND is_deleted = 0
-            </if>)
-        </foreach>
+        WHERE creator = #{userId}
+        <if test="projectViewOptions != null and projectViewOptions.size() > 0">
+            AND
+            <foreach collection="projectViewOptions" item="projectViewOption" open="(" close=")" separator="or">
+               (project_id = #{projectViewOption.projectId}
+                <if test="projectViewOption.showArchived == null or projectViewOption.showArchived == 0">
+                    AND is_archived = 0
+                </if>
+                <if test="projectViewOption.showDeleted == null or projectViewOption.showDeleted == 0">
+                    AND is_deleted = 0
+                </if>)
+            </foreach>
+        </if>
+        <if test="projectViewOptions == null or projectViewOptions.size() == 0">
+            AND 1 = 0
+        </if>
         GROUP BY project_id
     </select>
 </mapper>

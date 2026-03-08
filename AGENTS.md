@@ -9,7 +9,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 4. After you finish writing any code, list the edge cases and suggest test cases to cover them.
 5. If a task requires changes to more than 3 files, stop and break it into smaller tasks first.
 6. Every time I correct you, reflect on what you did wrong and come up with a plan to never make the same mistake again.
+7. Unit tests should find errors, not hide them. When tests fail, we should:
+  1. Investigate the root cause
+  2. Fix the bug
+  3. Keep the test to prevent regression
 
+## Empty Parameter Handling Pattern
+
+**Standardized approach for handling empty/null collections:**
+
+### Service Layer (Primary Validation)
+- **MUST validate** before calling mapper for INSERT operations (prevents SQL errors)
+- **SHOULD validate** for SELECT operations (performance optimization - avoids unnecessary DB calls)
+- Pattern: `if (collection == null || collection.isEmpty()) return emptyResult;`
+- Return empty collections/maps, never null or exceptions
+
+### Mapper Layer (Defensive SQL)
+- All SELECT methods with collection parameters use conditional checks
+- Pattern for empty collection handling:
+  ```xml
+  <if test="collection == null or collection.size() == 0">
+      AND 1 = 0
+  </if>
+  ```
+- INSERT methods assume non-empty (service validates first)
+
+### Testing Requirements
+- All methods accepting collections MUST have tests for:
+  - Empty list parameter
+  - Null parameter
+- INSERT methods: Verify mapper is not called when empty
+- SELECT methods: Verify empty result is returned
+
+### Examples
+```java
+// Service layer - SELECT method
+public HashMap<String, Long> getCounts(List<String> ids, String userId) {
+    if (ids == null || ids.isEmpty()) {
+        return new HashMap<>();
+    }
+    return mapper.getCounts(ids, userId);
+}
+
+// Service layer - INSERT method
+public void batchInsert(List<Item> items, String userId) {
+    if (items == null || items.isEmpty()) {
+        return;
+    }
+    mapper.batchInsert(items);
+}
+```
 
 ## Development Commands
 
@@ -95,7 +144,8 @@ cd backend && ./mvnw test -Dtest=NoteControllerTest
 - Integration tests: `@SpringBootTest` or `@MybatisPlusTest` - Real database
 - Controller tests: Standalone MockMvc setup - Faster than `@WebMvcTest`
 
-## Browser Automation
+### Frontend Tests
+#### Browser Automation
 
 Use `agent-browser` for web automation. Run `agent-browser --help` for all commands.
 

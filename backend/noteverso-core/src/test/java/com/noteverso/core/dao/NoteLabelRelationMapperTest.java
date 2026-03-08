@@ -38,6 +38,19 @@ class NoteLabelRelationMapperTest {
         assertEquals(2, noteCountForLabels.get(0).getNoteCount());
     }
 
+    @Test
+    void should_getNoteCountByLabels_returnEmpty_whenEmptyList() {
+        // Arrange
+        String userId = "1";
+        List<String> emptyList = List.of();
+
+        // Act
+        List<NoteCountForLabel> result = noteLabelRelationMapper.getNoteCountByLabels(emptyList, userId);
+
+        // Assert
+        assertEquals(0, result.size());
+    }
+
     private NoteLabelRelation constructNoteLabelRelation(String labelId, String noteId, String userId) {
         NoteLabelRelation noteLabelRelation = new NoteLabelRelation();
         noteLabelRelation.setLabelId(labelId);

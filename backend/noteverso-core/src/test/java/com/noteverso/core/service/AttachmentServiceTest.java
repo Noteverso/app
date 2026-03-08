@@ -152,4 +152,29 @@ class AttachmentServiceTest {
         // Assert
         assertThat(totalSize).isEqualTo(3072L);
     }
+
+    @Test
+    void should_createAttachments_notCallMapper_whenEmptyList() {
+        // Arrange
+        List<AttachmentDTO> emptyList = List.of();
+        String userId = "user1";
+
+        // Act
+        attachmentService.createAttachments(emptyList, userId);
+
+        // Assert
+        verify(attachmentMapper, never()).batchInsert(any());
+    }
+
+    @Test
+    void should_createAttachments_notCallMapper_whenNull() {
+        // Arrange
+        String userId = "user1";
+
+        // Act
+        attachmentService.createAttachments(null, userId);
+
+        // Assert
+        verify(attachmentMapper, never()).batchInsert(any());
+    }
 }

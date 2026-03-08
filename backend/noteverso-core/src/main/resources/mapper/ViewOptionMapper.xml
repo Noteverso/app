@@ -3,10 +3,17 @@
 <mapper namespace="com.noteverso.core.dao.ViewOptionMapper">
     <select id="batchSelectByObjectIds" resultType="com.noteverso.core.model.entity.ViewOption">
         SELECT * FROM noteverso_view_option
-        WHERE object_id IN
-            <foreach collection="objectIds" item="object" open="(" close=")" separator=",">
-                #{object}
-            </foreach>
-        AND creator = #{userId}
+        <where>
+            <if test="objectIds != null and objectIds.size() > 0">
+                object_id IN
+                <foreach collection="objectIds" item="object" open="(" close=")" separator=",">
+                    #{object}
+                </foreach>
+            </if>
+            <if test="objectIds == null or objectIds.size() == 0">
+                AND 1 = 0
+            </if>
+            AND creator = #{userId}
+        </where>
     </select>
 </mapper>

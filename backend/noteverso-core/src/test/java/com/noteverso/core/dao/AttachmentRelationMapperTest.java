@@ -46,4 +46,17 @@ class AttachmentRelationMapperTest {
         assertEquals(attachmentIds.size(), result.get(0).getAttachmentCount());
         assertEquals("123", result.get(0).getObjectId());
     }
+
+    @Test
+    void should_getAttachmentCount_returnEmpty_whenEmptyList() {
+        // Arrange
+        String userId = "1";
+        List<String> emptyList = List.of();
+
+        // Act
+        List<AttachmentCount> result = attachmentRelationMapper.getAttachmentCountByObjectIds(emptyList, userId);
+
+        // Assert
+        assertTrue(result.isEmpty());
+    }
 }

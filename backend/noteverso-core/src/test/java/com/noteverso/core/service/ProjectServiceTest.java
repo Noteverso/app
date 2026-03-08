@@ -389,6 +389,37 @@ class ProjectServiceTest {
         return projectItem;
     }
 
+    @Test
+    void should_getProjectSelectItems_returnEmpty_whenEmptyName() {
+        // Arrange
+        String userId = "user1";
+        ProjectRequest request = new ProjectRequest();
+        request.setName("");
+        
+        when(projectMapper.getProjects(request, userId)).thenReturn(List.of());
+
+        // Act
+        var result = projectService.getProjectSelectItems(request, userId);
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void should_getProjectList_returnEmpty_whenNoProjects() {
+        // Arrange
+        String userId = "user1";
+        ProjectListRequest request = new ProjectListRequest();
+        
+        when(projectMapper.selectList(any())).thenReturn(List.of());
+
+        // Act
+        List<ProjectItem> result = projectService.getProjectList(userId, request);
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
+
     private ViewOption constructViewOption(String objectId, String userId) {
         ViewOption viewOption = new ViewOption();
         viewOption.setObjectId(objectId);

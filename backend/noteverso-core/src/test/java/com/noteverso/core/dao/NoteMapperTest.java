@@ -158,6 +158,32 @@ class NoteMapperTest {
         assertThat(result.get(0).getNoteCount()).isEqualTo(3);
     }
 
+    @Test
+    void should_getNoteCountByProjects_returnEmpty_whenEmptyList() {
+        // Arrange
+        String userId = "123456789";
+        List<ProjectViewOption> emptyList = List.of();
+
+        // Act
+        List<NoteCountForProject> result = noteMapper.getNoteCountByProjects(emptyList, userId);
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void should_batchSelectByNoteIds_returnEmpty_whenEmptyList() {
+        // Arrange
+        String userId = "123456789";
+        List<String> emptyList = List.of();
+
+        // Act
+        List<Note> result = noteMapper.batchSelectByNoteIds(emptyList, userId, 0);
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
+
     private Note buildNote(String noteId, String content, String projectId, String userId) {
         return Note.builder()
                 .noteId(noteId)

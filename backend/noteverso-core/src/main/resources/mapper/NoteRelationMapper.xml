@@ -12,21 +12,35 @@
 
     <select id="getReferencingNoteCountByReferencingIds" resultType="com.noteverso.core.model.dto.ReferencingNoteCount">
         SELECT note_id AS referencing_note_id, COUNT(*) AS referencing_note_count FROM noteverso_note_map
-        WHERE note_id IN
-            <foreach collection="referencingNoteIds" item="referencingNoteId" open="(" close=")" separator=",">
-                #{referencingNoteId}
-            </foreach>
-        AND creator = #{userId}
+        <where>
+            <if test="referencingNoteIds != null and referencingNoteIds.size() > 0">
+                note_id IN
+                <foreach collection="referencingNoteIds" item="referencingNoteId" open="(" close=")" separator=",">
+                    #{referencingNoteId}
+                </foreach>
+            </if>
+            <if test="referencingNoteIds == null or referencingNoteIds.size() == 0">
+                AND 1 = 0
+            </if>
+            AND creator = #{userId}
+        </where>
         GROUP BY note_id;
     </select>
 
     <select id="getReferencedNoteCountByReferencedIds" resultType="com.noteverso.core.model.dto.ReferencedNoteCount">
         SELECT linked_note_id AS referenced_note_id, COUNT(*) AS referenced_note_count FROM noteverso_note_map
-        WHERE linked_note_id IN
-            <foreach collection="referencedNoteIds" item="referencedNoteId" open="(" close=")" separator=",">
-                #{referencedNoteId}
-            </foreach>
-        AND creator = #{userId}
+        <where>
+            <if test="referencedNoteIds != null and referencedNoteIds.size() > 0">
+                linked_note_id IN
+                <foreach collection="referencedNoteIds" item="referencedNoteId" open="(" close=")" separator=",">
+                    #{referencedNoteId}
+                </foreach>
+            </if>
+            <if test="referencedNoteIds == null or referencedNoteIds.size() == 0">
+                AND 1 = 0
+            </if>
+            AND creator = #{userId}
+        </where>
         GROUP BY linked_note_id;
     </select>
 </mapper>
