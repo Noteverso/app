@@ -1,4 +1,4 @@
-import { Outlet, useLoaderData } from 'react-router-dom'
+import { Outlet, useLoaderData, useRevalidator } from 'react-router-dom'
 import { PanelLeft } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Nav } from './nav/nav'
@@ -12,7 +12,15 @@ export function Layout() {
   const sidebarRef = useRef<HTMLDivElement>(null)
   const [sidebarWidth, setSidebarWidth] = useState(0)
 
-  const projects = useLoaderData() as FullProject[]
+  const loadedProjects = useLoaderData() as FullProject[]
+  const [projects, setProjects] = useState<FullProject[]>(loadedProjects)
+  const revalidator = useRevalidator()
+
+  // Update local state when loader data changes
+  useEffect(() => {
+    setProjects(loadedProjects)
+  }, [loadedProjects])
+
   const inboxProject = projects.find(project => project.inboxProject) as FullProject
   const otherProjects = projects.filter(project => !project.inboxProject)
 
@@ -37,6 +45,10 @@ export function Layout() {
     setIsSidebarVisible(!isSidebarVisible)
   }
 
+  const refetchProjects = () => {
+    revalidator.revalidate()
+  }
+
   return (
     <div id="app-layout" className={'flex items-start h-full overflow-auto transition-all duration-300 ease-in-out'}>
       <div
@@ -44,7 +56,12 @@ export function Layout() {
         style={{ '--copmuted-sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
         id="app-nav"
         className={`relative hidden md:block flex-shrink-0 flex-grow-0 md:w-[var(--sidebar-width)] min-w-0 transition-[margin-left] duration-300 ease-in-out ${isSidebarVisible ? 'ml-0' : '-ml-[var(--copmuted-sidebar-width)]'}`}>
-        <Nav projects={projects} onToggle={handleNavToggle} />
+        <Nav 
+          projects={projects} 
+          setProjects={setProjects}
+          refetchProjects={refetchProjects}
+          onToggle={handleNavToggle} 
+        />
       </div>
 
       <div id="app-layout__content" className="h-full flex-grow overflow-auto transition-all duration-300 ease-in-out">
@@ -69,7 +86,11 @@ export function Layout() {
                   The mobile device navigation
                 </SheetDescription>
               </SheetHeader>
-              <Nav projects={projects} />
+              <Nav 
+                projects={projects} 
+                setProjects={setProjects}
+                refetchProjects={refetchProjects}
+              />
             </SheetContent>
           </Sheet>
         </header>

@@ -16,6 +16,7 @@ export function Label() {
   const navigate = useNavigate()
   const [labels, setLabels] = useState<LabelItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingLabel, setEditingLabel] = useState<LabelItem | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -44,48 +45,100 @@ export function Label() {
       return
     }
 
-    const data: LabelCreateRequest = { name: formData.name, color: formData.color }
-    const response = await createLabelApi(data)
-    
-    if (response.ok) {
-      toast({ title: 'Label created successfully' })
-      setDialogOpen(false)
-      setFormData({ name: '', color: COLORS[0] })
-      loadLabels()
-    } else {
+    setIsLoading(true)
+    const tempId = `temp-${Date.now()}`
+    const newLabel: LabelItem = {
+      labelId: tempId,
+      name: formData.name,
+      color: formData.color,
+      noteCount: 0,
+    }
+
+    // Optimistic add
+    setLabels(prev => [...prev, newLabel])
+    setDialogOpen(false)
+    setFormData({ name: '', color: COLORS[0] })
+
+    try {
+      const data: LabelCreateRequest = { name: formData.name, color: formData.color }
+      const response = await createLabelApi(data)
+      
+      if (response.ok) {
+        // Replace temp ID with real ID
+        setLabels(prev => prev.map(l => l.labelId === tempId ? { ...l, labelId: response.data } : l))
+        toast({ title: 'Label created successfully' })
+      } else {
+        throw new Error('Failed to create')
+      }
+    } catch (error) {
+      // Revert on error
+      setLabels(prev => prev.filter(l => l.labelId !== tempId))
       toast({ title: 'Failed to create label', variant: 'destructive' })
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleUpdate = async () => {
     if (!editingLabel || !formData.name.trim()) return
 
-    const data: LabelUpdateRequest = { name: formData.name, color: formData.color }
-    const response = await updateLabelApi(editingLabel.labelId, data)
-    
-    if (response.ok) {
-      toast({ title: 'Label updated successfully' })
-      setDialogOpen(false)
-      setEditingLabel(null)
-      setFormData({ name: '', color: COLORS[0] })
-      loadLabels()
-    } else {
+    setIsLoading(true)
+    const oldLabel = editingLabel
+    const updatedLabel: LabelItem = {
+      ...editingLabel,
+      name: formData.name,
+      color: formData.color,
+    }
+
+    // Optimistic update
+    setLabels(prev => prev.map(l => l.labelId === editingLabel.labelId ? updatedLabel : l))
+    setDialogOpen(false)
+    setEditingLabel(null)
+    setFormData({ name: '', color: COLORS[0] })
+
+    try {
+      const data: LabelUpdateRequest = { name: formData.name, color: formData.color }
+      const response = await updateLabelApi(editingLabel.labelId, data)
+      
+      if (response.ok) {
+        toast({ title: 'Label updated successfully' })
+      } else {
+        throw new Error('Failed to update')
+      }
+    } catch (error) {
+      // Revert on error
+      setLabels(prev => prev.map(l => l.labelId === oldLabel.labelId ? oldLabel : l))
       toast({ title: 'Failed to update label', variant: 'destructive' })
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleDelete = async () => {
     if (!deletingLabel) return
 
-    const response = await deleteLabelApi(deletingLabel.labelId)
-    
-    if (response.ok) {
-      toast({ title: 'Label deleted successfully' })
-      setDeleteDialogOpen(false)
-      setDeletingLabel(null)
-      loadLabels()
-    } else {
+    setIsLoading(true)
+    const labelId = deletingLabel.labelId
+
+    // Optimistic remove
+    setLabels(prev => prev.filter(l => l.labelId !== labelId))
+    setDeleteDialogOpen(false)
+    setDeletingLabel(null)
+
+    try {
+      const response = await deleteLabelApi(labelId)
+      
+      if (response.ok) {
+        toast({ title: 'Label deleted successfully' })
+      } else {
+        throw new Error('Failed to delete')
+      }
+    } catch (error) {
+      // Refetch on error
+      await loadLabels()
       toast({ title: 'Failed to delete label', variant: 'destructive' })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -116,7 +169,7 @@ export function Label() {
         <h1 className="text-2xl font-bold">Labels</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={openCreateDialog}>
+            <Button onClick={openCreateDialog} disabled={isLoading}>
               <Plus className="w-4 h-4 mr-2" />
               New Label
             </Button>
@@ -147,7 +200,7 @@ export function Label() {
                   ))}
                 </div>
               </div>
-              <Button onClick={editingLabel ? handleUpdate : handleCreate} className="w-full">
+              <Button onClick={editingLabel ? handleUpdate : handleCreate} className="w-full" disabled={isLoading}>
                 {editingLabel ? 'Update' : 'Create'}
               </Button>
             </div>
@@ -170,10 +223,10 @@ export function Label() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={(e) => openEditDialog(label, e)}>
+              <Button variant="ghost" size="sm" onClick={(e) => openEditDialog(label, e)} disabled={isLoading}>
                 <Edit2 className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={(e) => openDeleteDialog(label, e)}>
+              <Button variant="ghost" size="sm" onClick={(e) => openDeleteDialog(label, e)} disabled={isLoading}>
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
@@ -190,8 +243,8 @@ export function Label() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isLoading}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

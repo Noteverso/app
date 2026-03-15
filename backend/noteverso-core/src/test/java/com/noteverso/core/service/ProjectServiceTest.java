@@ -420,6 +420,174 @@ class ProjectServiceTest {
         assertThat(result).isEmpty();
     }
 
+    @Test
+    void updateProject_shouldThrowException_whenProjectNotFound() {
+        // Arrange
+        String projectId = "nonexistent";
+        String userId = "user1";
+        ProjectUpdateRequest request = new ProjectUpdateRequest();
+        request.setName("Updated Name");
+        request.setColor("blue");
+        
+        when(projectMapper.update(any(Project.class), any())).thenReturn(0);
+
+        // Act & Assert
+        assertThatThrownBy(() -> projectService.updateProject(projectId, request, userId))
+            .isInstanceOf(NoSuchDataException.class)
+            .hasMessage("Project not found");
+    }
+
+    @Test
+    void should_archiveProject_successfully() {
+        // Arrange
+        String projectId = "project1";
+        String userId = "user1";
+        
+        when(projectMapper.update(any(Project.class), any())).thenReturn(1);
+
+        // Act
+        projectService.archiveProject(projectId, userId);
+
+        // Assert
+        verify(projectMapper).update(any(Project.class), any());
+        verify(noteMapper).updateNoteIsArchivedByProject(projectId, userId, 1);
+    }
+
+    @Test
+    void archiveProject_shouldThrowException_whenProjectNotFound() {
+        // Arrange
+        String projectId = "nonexistent";
+        String userId = "user1";
+        
+        when(projectMapper.update(any(Project.class), any())).thenReturn(0);
+
+        // Act & Assert
+        assertThatThrownBy(() -> projectService.archiveProject(projectId, userId))
+            .isInstanceOf(NoSuchDataException.class)
+            .hasMessage("Project not found");
+    }
+
+    @Test
+    void should_unarchiveProject_successfully() {
+        // Arrange
+        String projectId = "project1";
+        String userId = "user1";
+        
+        when(projectMapper.update(any(Project.class), any())).thenReturn(1);
+
+        // Act
+        projectService.unarchiveProject(projectId, userId);
+
+        // Assert
+        verify(projectMapper).update(any(Project.class), any());
+        verify(noteMapper).updateNoteIsArchivedByProject(projectId, userId, 0);
+    }
+
+    @Test
+    void unarchiveProject_shouldThrowException_whenProjectNotFound() {
+        // Arrange
+        String projectId = "nonexistent";
+        String userId = "user1";
+        
+        when(projectMapper.update(any(Project.class), any())).thenReturn(0);
+
+        // Act & Assert
+        assertThatThrownBy(() -> projectService.unarchiveProject(projectId, userId))
+            .isInstanceOf(NoSuchDataException.class)
+            .hasMessage("Project not found");
+    }
+
+    @Test
+    void deleteProject_shouldThrowException_whenProjectNotFound() {
+        // Arrange
+        String projectId = "nonexistent";
+        String userId = "user1";
+        
+        when(projectMapper.delete(any())).thenReturn(0);
+
+        // Act & Assert
+        assertThatThrownBy(() -> projectService.deleteProject(projectId, userId))
+            .isInstanceOf(NoSuchDataException.class)
+            .hasMessage("Project not found");
+    }
+
+    @Test
+    void should_favoriteProject_successfully() {
+        // Arrange
+        String projectId = "project1";
+        String userId = "user1";
+        
+        when(projectMapper.update(any(Project.class), any())).thenReturn(1);
+
+        // Act
+        projectService.favoriteProject(projectId, userId);
+
+        // Assert
+        ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
+        verify(projectMapper).update(captor.capture(), any());
+        assertThat(captor.getValue().getIsFavorite()).isEqualTo(1);
+    }
+
+    @Test
+    void favoriteProject_shouldThrowException_whenProjectNotFound() {
+        // Arrange
+        String projectId = "nonexistent";
+        String userId = "user1";
+        
+        when(projectMapper.update(any(Project.class), any())).thenReturn(0);
+
+        // Act & Assert
+        assertThatThrownBy(() -> projectService.favoriteProject(projectId, userId))
+            .isInstanceOf(NoSuchDataException.class)
+            .hasMessage("Project not found");
+    }
+
+    @Test
+    void should_unfavoriteProject_successfully() {
+        // Arrange
+        String projectId = "project1";
+        String userId = "user1";
+        
+        when(projectMapper.update(any(Project.class), any())).thenReturn(1);
+
+        // Act
+        projectService.unFavoriteProject(projectId, userId);
+
+        // Assert
+        ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
+        verify(projectMapper).update(captor.capture(), any());
+        assertThat(captor.getValue().getIsFavorite()).isEqualTo(0);
+    }
+
+    @Test
+    void unfavoriteProject_shouldThrowException_whenProjectNotFound() {
+        // Arrange
+        String projectId = "nonexistent";
+        String userId = "user1";
+        
+        when(projectMapper.update(any(Project.class), any())).thenReturn(0);
+
+        // Act & Assert
+        assertThatThrownBy(() -> projectService.unFavoriteProject(projectId, userId))
+            .isInstanceOf(NoSuchDataException.class)
+            .hasMessage("Project not found");
+    }
+
+    @Test
+    void should_deleteViewOption_whenDeleteProject() {
+        // Arrange
+        String projectId = "project1";
+        String userId = "user1";
+        
+        when(projectMapper.delete(any())).thenReturn(1);
+
+        // Act
+        projectService.deleteProject(projectId, userId);
+
+        // Assert
+        verify(viewOptionService).deleteViewOption(projectId, userId);
+    }
+
     private ViewOption constructViewOption(String objectId, String userId) {
         ViewOption viewOption = new ViewOption();
         viewOption.setObjectId(objectId);

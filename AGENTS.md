@@ -149,6 +149,12 @@ cd backend && ./mvnw test -Dtest=NoteControllerTest
 
 Use `agent-browser` for web automation. Run `agent-browser --help` for all commands.
 
+Authentication is required for testing, so you should login before running tests. 
+
+Test authentication information:
+Email: abc@gmail.com
+password: Admin123456
+
 Core workflow:
 1. `agent-browser open <url>` - Navigate to page
 2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)

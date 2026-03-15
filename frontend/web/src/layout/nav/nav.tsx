@@ -1,4 +1,4 @@
-import { Form, NavLink, useNavigate } from 'react-router-dom'
+import { Form, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   Archive,
   Calculator,
@@ -29,6 +29,15 @@ import { BreadcrumbButton } from './nav-breadcrumb-button'
 import { PROJECT_COLORS, ROUTER_PATHS } from '@/constants'
 import type { FullProject } from '@/types/project'
 import { Button } from '@/components/ui/button/button'
+import { useToast } from '@/components/ui/toast/use-toast'
+import {
+  createProjectApi,
+  updateProjectApi,
+  deleteProjectApi,
+  archiveProjectApi,
+  favoriteProjectApi,
+  unfavoriteProjectApi,
+} from '@/api/project/project'
 
 import {
   Collapsible,
@@ -101,14 +110,20 @@ import { Switch } from '@/components/ui/switch/switch'
 
 export type SidebarProprs = {
   projects: FullProject[];
+  setProjects: React.Dispatch<React.SetStateAction<FullProject[]>>;
+  refetchProjects: () => void;
   onToggle?: () => void;
 }
 
 export function Nav({
   projects,
+  setProjects,
+  refetchProjects,
   onToggle,
 }: SidebarProprs) {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { toast } = useToast()
   const [isCollaOpen, setIsCollaOpen] = useState(true)
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false)
   const [isCreateProject, setIsCreateProject] = useState(false)
@@ -116,6 +131,12 @@ export function Nav({
   const [curProject, setCurProject] = useState<FullProject | null>(null)
   const [operation, setOperation] = useState<'archive' | 'delete'>('archive')
   const [isCommandDialogOpen, setIsCommandDialogOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Form state
+  const [projectName, setProjectName] = useState('')
+  const [projectColor, setProjectColor] = useState('')
+  const [projectIsFavorite, setProjectIsFavorite] = useState(false)
 
   // const initialInbox = projects.find(project => project.inboxProject) as FullProject
   const [inboxProject, setInboxProject] = useState<FullProject | null>(null)
@@ -144,24 +165,193 @@ export function Nav({
     return () => document.removeEventListener('keydown', down)
   }, [])
 
-  function editProject(id: string) {
-    if (id === '') {
+  // Open dialog for create or edit
+  function openProjectDialog(project?: FullProject) {
+    if (project) {
+      // Edit mode
+      setIsCreateProject(false)
+      setCurProject(project)
+      setProjectName(project.name)
+      setProjectColor(project.color)
+      setProjectIsFavorite(project.isFavorite === 1)
+    } else {
+      // Create mode
       setIsCreateProject(true)
+      setCurProject(null)
+      setProjectName('')
+      setProjectColor(PROJECT_COLORS[0].value)
+      setProjectIsFavorite(false)
     }
-
     setIsProjectDialogOpen(true)
   }
 
-  function archiveProject(project: FullProject) {
-    setIsAlertDialogOpen(true)
-    setCurProject(project)
-    setOperation('archive')
+  // Handle create/update project with optimistic update
+  async function handleSaveProject() {
+    // Validation
+    if (!projectName.trim()) {
+      toast({ title: '错误', description: '项目名称不能为空', variant: 'destructive' })
+      return
+    }
+    if (!projectColor) {
+      toast({ title: '错误', description: '请选择项目颜色', variant: 'destructive' })
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      if (isCreateProject) {
+        // Create - optimistic add with temp ID
+        const tempId = `temp-${Date.now()}`
+        const newProject: FullProject = {
+          projectId: tempId,
+          name: projectName,
+          color: projectColor,
+          isFavorite: projectIsFavorite ? 1 : 0,
+          noteCount: 0,
+          inboxProject: false,
+        }
+        
+        // Optimistic add
+        setProjects(prev => [...prev, newProject])
+        setIsProjectDialogOpen(false)
+
+        // API call
+        const realId = await createProjectApi({
+          name: projectName,
+          color: projectColor,
+          isFavorite: projectIsFavorite ? 1 : 0,
+          noteCount: 0,
+        })
+
+        // Replace temp ID with real ID
+        setProjects(prev => prev.map(p => 
+          p.projectId === tempId ? { ...p, projectId: realId } : p
+        ))
+
+        toast({ title: '成功', description: '项目创建成功' })
+      } else {
+        // Update - optimistic update with old values stored
+        if (!curProject) return
+
+        const updatedProject: FullProject = {
+          ...curProject,
+          name: projectName,
+          color: projectColor,
+          isFavorite: projectIsFavorite ? 1 : 0,
+        }
+
+        // Optimistic update
+        setProjects(prev => prev.map(p => 
+          p.projectId === curProject.projectId ? updatedProject : p
+        ))
+        setIsProjectDialogOpen(false)
+
+        // API call
+        await updateProjectApi(curProject.projectId, {
+          name: projectName,
+          color: projectColor,
+          isFavorite: projectIsFavorite ? 1 : 0,
+          noteCount: 0,
+        })
+
+        toast({ title: '成功', description: '项目更新成功' })
+      }
+    } catch (error) {
+      // Revert on failure
+      if (isCreateProject) {
+        // Remove temp project
+        setProjects(prev => prev.filter(p => !p.projectId.startsWith('temp-')))
+      } else if (curProject) {
+        // Restore old project
+        setProjects(prev => prev.map(p => 
+          p.projectId === curProject.projectId ? curProject : p
+        ))
+      }
+      
+      toast({ 
+        title: '错误', 
+        description: `项目${isCreateProject ? '创建' : '更新'}失败`,
+        variant: 'destructive' 
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  function deleteProject(project: FullProject) {
-    setIsAlertDialogOpen(true)
-    setOperation('delete')
+  // Handle favorite toggle with optimistic update
+  async function handleToggleFavorite(project: FullProject) {
+    const newFavoriteStatus = project.isFavorite === 1 ? 0 : 1
+
+    // Optimistic toggle
+    setProjects(prev => prev.map(p => 
+      p.projectId === project.projectId ? { ...p, isFavorite: newFavoriteStatus } : p
+    ))
+
+    try {
+      // API call
+      if (newFavoriteStatus === 1) {
+        await favoriteProjectApi(project.projectId)
+      } else {
+        await unfavoriteProjectApi(project.projectId)
+      }
+    } catch (error) {
+      // Revert on failure
+      setProjects(prev => prev.map(p => 
+        p.projectId === project.projectId ? { ...p, isFavorite: project.isFavorite } : p
+      ))
+      
+      toast({ 
+        title: '错误', 
+        description: '操作失败',
+        variant: 'destructive' 
+      })
+    }
+  }
+
+  // Open archive/delete confirmation
+  function openConfirmDialog(project: FullProject, op: 'archive' | 'delete') {
     setCurProject(project)
+    setOperation(op)
+    setIsAlertDialogOpen(true)
+  }
+
+  // Handle archive/delete with optimistic update and refetch on failure
+  async function handleConfirmAction() {
+    if (!curProject) return
+
+    setIsLoading(true)
+    setIsAlertDialogOpen(false)
+
+    // Optimistic remove
+    setProjects(prev => prev.filter(p => p.projectId !== curProject.projectId))
+
+    // Navigate away if on deleted/archived project page
+    if (location.pathname.includes(curProject.projectId)) {
+      navigate(ROUTER_PATHS.INBOX.path)
+    }
+
+    try {
+      // API call
+      if (operation === 'archive') {
+        await archiveProjectApi(curProject.projectId)
+        toast({ title: '成功', description: '项目已归档' })
+      } else {
+        await deleteProjectApi(curProject.projectId)
+        toast({ title: '成功', description: '项目已删除' })
+      }
+    } catch (error) {
+      // Refetch on failure (simpler than re-adding)
+      refetchProjects()
+      
+      toast({ 
+        title: '错误', 
+        description: `项目${operation === 'archive' ? '归档' : '删除'}失败`,
+        variant: 'destructive' 
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   function handleSearch(_arg0: string): void {
@@ -259,12 +449,15 @@ export function Nav({
             onOpenChange={setIsCollaOpen}
             className="space-y-2"
           >
-            <div className="flex items-center justify-between space-x-4 py-2 px-2 sticky top-0">
+            <div 
+              className="flex items-center justify-between space-x-4 py-2 px-2 sticky top-0 cursor-pointer hover:bg-accent rounded-md transition-colors"
+              onClick={() => navigate(ROUTER_PATHS.PROJECTS.path)}
+            >
               <h4 className="text-sm font-semibold">
                 项目
               </h4>
-              <div className="ml-auto">
-                <Button variant="ghost" size="sm" onClick={() => editProject('')}>
+              <div className="ml-auto flex items-center" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="sm" onClick={() => openProjectDialog()} disabled={isLoading}>
                   <Plus className="h-4 w-4" />
                   <span className="sr-only">New project</span>
                 </Button>
@@ -303,12 +496,12 @@ export function Nav({
                         </NavLink>
                       </ContextMenuTrigger>
                       <ContextMenuContent className="w-64">
-                        <ContextMenuItem className="flex gap-x-4 py-2" onClick={() => editProject(project.projectId)}>
+                        <ContextMenuItem className="flex gap-x-4 py-2" onClick={() => openProjectDialog(project)} disabled={isLoading}>
                           <PenLine className="h-4 w-4" />
                           编辑项目
                           <ContextMenuShortcut>⌘E</ContextMenuShortcut>
                         </ContextMenuItem>
-                        <ContextMenuItem className="flex gap-x-4 py-2">
+                        <ContextMenuItem className="flex gap-x-4 py-2" onClick={() => handleToggleFavorite(project)} disabled={isLoading}>
                           {project.isFavorite
                             ? (
                               <>
@@ -326,12 +519,12 @@ export function Nav({
                           <ContextMenuShortcut>⌘D</ContextMenuShortcut>
                         </ContextMenuItem>
                         <ContextMenuSeparator />
-                        <ContextMenuItem className="flex gap-x-4 py-2" onClick={() => archiveProject(project)}>
+                        <ContextMenuItem className="flex gap-x-4 py-2" onClick={() => openConfirmDialog(project, 'archive')} disabled={isLoading}>
                           <Archive className="h-4 w-4" />
                           归档项目
                           <ContextMenuShortcut>⌘A</ContextMenuShortcut>
                         </ContextMenuItem>
-                        <ContextMenuItem className="flex gap-x-4 py-2" onClick={() => deleteProject(project)}>
+                        <ContextMenuItem className="flex gap-x-4 py-2" onClick={() => openConfirmDialog(project, 'delete')} disabled={isLoading}>
                           <Trash2 className="h-4 w-4 text-red-600" />
                           <span className="text-red-600">删除项目</span>
                           <ContextMenuShortcut>⌘R</ContextMenuShortcut>
@@ -365,14 +558,11 @@ export function Nav({
 
       {/* All Dialogs */}
       <Dialog open={isProjectDialogOpen} onOpenChange={setIsProjectDialogOpen}>
-        {/* <DialogTrigger asChild> */}
-        {/*   <Button variant="outline">Edit Profile</Button> */}
-        {/* </DialogTrigger> */}
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{isCreateProject ? '新增项目' : '编辑项目'}</DialogTitle>
             <DialogDescription>
-              Make changes to your profile here. Click save when you are done.
+              {isCreateProject ? '创建一个新项目来组织你的笔记' : '修改项目信息'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -382,9 +572,11 @@ export function Nav({
               </Label>
               <Input
                 id="name"
-                defaultValue=""
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
                 placeholder="请输入项目名称"
                 className="col-span-3"
+                disabled={isLoading}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -392,7 +584,7 @@ export function Nav({
                 颜色
               </Label>
 
-              <Select>
+              <Select value={projectColor} onValueChange={setProjectColor} disabled={isLoading}>
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="选择一个颜色" />
                 </SelectTrigger>
@@ -417,20 +609,35 @@ export function Nav({
               <Label htmlFor="add-to-favorites" className="text-right">
                 添加到收藏
               </Label>
-              <Switch id="add-to-favorites" />
+              <Switch 
+                id="add-to-favorites" 
+                checked={projectIsFavorite}
+                onCheckedChange={setProjectIsFavorite}
+                disabled={isLoading}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button type="reset" variant="secondary">取消</Button>
-            <Button type="submit">保存</Button>
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={() => setIsProjectDialogOpen(false)}
+              disabled={isLoading}
+            >
+              取消
+            </Button>
+            <Button 
+              type="button" 
+              onClick={handleSaveProject}
+              disabled={isLoading}
+            >
+              {isLoading ? '保存中...' : '保存'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
-        {/* <AlertDialogTrigger asChild> */}
-        {/*   <Button variant="outline">Show Dialog</Button> */}
-        {/* </AlertDialogTrigger> */}
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{operation === 'archive' ? '归档项目' : '删除项目'}</AlertDialogTitle>
@@ -441,8 +648,10 @@ export function Nav({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction>{operation === 'archive' ? '归档' : '删除'}</AlertDialogAction>
+            <AlertDialogCancel disabled={isLoading}>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmAction} disabled={isLoading}>
+              {isLoading ? '处理中...' : (operation === 'archive' ? '归档' : '删除')}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

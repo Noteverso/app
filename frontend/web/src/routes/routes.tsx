@@ -7,6 +7,7 @@ import { Layout } from '@/layout/layout'
 import { AuthLayout, LoginPage, SignupPage } from '@/pages/auth'
 import { ErrorPage } from '@/pages/error/error'
 import { Project } from '@/pages/project/project'
+import { ProjectsManage } from '@/pages/projects-manage/projects-manage'
 import { Inbox } from '@/pages/inbox/inbox'
 import { Label } from '@/pages/label/label'
 import { LabelDetail } from '@/pages/label/label-detail'
@@ -100,6 +101,10 @@ export const router = createBrowserRouter([
               {
                 path: 'search',
                 element: <SearchPage />,
+              },
+              {
+                path: 'projects',
+                element: <ProjectsManage />,
               },
               {
                 path: 'projects/:projectId',

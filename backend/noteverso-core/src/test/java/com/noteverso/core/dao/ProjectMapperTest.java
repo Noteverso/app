@@ -68,6 +68,87 @@ public class ProjectMapperTest {
         assertThat(projects).isEmpty();
     }
 
+    @Test
+    void should_returnNull_whenProjectNotFound() {
+        // Arrange
+        String projectId = "nonexistent";
+        String userId = "user1";
+
+        // Act
+        Project project = projectMapper.selectByProjectId(projectId, userId);
+
+        // Assert
+        assertThat(project).isNull();
+    }
+
+    @Test
+    void should_returnNull_whenWrongUserId() {
+        // Arrange
+        String projectId = "project123";
+        String userId = "user1";
+        String wrongUserId = "user2";
+        
+        Project project = constructProject(projectId, userId, "Test Project");
+        projectMapper.insert(project);
+
+        // Act
+        Project result = projectMapper.selectByProjectId(projectId, wrongUserId);
+
+        // Assert
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void should_getProjects_returnEmpty_whenNullProjectIds() {
+        // Arrange
+        String userId = "user1";
+        ProjectRequest request = new ProjectRequest();
+        request.setProjectIds(null);
+
+        // Act
+        List<Project> projects = projectMapper.getProjects(request, userId);
+
+        // Assert
+        assertThat(projects).isEmpty();
+    }
+
+    @Test
+    void should_getProjects_filterByName() {
+        // Arrange
+        String userId = "user1";
+        Project project1 = constructProject("p1", userId, "Java Project");
+        Project project2 = constructProject("p2", userId, "Python Project");
+        Project project3 = constructProject("p3", userId, "JavaScript Project");
+        
+        projectMapper.insert(project1);
+        projectMapper.insert(project2);
+        projectMapper.insert(project3);
+
+        // Act - LIKE search matches both "Java Project" and "JavaScript Project"
+        ProjectRequest request = new ProjectRequest();
+        request.setName("Java");
+        List<Project> projects = projectMapper.getProjects(request, userId);
+
+        // Assert
+        assertThat(projects).hasSize(2);
+        assertThat(projects).allMatch(p -> p.getName().toLowerCase().contains("java"));
+    }
+
+    @Test
+    void should_getProjects_returnEmpty_whenNoMatch() {
+        // Arrange
+        String userId = "user1";
+        Project project = constructProject("p1", userId, "Test Project");
+        projectMapper.insert(project);
+
+        // Act
+        ProjectRequest request = new ProjectRequest();
+        request.setName("NonExistent");
+        List<Project> projects = projectMapper.getProjects(request, userId);
+
+        // Assert
+        assertThat(projects).isEmpty();
+    }
 
     private Project constructProject(String projectId, String userId, String name) {
         Project project = new Project();

@@ -70,14 +70,15 @@ create index ikey_note_map_creator on noteverso_note_map (creator);
 CREATE TABLE IF NOT EXISTS noteverso_label (
     id bigserial NOT NULL,
     label_id varchar(50) NOT NULL CONSTRAINT noteverso_label_pk UNIQUE,
-    name varchar(60) NOT NULL CONSTRAINT noteverso_label_name_pk UNIQUE,
+    name varchar(60) NOT NULL,
     color varchar(20) NOT NULL,
     added_at timestamptz DEFAULT NULL,
     updated_at timestamptz DEFAULT NULL,
     creator varchar(50) NOT NULL,
     updater varchar(50) NOT NULL,
     is_favorite smallint DEFAULT 0,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    CONSTRAINT noteverso_label_name_creator_uk UNIQUE (name, creator)
 );
 
 COMMENT ON TABLE noteverso_label IS '标签表';
