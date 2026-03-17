@@ -18,4 +18,6 @@ public interface NoteMapper extends BaseMapper<Note> {
     void updateNoteIsArchivedByProject(String projectId, String userId, Integer isArchived);
 
     void updateNotesIsDeletedByProject(String projectId, String userId);
+    
+    int insertWithJsonb(Note note);
 }

@@ -1,5 +1,5 @@
 export interface BaseNote {
-  content: string;
+  contentJson?: object;
   labels: { labelId: string; name: string }[];
   project: { projectId: string; name: string };
 }
@@ -18,7 +18,7 @@ export interface FullNote extends BaseNote {
 }
 
 export interface NewNote {
-  content: string;
+  contentJson: object;
   projectId: string;
   labels?: string[];
   files?: string[];
@@ -38,4 +38,17 @@ export type NotePageLoaderData = {
   pageSize: number;
   total: number;
   records: FullNote[]
+}
+
+// 搜索笔记参数
+export interface SearchNotesParams {
+  keyword?: string
+  labelIds?: string[]
+  status?: number
+  startDate?: string
+  endDate?: string
+  sortBy?: string
+  sortOrder?: string
+  pageIndex?: number
+  pageSize?: number
 }

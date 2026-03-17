@@ -4,10 +4,11 @@ import com.noteverso.core.model.entity.Note;
 import com.noteverso.core.model.request.NoteCreateRequest;
 
 import java.util.List;
+import java.util.Map;
 
 public abstract class NoteServiceTestFixture {
     protected Note createNote(String noteId, String content, String projectId) {
-        return Note.builder().noteId(noteId).content(content).projectId(projectId).build();
+        return Note.builder().noteId(noteId).contentJson(Map.of("type", "doc", "content", List.of(Map.of("type", "paragraph", "content", List.of(Map.of("type", "text", "text", content)))))).projectId(projectId).build();
     }
 
     protected NoteCreateRequest createMinimalNoteRequest(String content, String projectId) {
@@ -28,7 +29,7 @@ public abstract class NoteServiceTestFixture {
 
     protected NoteCreateRequest createNoteRequest(String content, String projectId, List<String> labels, List<String> attachments, List<String> linkedNotes) {
         NoteCreateRequest noteCreateRequest = new NoteCreateRequest();
-        noteCreateRequest.setContent(content);
+        noteCreateRequest.setContentJson(Map.of("type", "doc", "content", List.of(Map.of("type", "paragraph", "content", List.of(Map.of("type", "text", "text", content))))));
         noteCreateRequest.setProjectId(projectId);
         noteCreateRequest.setLinkedNotes(linkedNotes);
         noteCreateRequest.setFiles(attachments);

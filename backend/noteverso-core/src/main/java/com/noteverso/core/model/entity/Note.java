@@ -1,8 +1,10 @@
 package com.noteverso.core.model.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.noteverso.core.config.JsonbTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,7 +38,8 @@ public class Note {
      * 6-记账(订阅信息，可自动更新续费信息)
      */
     private Integer noteType;
-    private String content;
+    @TableField(typeHandler = JsonbTypeHandler.class)
+    private Object contentJson;
     private Integer isPinned;
     private Integer isDeleted;
     private Integer isArchived;

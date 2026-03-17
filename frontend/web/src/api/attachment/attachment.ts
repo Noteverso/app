@@ -1,5 +1,5 @@
 import { request } from '@/lib/http'
-import type { AttachmentDTO, AttachmentPageResult } from '@/types/attachment'
+import type { AttachmentPageResult } from '@/types/attachment'
 
 export function getUserAttachmentsApi(pageIndex: number, pageSize: number) {
   return request<AttachmentPageResult>({

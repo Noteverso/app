@@ -31,6 +31,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -350,7 +353,7 @@ class ProjectServiceTest {
         List<Note> notes = new ArrayList<>();
         for (String noteId : noteIds) {
             notes.add(Note.builder()
-                    .content("Hello World" + noteId + "!")
+                    .contentJson(Map.of("type", "doc", "content", List.of(Map.of("type", "paragraph", "content", List.of(Map.of("type", "text", "text", "Hello World" + noteId + "!"))))))
                     .creator(userId)
                     .updater(userId)
                     .noteId(noteId)

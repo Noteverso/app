@@ -54,4 +54,16 @@
         </if>
         GROUP BY project_id
     </select>
+
+    <insert id="insertWithJsonb" parameterType="com.noteverso.core.model.entity.Note">
+        INSERT INTO noteverso_note (
+            note_id, content_json, project_id, creator, updater, added_at, updated_at,
+            is_archived, is_deleted, is_pinned, is_favorite, note_type, status, url
+        ) VALUES (
+            #{noteId}, #{contentJson,typeHandler=com.noteverso.core.config.JsonbTypeHandler}::jsonb, 
+            #{projectId}, #{creator}, #{updater}, #{addedAt}, #{updatedAt},
+            COALESCE(#{isArchived}, 0), COALESCE(#{isDeleted}, 0), COALESCE(#{isPinned}, 0), 
+            COALESCE(#{isFavorite}, 0), COALESCE(#{noteType}, 0), COALESCE(#{status}, 1), #{url}
+        )
+    </insert>
 </mapper>

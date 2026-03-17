@@ -11,7 +11,7 @@ public class NoteDTO {
 
     private String projectName;
 
-    private String content;
+    private Object contentJson;
 
     private String noteId;
 

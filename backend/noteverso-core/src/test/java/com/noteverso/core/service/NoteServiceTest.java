@@ -8,6 +8,9 @@ import com.noteverso.core.model.dto.NoteDTO;
 import com.noteverso.core.model.entity.Note;
 import com.noteverso.core.model.request.NoteCreateRequest;
 import com.noteverso.core.service.impl.NoteServiceImpl;
+
+import java.util.List;
+import java.util.Map;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +20,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -43,7 +49,7 @@ class NoteServiceTest {
     void should_createNoteSuccessfully_withMinimalNote() {
         // Arrange
         NoteCreateRequest noteCreateRequest = new NoteCreateRequest();
-        noteCreateRequest.setContent("Hello World!");
+        noteCreateRequest.setContentJson(Map.of("type", "doc", "content", List.of(Map.of("type", "paragraph", "content", List.of(Map.of("type", "text", "text", "Hello World!"))))));
         noteCreateRequest.setProjectId("1");
         String tenantId = "test";
 
@@ -52,9 +58,9 @@ class NoteServiceTest {
 
         // Assert
         ArgumentCaptor<Note> noteCaptor = ArgumentCaptor.forClass(Note.class);
-        verify(noteMapper).insert(noteCaptor.capture());
+        verify(noteMapper).insertWithJsonb(noteCaptor.capture());
         Note captureedNote = noteCaptor.getValue();
-        assertThat(captureedNote.getContent()).isEqualTo(noteCreateRequest.getContent());
+        assertThat(captureedNote.getContentJson()).isEqualTo(noteCreateRequest.getContentJson());
     }
 
     @Test
@@ -106,7 +112,7 @@ class NoteServiceTest {
         String noteId = "1";
         String userId = "test";
         Note note = Note.builder()
-                .content("Hello World!").creator(userId).updater(userId).noteId(noteId)
+                .contentJson(Map.of("type", "doc", "content", List.of(Map.of("type", "paragraph", "content", List.of(Map.of("type", "text", "text", "Hello World!")))))).creator(userId).updater(userId).noteId(noteId)
                 .isPinned(0).isFavorite(0).isArchived(0).isDeleted(0)
                 .build();
 
@@ -141,7 +147,7 @@ class NoteServiceTest {
     void should_createNote_withEmptyContent() {
         // Arrange
         NoteCreateRequest request = new NoteCreateRequest();
-        request.setContent("");
+        request.setContentJson(Map.of("type", "doc", "content", List.of()));
         request.setProjectId("1");
         String userId = "test";
 
@@ -150,15 +156,15 @@ class NoteServiceTest {
 
         // Assert
         ArgumentCaptor<Note> noteCaptor = ArgumentCaptor.forClass(Note.class);
-        verify(noteMapper).insert(noteCaptor.capture());
-        assertThat(noteCaptor.getValue().getContent()).isEmpty();
+        verify(noteMapper).insertWithJsonb(noteCaptor.capture());
+        assertThat(noteCaptor.getValue().getContentJson()).isEqualTo(Map.of("type", "doc", "content", List.of()));
     }
 
     @Test
     void should_createNote_handleNullLabels() {
         // Arrange
         NoteCreateRequest request = new NoteCreateRequest();
-        request.setContent("Test");
+        request.setContentJson(Map.of("type", "doc", "content", List.of(Map.of("type", "paragraph", "content", List.of(Map.of("type", "text", "text", "Test"))))));
         request.setProjectId("1");
         request.setLabels(null);
         String userId = "test";
@@ -167,15 +173,15 @@ class NoteServiceTest {
         noteService.createNote(request, userId);
 
         // Assert
-        verify(noteMapper).insert(any(Note.class));
-        verify(relationService).insertNoteLabelRelation(null, any(), eq(userId));
+        verify(noteMapper).insertWithJsonb(any(Note.class));
+        verify(relationService).insertNoteLabelRelation(eq(null), any(), eq(userId));
     }
 
     @Test
     void should_createNote_handleEmptyLabels() {
         // Arrange
         NoteCreateRequest request = new NoteCreateRequest();
-        request.setContent("Test");
+        request.setContentJson(Map.of("type", "doc", "content", List.of(Map.of("type", "paragraph", "content", List.of(Map.of("type", "text", "text", "Test"))))));
         request.setProjectId("1");
         request.setLabels(List.of());
         String userId = "test";
@@ -184,7 +190,7 @@ class NoteServiceTest {
         noteService.createNote(request, userId);
 
         // Assert
-        verify(noteMapper).insert(any(Note.class));
+        verify(noteMapper).insertWithJsonb(any(Note.class));
         verify(relationService).insertNoteLabelRelation(eq(List.of()), any(), eq(userId));
     }
 }

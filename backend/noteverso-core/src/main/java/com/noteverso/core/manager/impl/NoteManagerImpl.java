@@ -100,7 +100,7 @@ public class NoteManagerImpl implements NoteManager {
             Project project) {
         NoteItem noteItem = new NoteItem();
         String noteId = note.getNoteId();
-        noteItem.setContent(note.getContent());
+        noteItem.setContentJson(note.getContentJson());
         noteItem.setNoteId(noteId);
         noteItem.setIsPinned(note.getIsPinned());
         noteItem.setIsArchived(note.getIsArchived());

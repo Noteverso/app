@@ -6,8 +6,10 @@ import { NoteActions } from './note-actions'
 import { ROUTER_PATHS } from '@/constants'
 import { dateFormat } from '@/lib/utils'
 
+import { generateHtmlFromJson } from '@/lib/html-generator'
+
 export interface NoteCardProps {
-  content: string;
+  contentJson: object;
   addedAt: string;
   labels?: {
     name: string,
@@ -27,13 +29,15 @@ export function NoteCard(props: NoteCardProps) {
 
   const {
     labels,
-    content,
+    contentJson,
     addedAt,
     // project,
     attachmentCount,
     referencedCount,
     referencingCount,
   } = props
+
+  const htmlContent = generateHtmlFromJson(contentJson)
 
   return (
     <div className="group/item">
@@ -82,7 +86,7 @@ export function NoteCard(props: NoteCardProps) {
           />
         ))}
       </div>
-      <div className="prose prose-sm sm:prose-base focus:outline-none max-w-full tiptap">{parse(content)}</div>
+      <div className="prose prose-sm sm:prose-base focus:outline-none max-w-full tiptap">{parse(htmlContent)}</div>
     </div>
   )
 }

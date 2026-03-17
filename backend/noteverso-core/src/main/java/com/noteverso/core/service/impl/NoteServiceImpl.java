@@ -23,6 +23,7 @@ import com.noteverso.core.model.request.ProjectRequest;
 import com.noteverso.core.service.NoteService;
 import com.noteverso.core.service.RelationService;
 import com.noteverso.core.service.ViewOptionService;
+import com.noteverso.core.service.HtmlGeneratorService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,7 @@ public class NoteServiceImpl implements NoteService {
     private final UserConfigManager userConfigManager;
     private final ViewOptionService viewOptionService;
     private final NoteManager noteManager;
+    private final HtmlGeneratorService htmlGeneratorService;
 
     private final SnowFlakeUtils snowFlakeUtils = new SnowFlakeUtils(
             NOTE_DATACENTER_ID, IPUtils.getHostAddressWithLong() % NUM_31
@@ -58,8 +60,8 @@ public class NoteServiceImpl implements NoteService {
         String noteId = String.valueOf(snowFlakeUtils.nextId());
 
         // Create a note
-        Note note = constructNote(noteId, projectId, request.getContent(), userId);
-        noteMapper.insert(note);
+        Note note = constructNote(noteId, projectId, request.getContentJson(), userId);
+        noteMapper.insertWithJsonb(note);
 
         // create the relation with labels
         relationService.insertNoteLabelRelation(request.getLabels(), noteId, userId);
@@ -80,7 +82,7 @@ public class NoteServiceImpl implements NoteService {
         LambdaUpdateWrapper<Note> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(Note::getNoteId, noteId);
         wrapper.eq(Note::getIsDeleted, NUM_O);
-        wrapper.set(Note::getContent, request.getContent());
+        wrapper.set(Note::getContentJson, request.getContentJson());
         wrapper.set(Note::getUpdatedAt, Instant.now());
 
         if (null != request.getProjectId()) {
@@ -99,10 +101,10 @@ public class NoteServiceImpl implements NoteService {
         relationService.updateNoteAttachment(request.getFiles(), noteId, userId);
     }
 
-    public Note constructNote(String noteId, String projectId, String content, String userId) {
+    public Note constructNote(String noteId, String projectId, Object contentJson, String userId) {
         return Note.builder()
                 .noteId(noteId)
-                .content(content)
+                .contentJson(contentJson)
                 .projectId(projectId)
                 .creator(userId)
                 .updater(userId)
@@ -255,7 +257,7 @@ public class NoteServiceImpl implements NoteService {
 
         NoteDTO noteDTO = new NoteDTO();
         noteDTO.setNoteId(note.getNoteId());
-        noteDTO.setContent(note.getContent());
+        noteDTO.setContentJson(note.getContentJson());
         noteDTO.setIsDeleted(note.getIsDeleted());
         noteDTO.setIsArchived(note.getIsArchived());
         noteDTO.setIsPinned(note.getIsPinned());
@@ -313,9 +315,9 @@ public class NoteServiceImpl implements NoteService {
         queryWrapper.eq(Note::getCreator, userId);
         queryWrapper.eq(Note::getIsDeleted, NUM_O);
 
-        // Keyword search in content
+        // Keyword search in JSON content
         if (keyword != null && !keyword.trim().isEmpty()) {
-            queryWrapper.like(Note::getContent, keyword.trim());
+            queryWrapper.apply("content_json #>> '{}' ILIKE {0}", "%" + keyword.trim() + "%");
         }
 
         // Filter by status (pinned, archived, favorite)

@@ -6,7 +6,7 @@ import java.util.List;
 
 @Data
 public class NoteItem {
-    private String content;
+    private Object contentJson;
     private String noteId;
     private Integer isPinned;
     private Integer isArchived;

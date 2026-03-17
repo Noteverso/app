@@ -36,7 +36,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
   }
 
   const [selectedProjectId, setSelectedProjectId] = useState(curProjectId)
-  const [editorContent, setEditorContent] = useState('')
+  const [editorContentJson, setEditorContentJson] = useState<object>({})
   const [hasEditorContent, setHasEditorContent] = useState(false)
 
   const [notes, setNotes] = useState(initialNotePage.records)
@@ -107,10 +107,10 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     if (fetcher.formData && fetcher.state === 'submitting') {
       const tempUuid = uuidv4()
       setUuid(tempUuid)
-      const content = fetcher.formData.get('content') as string
+      const contentJson = JSON.parse(fetcher.formData.get('contentJson') as string)
       const optimisticNote: FullNote = {
         noteId: tempUuid,
-        content,
+        contentJson,
         addedAt: new Date().toISOString(),
         labels: [],
         project: { projectId: curProjectId, name: projectName },
@@ -139,14 +139,20 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
         })
 
         setNotes(updatedNotes)
-        handleContentChange('', false)
+        handleContentChange({}, false)
         editorRef.current?.reset()
       } else {
         // 回滚数据
         const failedNote = notes.find(note => note.noteId === uuid)
         if (failedNote) {
-          handleContentChange(failedNote.content, true)
-          editorRef.current?.setContent(failedNote.content)
+          handleContentChange(
+            failedNote.contentJson || {}, 
+            true
+          )
+          // Use JSON content if available
+          if (failedNote.contentJson) {
+            editorRef.current?.setContentJson(failedNote.contentJson)
+          }
 
           const filteredNotes = notes.filter(n => n.noteId !== uuid)
           setNotes(filteredNotes)
@@ -155,8 +161,8 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     }
   }, [fetcher])
 
-  function handleContentChange(content: string, hasContent: boolean) {
-    setEditorContent(content)
+  function handleContentChange(contentJson: object, hasContent: boolean) {
+    setEditorContentJson(contentJson)
     setHasEditorContent(hasContent)
   }
 
@@ -165,7 +171,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
       <h1 className="text-2xl mb-4">{projectName ?? title}</h1>
       <TextEditor ref={editorRef} className="mb-4" onChange={handleContentChange} />
       <fetcher.Form method="post" action={actionPath} className="mb-4">
-        <input type="hidden" name="content" value={editorContent} />
+        <input type="hidden" name="contentJson" value={JSON.stringify(editorContentJson)} />
         <div className="flex">
           <Select name="projectId" value={selectedProjectId} onValueChange={setSelectedProjectId}>
             <SelectTrigger className="w-[280px]">

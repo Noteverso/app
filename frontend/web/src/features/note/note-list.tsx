@@ -12,7 +12,7 @@ export function NoteList({ notes, refFunc }: { notes: FullNote[], refFunc: (node
         >
           <NoteCard
             labels={note.labels}
-            content={note.content}
+            contentJson={note.contentJson || {}}
             addedAt={note.addedAt}
             project={note.project}
             attachmentCount={note.attachmentCount}

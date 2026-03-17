@@ -138,6 +138,7 @@ export function Attachment() {
                     setDeletingAttachment(attachment)
                     setDeleteDialogOpen(true)
                   }}
+                  aria-label="Delete attachment"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>

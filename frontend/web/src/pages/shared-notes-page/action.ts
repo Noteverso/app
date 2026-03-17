@@ -6,12 +6,12 @@ import { addNote } from '@/api/note/note'
 export async function sharedNotesAction({ request }: ActionFunctionArgs): Promise<any> {
   const formData = await request.formData()
 
-  const noteContent = formData.get('content') as string
+  const noteContent = JSON.parse(formData.get('contentJson') as string)
   const projectId = formData.get('projectId') as string
 
   // 创建新笔记对象
   const newNote: NewNote = {
-    content: noteContent,
+    contentJson: noteContent,
     labels: [],
     projectId,
   }

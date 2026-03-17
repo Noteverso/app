@@ -21,6 +21,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.*;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -178,7 +181,7 @@ class NoteSearchServiceTest {
     private Note createTestNote(String noteId, String content, String userId) {
         Note note = new Note();
         note.setNoteId(noteId);
-        note.setContent(content);
+        note.setContentJson(Map.of("type", "doc", "content", List.of(Map.of("type", "paragraph", "content", List.of(Map.of("type", "text", "text", content))))));
         note.setCreator(userId);
         note.setProjectId("project1");
         note.setIsDeleted(0);
@@ -193,7 +196,7 @@ class NoteSearchServiceTest {
     private NoteItem createTestNoteItem(String noteId) {
         NoteItem item = new NoteItem();
         item.setNoteId(noteId);
-        item.setContent("Test content");
+        item.setContentJson(Map.of("type", "doc", "content", List.of(Map.of("type", "paragraph", "content", List.of(Map.of("type", "text", "text", "Test content"))))));
         item.setAddedAt(Instant.now().toString());
         item.setUpdatedAt(Instant.now().toString());
         return item;

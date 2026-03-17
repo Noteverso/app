@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS noteverso_note (
     id bigserial NOT NULL,
     note_id varchar not null constraint uq_note_id unique,
     note_type smallint DEFAULT 0,
-    content varchar NOT NULL,
+    content_json jsonb NOT NULL,
     is_pinned smallint DEFAULT 0,
     is_deleted smallint DEFAULT 0,
     is_archived smallint DEFAULT 0,
@@ -26,7 +26,7 @@ COMMENT ON COLUMN noteverso_note.id IS 'id';
 COMMENT ON COLUMN noteverso_note.note_id IS '笔记唯一标识，snowFlake id';
 COMMENT ON CONSTRAINT uq_note_id ON noteverso_note IS 'UNIQUE (note_id)';
 COMMENT ON COLUMN noteverso_note.note_type IS '笔记类型，0-普通笔记 1-账户密码 2-待办清单 3-图表 4-日程 5-工具清单 6-记账(订阅信息，可自动更新续费信息)';
-COMMENT ON COLUMN noteverso_note.content IS '笔记内容';
+COMMENT ON COLUMN noteverso_note.content_json IS '笔记内容 (ProseMirror JSON format, source of truth)';
 COMMENT ON COLUMN noteverso_note.is_pinned IS '是否将笔记置顶,0-否，1-是';
 COMMENT ON COLUMN noteverso_note.is_favorite IS '是否收藏笔记, 0-否，1-是';
 COMMENT ON COLUMN noteverso_note.is_deleted IS '是否删除,0-否，1-是';
@@ -41,6 +41,11 @@ COMMENT ON COLUMN noteverso_note.updated_at IS '更新时间';
 
 create index ikey_note_project_id on noteverso_note (project_id);
 create index ikey_note_creator on noteverso_note (creator);
+
+-- GIN index for JSON content search
+CREATE INDEX IF NOT EXISTS idx_note_content_json_text 
+ON noteverso_note 
+USING GIN((content_json #>> '{}'));
 
 CREATE TABLE IF NOT EXISTS noteverso_note_map (
     id bigserial NOT NULL,

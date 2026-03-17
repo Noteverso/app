@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Search, X, Filter } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input/input'
 import { Button } from '@/components/ui/button/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover/popover'
@@ -85,6 +84,7 @@ export function SearchBar({ onSearch }: SearchBarProps) {
           <button
             onClick={handleClear}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            aria-label="Clear search"
           >
             <X className="w-4 h-4" />
           </button>

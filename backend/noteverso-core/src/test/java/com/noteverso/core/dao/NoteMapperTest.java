@@ -7,14 +7,20 @@ import com.noteverso.core.model.entity.Note;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @MybatisPlusTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Sql(executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD, statements = "DELETE FROM noteverso_note")
 class NoteMapperTest {
     @Autowired
     NoteMapper noteMapper;
@@ -26,7 +32,7 @@ class NoteMapperTest {
         String projectId = "123456789";
         String userId = "123456789";
         Note note = buildNote(noteId, content, projectId, userId);
-        noteMapper.insert(note);
+        noteMapper.insertWithJsonb(note);
 
         Note findedNote = noteMapper.selectByNoteId(noteId, 0);
         assertThat(findedNote.getNoteId()).isEqualTo(noteId);
@@ -44,8 +50,8 @@ class NoteMapperTest {
         Note note1 = buildNote(noteId1, content, projectId, userId);
         Note note2 = buildNote(noteId2, content, projectId, userId);
 
-        noteMapper.insert(note1);
-        noteMapper.insert(note2);
+        noteMapper.insertWithJsonb(note1);
+        noteMapper.insertWithJsonb(note2);
 
         // Act
         noteMapper.updateNoteIsArchivedByProject(projectId, userId, 1);
@@ -69,8 +75,8 @@ class NoteMapperTest {
         Note note1 = buildNote(noteId1, content, projectId, userId);
         Note note2 = buildNote(noteId2, content, projectId, userId);
 
-        noteMapper.insert(note1);
-        noteMapper.insert(note2);
+        noteMapper.insertWithJsonb(note1);
+        noteMapper.insertWithJsonb(note2);
 
         // Act
         noteMapper.updateNotesIsDeletedByProject(projectId, userId);
@@ -94,8 +100,8 @@ class NoteMapperTest {
         Note note1 = buildNote(noteId1, content, projectId, userId);
         Note note2 = buildNote(noteId2, content, projectId, userId);
 
-        noteMapper.insert(note1);
-        noteMapper.insert(note2);
+        noteMapper.insertWithJsonb(note1);
+        noteMapper.insertWithJsonb(note2);
 
         // Act
         List<Note> notes = noteMapper.batchSelectByNoteIds(List.of(noteId1, noteId2), userId, 0);
@@ -115,12 +121,12 @@ class NoteMapperTest {
         Note note5 = buildNote("5", "Hello World5!", "456", "123456789");
         Note note6 = buildNote("6", "Hello World6!", "456", "123456789");
         note6.setIsDeleted(1);
-        noteMapper.insert(note1);
-        noteMapper.insert(note2);
-        noteMapper.insert(note3);
-        noteMapper.insert(note4);
-        noteMapper.insert(note5);
-        noteMapper.insert(note6);
+        noteMapper.insertWithJsonb(note1);
+        noteMapper.insertWithJsonb(note2);
+        noteMapper.insertWithJsonb(note3);
+        noteMapper.insertWithJsonb(note4);
+        noteMapper.insertWithJsonb(note5);
+        noteMapper.insertWithJsonb(note6);
         List<ProjectViewOption> projectViewOptions = List.of(
             new ProjectViewOption("123", 0, 0),
             new ProjectViewOption("456", 0, 0)
@@ -142,9 +148,9 @@ class NoteMapperTest {
         note2.setIsArchived(1);
         Note note3 = buildNote("3", "Hello World3!", "123", "123456789");
         note3.setIsDeleted(1);
-        noteMapper.insert(note1);
-        noteMapper.insert(note2);
-        noteMapper.insert(note3);
+        noteMapper.insertWithJsonb(note1);
+        noteMapper.insertWithJsonb(note2);
+        noteMapper.insertWithJsonb(note3);
 
         List<ProjectViewOption> projectViewOptions = List.of(
                 new ProjectViewOption("123", 1, 1)
@@ -185,9 +191,22 @@ class NoteMapperTest {
     }
 
     private Note buildNote(String noteId, String content, String projectId, String userId) {
+        // Create simple JSON content for tests
+        Object contentJson = Map.of(
+            "type", "doc",
+            "content", List.of(Map.of(
+                "type", "paragraph",
+                "content", List.of(Map.of(
+                    "type", "text",
+                    "text", content
+                ))
+            ))
+        );
+        
         return Note.builder()
                 .noteId(noteId)
-                .content(content)
+                .contentJson(Map.of("type", "doc", "content", List.of(Map.of("type", "paragraph", "content", List.of(Map.of("type", "text", "text", content))))))
+                .contentJson(contentJson)
                 .projectId(projectId)
                 .creator(userId)
                 .updater(userId)

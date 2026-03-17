@@ -103,7 +103,7 @@ export function SearchPage() {
           <div className="mb-4 text-sm text-gray-600">
             Found {notes.length} note{notes.length !== 1 ? 's' : ''}
           </div>
-          <NoteList notes={notes} lastNoteElementRef={lastNoteRef} />
+          <NoteList notes={notes} refFunc={lastNoteRef} />
           {loading && page > 1 && (
             <div className="text-center py-4 text-gray-500">Loading more...</div>
           )}

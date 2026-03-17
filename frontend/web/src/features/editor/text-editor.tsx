@@ -46,12 +46,12 @@ lowlight.register('ts', ts)
 
 export interface TextEditorProps {
   className?: string;
-  onChange?: (content: string, hasContent: boolean) => void;
+  onChange?: (contentJson: object, hasContent: boolean) => void;
 }
 
 export interface EditorMethods {
   reset: () => void;
-  setContent: (content: string) => void
+  setContentJson: (contentJson: object) => void
   // isEmpty: () => boolean;
 }
 
@@ -94,8 +94,8 @@ const TextEditor = forwardRef<EditorMethods, TextEditorProps>(({ className = '',
       },
     },
     onUpdate: (props) => {
-      const text = props.editor?.getHTML()
-      onChange && onChange(text, !props.editor?.isEmpty)
+      const contentJson = props.editor?.getJSON() || {}
+      onChange && onChange(contentJson, !props.editor?.isEmpty)
     },
   })
 
@@ -103,8 +103,8 @@ const TextEditor = forwardRef<EditorMethods, TextEditorProps>(({ className = '',
     reset() {
       editor?.commands.clearContent()
     },
-    setContent(content: string) {
-      editor?.commands.setContent(content)
+    setContentJson(contentJson: object) {
+      editor?.commands.setContent(contentJson)
     },
   }))
 
