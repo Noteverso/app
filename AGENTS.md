@@ -1,162 +1,91 @@
 # AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Reusable collaboration guide for AI coding agents.
 
-## Esentially
-1. Before writing any code, describe your approach and wait for approval.
-2. Before kill any process or port, check if it's running and wait for approval.
-3. If the requirements I give you are ambiguous, ask clarifying questions before writing any code.
-4. After you finish writing any code, list the edge cases and suggest test cases to cover them.
-5. If a task requires changes to more than 3 files, stop and break it into smaller tasks first.
-6. Every time I correct you, reflect on what you did wrong and come up with a plan to never make the same mistake again.
-7. Unit tests should find errors, not hide them. When tests fail, we should:
-  1. Investigate the root cause
-  2. Fix the bug
-  3. Keep the test to prevent regression
+## 1) Core Working Agreement
 
-## Empty Parameter Handling Pattern
+1. Before writing code, provide a short implementation approach and wait for approval.
+2. Before killing any process/port or running force-cleanup commands, check current state and wait for approval.
+3. If requirements are ambiguous, ask clarifying questions before implementation.
+4. After code changes, always list edge cases and suggest test cases.
+5. If a task needs changes in more than 3 files, split into smaller sub-tasks first.
+6. When corrected, reflect briefly on what failed and how to prevent recurrence.
+7. Test philosophy:
+   1. Investigate root cause.
+   2. Fix the bug.
+   3. Keep/add tests to prevent regression.
 
-**Standardized approach for handling empty/null collections:**
+## 2) Plan-to-Execution Handoff
 
-### Service Layer (Primary Validation)
-- **MUST validate** before calling mapper for INSERT operations (prevents SQL errors)
-- **SHOULD validate** for SELECT operations (performance optimization - avoids unnecessary DB calls)
-- Pattern: `if (collection == null || collection.isEmpty()) return emptyResult;`
-- Return empty collections/maps, never null or exceptions
+- In Plan Mode, once the user explicitly approves and asks to execute (for example: "Implement the plan"), treat that as execution approval.
+- After this handoff, do not pause again for intermediate coding/testing approvals.
+- Only pause when:
+  - destructive or high-risk actions are required,
+  - external credentials/access are missing,
+  - product decisions are still ambiguous and cannot be inferred.
 
-### Mapper Layer (Defensive SQL)
-- All SELECT methods with collection parameters use conditional checks
-- Pattern for empty collection handling:
-  ```xml
-  <if test="collection == null or collection.size() == 0">
-      AND 1 = 0
-  </if>
-  ```
-- INSERT methods assume non-empty (service validates first)
+## 3) Autonomous Execution Loop (After Approval)
 
-### Testing Requirements
-- All methods accepting collections MUST have tests for:
-  - Empty list parameter
-  - Null parameter
-- INSERT methods: Verify mapper is not called when empty
-- SELECT methods: Verify empty result is returned
+Run continuously until completion:
 
-### Examples
-```java
-// Service layer - SELECT method
-public HashMap<String, Long> getCounts(List<String> ids, String userId) {
-    if (ids == null || ids.isEmpty()) {
-        return new HashMap<>();
-    }
-    return mapper.getCounts(ids, userId);
-}
+1. Implement changes.
+2. Continuously run type/compile checks during implementation:
+   - Frontend (TypeScript): run typecheck every logical batch and once more before finalizing.
+   - Backend (Java): run compile check every logical batch and once more before finalizing.
+3. Run relevant unit/integration tests.
+4. Run affected user-flow checks (e2e/browser automation where applicable).
+5. If failures appear, fix and rerun.
+6. Return final summary with:
+   - what changed,
+   - test evidence,
+   - edge cases and residual risks.
 
-// Service layer - INSERT method
-public void batchInsert(List<Item> items, String userId) {
-    if (items == null || items.isEmpty()) {
-        return;
-    }
-    mapper.batchInsert(items);
-}
-```
+Do not stop before integration/e2e validation unless blocked by a real external dependency.
 
-## Development Commands
+## 4) Safety and Change Control
 
-### Backend
+- Prefer non-destructive commands by default.
+- Never use force-reset/destructive cleanup unless explicitly approved.
+- Do not revert unrelated local changes.
+- Use minimal scope edits and keep diffs focused.
 
-```bash
-# From backend/ directory
-./mvnw clean install -DskipTests          # Build all modules
-# Set version for all modules (if needed)
-mvn clean install -DskipTests -Drevision=0.0.1
-./mvnw spring-boot:run -pl noteverso-core       # Run application (from noteverso-core/)
-./mvnw test                   # Run all tests
-./mvnw test -Dtest=ClassName  # Run specific test class
-./mvnw jacoco:report          # Generate test coverage report
+## 5) Testing Standards
 
-# Restart backend (rebuild + restart)
-cd /root/personal/app/backend && mvn clean package -DskipTests -Dmaven.test.skip=true && pkill -f "noteverso-core" && sleep 2 && nohup ./start.sh > backend.log 2>&1 & sleep 10 && tail -n 20 backend.log
-```
+- Add or update tests for each behavior change.
+- Include at least:
+  - happy path,
+  - failure path,
+  - boundary/edge inputs.
+- If skipping tests, explain why and what risk remains.
+- Prefer deterministic, fast tests first; run broader suites when risk warrants.
+- Type/compile check frequency guidance:
+  - small change: once after implementation + once before final response,
+  - medium/large change: every logical sub-task + final full pass.
 
-### Frontend
+## 6) Browser Automation Lifecycle (agent-browser / Playwright-like tools)
 
-```bash
-# From project root (uses pnpm workspace)
-pnpm web:install              # Install dependencies
-pnpm web:dev                  # Start dev server (with --host)
-pnpm web:build                # Build for production
-pnpm web:test                 # Run tests
+- Reuse a single session name per task (for example: `qa`) when possible.
+- At task end, always run teardown:
+  1. list active sessions,
+  2. close all sessions created in this task,
+  3. report residual processes and request approval before force cleanup.
+- If environment enforces permission prompts, use approved command prefixes and persistent policy where available.
 
-# From frontend/web/ directory
-pnpm dev                      # Start dev server
-pnpm build                    # TypeScript compile + Vite build
-pnpm lint                     # Run ESLint
-pnpm lint:fix                 # Fix ESLint issues
-```
+## 7) Command and Environment Conventions
 
-## Docker Environment
+- Keep project-specific startup/test commands in dedicated docs or scripts:
+  - `docs/RUNNING.md`
+  - `docs/RUNNING_TEST.md`
+  - `scripts/*.sh`
+- In this file, keep only reusable policy and workflow rules.
+- Prefer stable script entry points over long inline shell pipelines.
+- Summary-style documents must be saved under `docs/summary/*/**.md` (`summary` subfolders are the category).
 
-Prefer `docker compose` command (not `docker-compose`).
-See `docker/README.md` for detailed Docker documentation.
+## 8) Domain-Specific Rules (Optional Extension Point)
 
-### Quick Start Development
+Project/domain-specific patterns (for example, data validation conventions or mapper/service contracts) should live in dedicated docs and be referenced here:
 
-```bash
-# Start Docker services (PostgreSQL, Redis, MinIO, Mailpit)
-cd docker/dev
-docker compose up -d
+- Example: `docs/patterns/empty-collection-handling.md`
+- Example: `docs/patterns/api-error-handling.md`
 
-# Initialize database schema
-docker exec -i noteverso-postgres-dev psql -U noteverso -d noteverso_dev < backend/noteverso-core/src/main/resources/noteverso-pg.sql
-
-# The .env file should be copied to backend/ for Spring Boot
-cp docker/dev/.env backend/.env
-```
-
-## Configuration
-
-- Spring Boot uses environment variables loaded from `.env` file
-- Vite API base URL should be configured for different environments.
-
-## Testing
-
-### Backend Tests
-
-Tests require Docker test environment. See `docs/RUNNING_TESTS.md` for complete guide.
-
-**Quick Start:**
-```bash
-# Start test environment
-cd docker/test && docker compose up -d
-
-# Initialize schema (first time only)
-docker exec -i noteverso-postgres-test psql -U noteverso_test -d noteverso_test < backend/noteverso-core/src/main/resources/noteverso-pg.sql
-
-# Run tests
-cd backend && ./mvnw test
-
-# Run specific test:
-cd backend && ./mvnw test -Dtest=NoteControllerTest
-```
-
-**Test Architecture:**
-- Unit tests: `@ExtendWith(MockitoExtension.class)` - Fast, no Spring context
-- Integration tests: `@SpringBootTest` or `@MybatisPlusTest` - Real database
-- Controller tests: Standalone MockMvc setup - Faster than `@WebMvcTest`
-
-### Frontend Tests
-#### Browser Automation
-
-Use `agent-browser` for web automation. Run `agent-browser --help` for all commands.
-
-Authentication is required for testing, so you should login before running tests. 
-
-Test authentication information:
-Email: abc@gmail.com
-password: Admin123456
-
-Core workflow:
-1. `agent-browser open <url>` - Navigate to page
-2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
-3. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
-4. Re-snapshot after page changes
+Keep this file concise and policy-focused.

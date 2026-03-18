@@ -3,16 +3,17 @@ import { json } from 'react-router-dom'
 import type { NewNote } from '@/types/note'
 import { addNote } from '@/api/note/note'
 
-export async function sharedNotesAction({ request }: ActionFunctionArgs): Promise<any> {
+export async function sharedNotesAction({ request }: ActionFunctionArgs): Promise<Response | null> {
   const formData = await request.formData()
 
   const noteContent = JSON.parse(formData.get('contentJson') as string)
   const projectId = formData.get('projectId') as string
+  const labels = JSON.parse((formData.get('labels') as string) || '[]') as string[]
 
   // 创建新笔记对象
   const newNote: NewNote = {
     contentJson: noteContent,
-    labels: [],
+    labels,
     projectId,
   }
 
@@ -21,4 +22,6 @@ export async function sharedNotesAction({ request }: ActionFunctionArgs): Promis
   if (savedNote.ok) {
     return json({ ok: true, note: savedNote.data })
   }
+
+  return null
 }

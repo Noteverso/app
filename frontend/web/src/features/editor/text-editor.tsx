@@ -1,4 +1,4 @@
-import { type KeyboardEvent, forwardRef, useCallback, useImperativeHandle, useState } from 'react'
+import { type KeyboardEvent as ReactKeyboardEvent, type ReactNode, forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import {
   EditorContent,
   useEditor,
@@ -21,6 +21,8 @@ import {
   Heading2,
   Heading3, Highlighter, Image as ImageIcon, Italic, Link as LinkIcon, List, ListChecks, ListOrdered, Palette, Pilcrow, RemoveFormatting, Strikethrough,
   TextQuote,
+  Hash,
+  AtSign,
 } from 'lucide-react'
 import classnames from 'classnames'
 import { common, createLowlight } from 'lowlight'
@@ -37,6 +39,7 @@ import {
   PopoverContent,
 } from '@/components/ui/popover/popover'
 import { Input } from '@/components/ui/input/input'
+import { QuickActionToken, type QuickActionTokenAttrs, type QuickActionTokenType } from './quick-action-token'
 
 const lowlight = createLowlight(common)
 lowlight.register('html', html)
@@ -47,19 +50,87 @@ lowlight.register('ts', ts)
 export interface TextEditorProps {
   className?: string;
   onChange?: (contentJson: object, hasContent: boolean) => void;
+  onQuickActionQuery?: (query: QuickActionQuery | null) => void;
+  onQuickActionKeyDown?: (event: globalThis.KeyboardEvent) => boolean;
+  onQuickActionIconClick?: (type: 'project' | 'label') => void;
+  quickActionPanel?: ReactNode;
+  onQuickActionTokenClick?: (payload: QuickActionTokenClickPayload) => void;
+  footer?: ReactNode;
+}
+
+export interface QuickActionTokenClickPayload extends QuickActionTokenAttrs {
+  rect: DOMRect;
 }
 
 export interface EditorMethods {
   reset: () => void;
   setContentJson: (contentJson: object) => void
+  consumeQuickActionToken: () => void
+  insertQuickActionToken: (payload: QuickActionTokenAttrs) => void
+  replaceQuickActionToken: (tokenId: string, payload: QuickActionTokenAttrs) => void
+  getCursorAnchor: () => { left: number; top: number; bottom: number } | null
   // isEmpty: () => boolean;
 }
 
-const TextEditor = forwardRef<EditorMethods, TextEditorProps>(({ className = '', onChange }: TextEditorProps, ref) => {
+export interface QuickActionQuery {
+  type: 'project' | 'label';
+  keyword: string;
+  token: string;
+}
+
+export const EDITOR_CONTENT_MAX_HEIGHT_CLASS = 'max-h-[280px]'
+
+export function parseQuickActionFromTextBefore(textBefore: string): QuickActionQuery | null {
+  const match = textBefore.match(/(?:^|\s)([#@][^\s#@.,!?;:(){}\[\]"'`]+)$/)
+
+  if (!match) {
+    return null
+  }
+
+  const token = match[1]
+  return {
+    type: token.startsWith('#') ? 'project' : 'label',
+    keyword: token.slice(1),
+    token,
+  }
+}
+
+const TextEditor = forwardRef<EditorMethods, TextEditorProps>(({ className = '', onChange, onQuickActionQuery, onQuickActionKeyDown, onQuickActionIconClick, quickActionPanel, onQuickActionTokenClick, footer }: TextEditorProps, ref) => {
   const [isImagePopoverOpen, setIsImagePopoverOpen] = useState(false)
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false)
   const [textLink, setTextLink] = useState('')
   const [imageLink, setImageLink] = useState('')
+  const quickActionRangeRef = useRef<{ from: number; to: number } | null>(null)
+
+  const emitQuickActionQuery = useCallback((editorInstance: NonNullable<typeof editor>) => {
+    if (!onQuickActionQuery) {
+      return
+    }
+
+    const selection = editorInstance.state.selection
+    if (!selection.empty) {
+      quickActionRangeRef.current = null
+      onQuickActionQuery(null)
+      return
+    }
+
+    const from = selection.from
+    const textBefore = selection.$from.parent.textBetween(0, selection.$from.parentOffset, ' ', ' ')
+    const query = parseQuickActionFromTextBefore(textBefore)
+    if (!query) {
+      quickActionRangeRef.current = null
+      onQuickActionQuery(null)
+      return
+    }
+
+    const token = query.token
+    quickActionRangeRef.current = {
+      from: from - token.length,
+      to: from,
+    }
+
+    onQuickActionQuery(query)
+  }, [onQuickActionQuery])
 
   const editor = useEditor({
     extensions: [
@@ -86,29 +157,174 @@ const TextEditor = forwardRef<EditorMethods, TextEditorProps>(({ className = '',
       TaskItem.configure({
         nested: true,
       }),
+      QuickActionToken,
     ],
     content: '',
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose-base focus:outline-none max-w-full',
       },
+      handleKeyDown: (_, event) => onQuickActionKeyDown?.(event) ?? false,
+      handleClickOn: (_, __, node, nodePos) => {
+        if (node.type.name !== 'quickActionToken') {
+          return false
+        }
+
+        const tokenDom = editor?.view.nodeDOM(nodePos)
+        if (!(tokenDom instanceof HTMLElement)) {
+          return false
+        }
+
+        const attrs = node.attrs as QuickActionTokenAttrs
+        onQuickActionTokenClick?.({
+          tokenId: attrs.tokenId,
+          tokenType: attrs.tokenType,
+          entityId: attrs.entityId,
+          label: attrs.label,
+          rect: tokenDom.getBoundingClientRect(),
+        })
+        return true
+      },
     },
     onUpdate: (props) => {
       const contentJson = props.editor?.getJSON() || {}
       onChange && onChange(contentJson, !props.editor?.isEmpty)
+      if (props.editor) {
+        emitQuickActionQuery(props.editor)
+      }
     },
   })
 
   useImperativeHandle(ref, () => ({
     reset() {
-      editor?.commands.clearContent()
+      quickActionRangeRef.current = null
+      onQuickActionQuery?.(null)
+      editor?.commands.clearContent(true)
     },
     setContentJson(contentJson: object) {
       editor?.commands.setContent(contentJson)
     },
+    consumeQuickActionToken() {
+      if (!editor || !quickActionRangeRef.current) {
+        return
+      }
+
+      editor.chain().focus().deleteRange(quickActionRangeRef.current).run()
+      quickActionRangeRef.current = null
+      onQuickActionQuery?.(null)
+    },
+    insertQuickActionToken(token: QuickActionTokenAttrs) {
+      if (!editor) {
+        return
+      }
+
+      const tokenType = editor.schema.nodes.quickActionToken
+      if (!tokenType) {
+        return
+      }
+
+      let tr = editor.state.tr
+      if (token.tokenType === 'project') {
+        const replacements: Array<{ from: number; to: number; label: string }> = []
+        editor.state.doc.descendants((node, pos) => {
+          if (node.type.name === 'quickActionToken' && (node.attrs.tokenType as QuickActionTokenType) === 'project') {
+            replacements.push({
+              from: pos,
+              to: pos + node.nodeSize,
+              label: String(node.attrs.label),
+            })
+          }
+        })
+
+        replacements
+          .sort((a, b) => b.from - a.from)
+          .forEach((replacement) => {
+            tr = tr.replaceWith(replacement.from, replacement.to, editor.state.schema.text(`#${replacement.label}`))
+          })
+      }
+
+      const insertPos = tr.mapping.map(editor.state.selection.from)
+      tr = tr.insert(insertPos, tokenType.create(token))
+      tr = tr.insertText(' ', insertPos + 1)
+      editor.view.dispatch(tr.scrollIntoView())
+    },
+    replaceQuickActionToken(tokenId: string, payload: QuickActionTokenAttrs) {
+      if (!editor) {
+        return
+      }
+
+      const tokenType = editor.schema.nodes.quickActionToken
+      if (!tokenType) {
+        return
+      }
+
+      let tr = editor.state.tr
+      const replacements: Array<{ from: number; to: number; node: { type: 'token' | 'text'; label: string } }> = []
+
+      editor.state.doc.descendants((node, pos) => {
+        if (node.type.name !== 'quickActionToken') {
+          return
+        }
+
+        const attrs = node.attrs as QuickActionTokenAttrs
+        if (attrs.tokenType !== payload.tokenType) {
+          return
+        }
+
+        if (payload.tokenType === 'project') {
+          if (attrs.tokenId === tokenId) {
+            replacements.push({
+              from: pos,
+              to: pos + node.nodeSize,
+              node: { type: 'token', label: payload.label },
+            })
+          } else {
+            replacements.push({
+              from: pos,
+              to: pos + node.nodeSize,
+              node: { type: 'text', label: attrs.label },
+            })
+          }
+          return
+        }
+
+        if (attrs.tokenId === tokenId) {
+          replacements.push({
+            from: pos,
+            to: pos + node.nodeSize,
+            node: { type: 'token', label: payload.label },
+          })
+        }
+      })
+
+      replacements
+        .sort((a, b) => b.from - a.from)
+        .forEach((replacement) => {
+          if (replacement.node.type === 'token') {
+            tr = tr.replaceWith(replacement.from, replacement.to, tokenType.create(payload))
+          } else {
+            tr = tr.replaceWith(replacement.from, replacement.to, editor.state.schema.text(`#${replacement.node.label}`))
+          }
+        })
+
+      editor.view.dispatch(tr.scrollIntoView())
+    },
+    getCursorAnchor() {
+      if (!editor) {
+        return null
+      }
+
+      const selectionPos = editor.state.selection.from
+      const coords = editor.view.coordsAtPos(selectionPos)
+      return {
+        left: coords.left,
+        top: coords.top,
+        bottom: coords.bottom,
+      }
+    },
   }))
 
-  const handleLinkPaste = useCallback((event: KeyboardEvent) => {
+  const handleLinkPaste = useCallback((event: ReactKeyboardEvent) => {
     if (event.key === 'Enter') {
       if (textLink === '') {
         editor?.chain().focus().extendMarkRange('link').unsetLink().run()
@@ -134,16 +350,36 @@ const TextEditor = forwardRef<EditorMethods, TextEditorProps>(({ className = '',
   }, [editor, imageLink])
 
   const buttonVariants = (tag: string, options = {}) => {
-    const isActive = editor?.isActive(tag, options) ? 'bg-black/5' : ''
+    const isActive = editor?.isActive(tag, options) ? 'bg-white text-slate-900 ring-1 ring-slate-200 shadow-sm' : ''
 
-    return classnames(isActive, 'hover:text-neutral-700 hover:bg-black/5')
+    return classnames(isActive, 'hover:text-slate-800 hover:bg-white/90')
   }
 
   return (
     <div className={`${className}`}>
-      <div className="border border-gray-300 rounded">
-        <div className="p-4 flex items-center">
-          {editor && <div className="Button-group">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center gap-1 px-3 pb-1 pt-3">
+          {editor && <div className="Button-group flex flex-wrap items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onQuickActionIconClick?.('project')}
+              aria-label="Quick assign project"
+            >
+              <Hash className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onQuickActionIconClick?.('label')}
+              aria-label="Quick assign label"
+            >
+              <AtSign className="h-4 w-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -406,10 +642,20 @@ const TextEditor = forwardRef<EditorMethods, TextEditorProps>(({ className = '',
             </Popover>
           </div>}
         </div>
+        {quickActionPanel && (
+          <div className="px-3 pb-2">
+            {quickActionPanel}
+          </div>
+        )}
 
-        <div className="overflow-auto bg-white relative">
-          <EditorContent editor={editor} className="p-4" />
+        <div className={`overflow-auto bg-white ${EDITOR_CONTENT_MAX_HEIGHT_CLASS}`}>
+          <EditorContent editor={editor} className="p-4 pt-2" />
         </div>
+        {footer && (
+          <div className="sticky bottom-0 border-t border-slate-100 bg-white px-3 py-2">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   )

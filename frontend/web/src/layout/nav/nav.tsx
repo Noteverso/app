@@ -393,7 +393,7 @@ export function Nav({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <BreadcrumbButton onClick={onToggle} className="ml-auto absolute left-full" />
+          <BreadcrumbButton onClick={onToggle} className="ml-auto" />
         </div>
       </div>
 

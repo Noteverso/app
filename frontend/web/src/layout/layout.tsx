@@ -7,6 +7,10 @@ import type { FullProject } from '@/types/project'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet/sheet'
 import { Button } from '@/components/ui/button/button'
 
+export function getContentTopControlsClass() {
+  return 'mb-2 flex h-10 items-center md:hidden'
+}
+
 export function Layout() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true)
   const sidebarRef = useRef<HTMLDivElement>(null)
@@ -65,39 +69,37 @@ export function Layout() {
       </div>
 
       <div id="app-layout__content" className="h-full flex-grow overflow-auto transition-all duration-300 ease-in-out">
-        <header className="flex h-[60px] items-center gap-4 px-4 lg:px-6 mb-4">
-          {/* 移动端侧边栏 */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0 md:hidden"
-              >
-                <PanelLeft className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-
-            <SheetContent side="left" className="flex flex-col p-0">
-              <SheetHeader className="hidden">
-                <SheetTitle>Edit profile</SheetTitle>
-                <SheetDescription>
-                  The mobile device navigation
-                </SheetDescription>
-              </SheetHeader>
-              <Nav 
-                projects={projects} 
-                setProjects={setProjects}
-                refetchProjects={refetchProjects}
-              />
-            </SheetContent>
-          </Sheet>
-        </header>
-
         <div id="app-main" className="grid justify-items-center px-4 lg:px-6">
           <div id="app-main__content" className="w-full max-w-[var(--main-content-max-width)]">
-            <Outlet context={{ projects: otherProjects, inboxProject }} />
+            <div className={getContentTopControlsClass()}>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0 md:hidden"
+                  >
+                    <PanelLeft className="h-5 w-5" />
+                    <span className="sr-only">Toggle navigation menu</span>
+                  </Button>
+                </SheetTrigger>
+
+                <SheetContent side="left" className="flex flex-col p-0">
+                  <SheetHeader className="hidden">
+                    <SheetTitle>Edit profile</SheetTitle>
+                    <SheetDescription>
+                      The mobile device navigation
+                    </SheetDescription>
+                  </SheetHeader>
+                  <Nav 
+                    projects={projects} 
+                    setProjects={setProjects}
+                    refetchProjects={refetchProjects}
+                  />
+                </SheetContent>
+              </Sheet>
+            </div>
+            <Outlet context={{ projects: otherProjects, inboxProject, isSidebarVisible, onToggleSidebar: handleNavToggle }} />
           </div>
         </div>
       </div>
