@@ -46,7 +46,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-Backend runs on http://localhost:8080
+Backend runs on http://localhost:8081
 
 ### 5. Start Frontend (Local)
 
@@ -67,7 +67,7 @@ docker compose -f docker compose.full.yml up -d
 
 Access:
 - Frontend: http://localhost:3000
-- Backend: http://localhost:8080
+- Backend: http://localhost:8081
 - Mailpit: http://localhost:8025
 - MinIO: http://localhost:9001
 

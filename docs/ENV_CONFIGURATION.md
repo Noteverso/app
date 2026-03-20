@@ -122,7 +122,7 @@ docker compose -f docker compose.full.yml up -d
 
 # Access:
 # - Frontend: http://localhost:3000
-# - Backend: http://localhost:8080
+# - Backend: http://localhost:8081
 ```
 
 ## Environment Variables Used

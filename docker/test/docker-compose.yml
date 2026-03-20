@@ -56,11 +56,9 @@ services:
     ports:
       - "127.0.0.1:1026:1025"
       - "127.0.0.1:8026:8025"
-    volumes:
-      - ./mailpit-auth.txt:/etc/mailpit/auth.txt:ro
     environment:
       MP_MAX_MESSAGES: 1000
-      MP_SMTP_AUTH_FILE: /etc/mailpit/auth.txt
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
 volumes:

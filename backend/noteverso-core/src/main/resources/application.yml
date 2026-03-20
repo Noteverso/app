@@ -63,7 +63,7 @@ noteverso:
   jwtSecret: ${JWT_SECRET}
   jwtExpirationDays: ${JWT_EXPIRATION_DAYS}
   openapi :
-    dev-url: http://localhost:8080
+    dev-url: http://localhost:8081
     prod-url: http://api.noteverso.com/docs
 oss:
   accessKey: ${OSS_ACCESS_KEY}
