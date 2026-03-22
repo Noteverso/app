@@ -2,6 +2,11 @@
 
 Reusable collaboration guide for AI coding agents.
 
+## Project instructions
+
+- This monorepo uses host-provided external services for E2E.
+- Do not start frontend, backend, db, or redis inside Codex unless explicitly asked.
+
 ## 1) Core Working Agreement
 
 1. Before writing code, provide a short implementation approach and wait for approval.
