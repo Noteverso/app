@@ -9,6 +9,10 @@ import { cn } from '@/lib/utils'
 
 const ToastProvider = ToastPrimitives.Provider
 
+export function getToastViewportClassName() {
+  return 'fixed bottom-0 left-0 z-[100] flex max-h-screen w-full flex-col p-4 md:max-w-[420px]'
+}
+
 const ToastViewport = React.forwardRef<
     React.ElementRef<typeof ToastPrimitives.Viewport>,
     React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
@@ -16,7 +20,7 @@ const ToastViewport = React.forwardRef<
     <ToastPrimitives.Viewport
         ref={ref}
         className={cn(
-          'fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]',
+          getToastViewportClassName(),
           className,
         )}
         {...props}

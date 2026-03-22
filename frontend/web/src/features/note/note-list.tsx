@@ -1,7 +1,7 @@
 import { NoteCard } from './note-card'
-import type { FullNote } from '@/types/note'
+import type { NoteListItem } from '@/types/note'
 
-export function NoteList({ notes, refFunc }: { notes: FullNote[], refFunc: (node: HTMLElement | null) => void }) {
+export function NoteList({ notes, refFunc }: { notes: NoteListItem[], refFunc: (node: HTMLElement | null) => void }) {
   return (
     <ul className="flex flex-col gap-x-4">
       {notes.map((note, index) => (

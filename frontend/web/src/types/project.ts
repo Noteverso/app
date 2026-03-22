@@ -15,5 +15,5 @@ export type NewProject = BaseProject
 export type ProjectOutletContext = {
   projects: FullProject[];
   inboxProject: FullProject;
+  refetchProjects: () => void;
 }
-

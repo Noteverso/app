@@ -49,13 +49,6 @@ export function NoteCard(props: NoteCardProps) {
       </div>
 
       <div className="flex flex-wrap gap-x-4">
-        {/* <NoteMetaButton
-          icon={Hash}
-          text={project.name}
-          className="w-auto gap-x-1 text-gray-400"
-          onClick={() => navigate(`${ROUTER_PATHS.PROJECTS.path}/${project.projectId}`)}
-          hover
-        /> */}
         { attachmentCount && <NoteMetaButton
             icon={Paperclip}
             text={`${attachmentCount} ${attachmentCount === 1 ? 'file' : 'files'}`}

@@ -6,6 +6,7 @@ import type { FullProject } from '@/types/project'
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet/sheet'
 import { Button } from '@/components/ui/button/button'
+import { Toaster } from '@/components/ui/toast/toaster'
 
 export function getContentTopControlsClass() {
   return 'mb-2 flex h-10 items-center md:hidden'
@@ -60,11 +61,11 @@ export function Layout() {
         style={{ '--copmuted-sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
         id="app-nav"
         className={`relative hidden md:block flex-shrink-0 flex-grow-0 md:w-[var(--sidebar-width)] min-w-0 transition-[margin-left] duration-300 ease-in-out ${isSidebarVisible ? 'ml-0' : '-ml-[var(--copmuted-sidebar-width)]'}`}>
-        <Nav 
-          projects={projects} 
+        <Nav
+          projects={projects}
           setProjects={setProjects}
           refetchProjects={refetchProjects}
-          onToggle={handleNavToggle} 
+          onToggle={handleNavToggle}
         />
       </div>
 
@@ -91,15 +92,22 @@ export function Layout() {
                       The mobile device navigation
                     </SheetDescription>
                   </SheetHeader>
-                  <Nav 
-                    projects={projects} 
+                  <Nav
+                    projects={projects}
                     setProjects={setProjects}
                     refetchProjects={refetchProjects}
                   />
                 </SheetContent>
               </Sheet>
             </div>
-            <Outlet context={{ projects: otherProjects, inboxProject, isSidebarVisible, onToggleSidebar: handleNavToggle }} />
+            <Outlet context={{
+              projects: otherProjects,
+              inboxProject,
+              refetchProjects,
+              isSidebarVisible,
+              onToggleSidebar: handleNavToggle,
+            }} />
+            <Toaster />
           </div>
         </div>
       </div>

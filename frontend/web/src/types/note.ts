@@ -17,6 +17,14 @@ export interface FullNote extends BaseNote {
   creator: string;
 }
 
+export interface NoteNavigationHint {
+  projectId: string;
+  projectName: string;
+  routePath: string;
+}
+
+export type NoteListItem = FullNote
+
 export interface NewNote {
   contentJson: object;
   projectId: string;

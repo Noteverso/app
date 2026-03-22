@@ -1,22 +1,23 @@
-import { json, useFetcher, useLocation, useOutletContext, useParams } from 'react-router-dom'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { json, useFetcher, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AtSign, HashIcon, PanelLeft, Plus } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
+import { extractQuickTokenBinding } from './quick-action-binding'
 import { NoteList } from '@/features/note'
 import { TextEditor } from '@/features/editor'
 import { Button } from '@/components/ui/button/button'
 import { ROUTER_PATHS } from '@/constants'
-import type { FullNote, NotePageLoaderData } from '@/types/note'
+import type { FullNote, NoteListItem, NoteNavigationHint, NotePageLoaderData } from '@/types/note'
 import { getNotesApi } from '@/api/note/note'
 import type { ProjectOutletContext } from '@/types/project'
 import type { EditorMethods, QuickActionQuery, QuickActionTokenClickPayload } from '@/features/editor/text-editor'
-import { getLabelSelectItemsApi, createLabelApi } from '@/api/label/label'
+import { createLabelApi, getLabelSelectItemsApi } from '@/api/label/label'
 import type { SelectItem as LabelSelectItem } from '@/types/label'
 import { createProjectApi } from '@/api/project/project'
 import { PROJECT_COLORS } from '@/constants/project-constants'
+import { ToastAction } from '@/components/ui/toast/toast'
 import { useToast } from '@/components/ui/toast/use-toast'
 import type { QuickActionTokenAttrs } from '@/features/editor/quick-action-token'
-import { extractQuickTokenBinding } from './quick-action-binding'
 
 interface ProjectPageProps {
   title?: string;
@@ -26,6 +27,15 @@ interface ProjectPageProps {
 type SharedNotesOutletContext = ProjectOutletContext & {
   isSidebarVisible: boolean;
   onToggleSidebar: () => void;
+}
+
+type AvailableProject = {
+  projectId: string;
+  name: string;
+  color: string;
+  noteCount: number;
+  isFavorite: 0 | 1;
+  inboxProject: boolean;
 }
 
 type QuickSuggestion = {
@@ -44,8 +54,18 @@ type QuickActionAnchor = {
 
 type OptimisticSaveContext = {
   tempNoteId: string;
-  contentJson: object;
+  rawContentJson: object;
+  sanitizedContentJson: object;
+  hasEditorContent: boolean;
+  labels: FullNote['labels'];
+  project: FullNote['project'];
+  navigationHint: NoteNavigationHint | null;
+  shouldInsertOptimisticNote: boolean;
 }
+
+const LABEL_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899']
+
+export type SharedNotesRouteKind = 'inbox' | 'project' | 'other'
 
 export function shouldInsertOptimisticNote(
   previousState: string,
@@ -60,11 +80,12 @@ export function shouldInsertOptimisticNote(
 }
 
 export function shouldFinalizeOptimisticNote(previousState: string, currentState: string) {
-  return previousState === 'submitting' && currentState === 'idle'
+  return currentState === 'idle'
+    && (previousState === 'submitting' || previousState === 'loading')
 }
 
 export function reconcileOptimisticNote(
-  notes: FullNote[],
+  notes: NoteListItem[],
   activeSave: OptimisticSaveContext,
   result?: { ok: boolean; note: string },
 ) {
@@ -83,58 +104,140 @@ export function nextEditorInstanceKeyOnSave(currentKey: number, saveResult?: { o
   return saveResult?.ok ? currentKey + 1 : currentKey
 }
 
+export function shouldKeepOptimisticNoteInCurrentList(currentProjectId: string, selectedProjectId: string) {
+  return !currentProjectId || currentProjectId === selectedProjectId
+}
+
+export function shouldShowCreatedNoteNavigationHint(currentProjectId: string, selectedProjectId: string) {
+  return Boolean(currentProjectId) && currentProjectId !== selectedProjectId
+}
+
+export function isCreateSubmitDisabled(fetcherState: string, hasEditorContent: boolean) {
+  return fetcherState !== 'idle' || !hasEditorContent
+}
+
+export function mergeSameRouteNoteRecords(
+  existingNotes: NoteListItem[],
+  incomingRecords: NoteListItem[],
+) {
+  const incomingIds = new Set(incomingRecords.map(note => note.noteId))
+  const preservedExistingNotes = existingNotes.filter(note => !incomingIds.has(note.noteId))
+  return [...incomingRecords, ...preservedExistingNotes]
+}
+
+export function resolveSharedNotesRouteContext(
+  pathname: string,
+  projectId: string | undefined,
+  projects: Array<{ projectId: string; name: string; inboxProject: boolean }>,
+  inboxProject: { projectId: string } | null | undefined,
+  title?: string,
+) {
+  if (pathname.includes(ROUTER_PATHS.INBOX.path)) {
+    return {
+      routeKind: 'inbox' as const,
+      actionPath: ROUTER_PATHS.INBOX.path,
+      projectName: ROUTER_PATHS.INBOX.name,
+      currentProjectId: inboxProject?.projectId || '',
+      defaultSelectedProjectId: inboxProject?.projectId || '',
+      supportsScopedCreateBehavior: true,
+    }
+  }
+
+  if (projectId) {
+    return {
+      routeKind: 'project' as const,
+      actionPath: `${ROUTER_PATHS.PROJECTS.path}/${projectId}`,
+      projectName: projects.find(project => project.projectId === projectId)?.name || '',
+      currentProjectId: projectId,
+      defaultSelectedProjectId: projectId,
+      supportsScopedCreateBehavior: true,
+    }
+  }
+
+  return {
+    routeKind: 'other' as const,
+    actionPath: pathname,
+    projectName: title || '',
+    currentProjectId: '',
+    defaultSelectedProjectId: inboxProject?.projectId || '',
+    supportsScopedCreateBehavior: false,
+  }
+}
+
+export function createSavedNoteListItem(
+  activeSave: OptimisticSaveContext,
+  noteId: string,
+  addedAt = new Date().toISOString(),
+): NoteListItem {
+  return {
+    noteId,
+    contentJson: activeSave.sanitizedContentJson,
+    addedAt,
+    labels: activeSave.labels,
+    project: activeSave.project,
+    attachmentCount: null,
+    referencedCount: null,
+    referencingCount: null,
+    updatedAt: addedAt,
+    isDeleted: 0,
+    isPinned: 0,
+    isArchived: 0,
+    creator: '',
+  }
+}
+
 function getEmptyEditorContent() {
   return {}
 }
 
+export function getCreatedNoteNavigationToastTitle(projectName: string) {
+  return `Note created in ${projectName}`
+}
+
+export const CREATED_NOTE_NAVIGATION_TOAST_DESCRIPTION = 'Open the destination project to view it.'
+
 export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
-  const { projects, inboxProject, isSidebarVisible, onToggleSidebar } = useOutletContext() as SharedNotesOutletContext
+  const { projects, inboxProject, refetchProjects, isSidebarVisible, onToggleSidebar } = useOutletContext() as SharedNotesOutletContext
   const { toast } = useToast()
   const fetcher = useFetcher()
   const location = useLocation()
+  const navigate = useNavigate()
   const { projectId } = useParams() as { projectId: string }
-  const isInbox = location.pathname.includes(ROUTER_PATHS.INBOX.path)
+  const routeContext = useMemo(
+    () => resolveSharedNotesRouteContext(location.pathname, projectId, projects, inboxProject, title),
+    [inboxProject, location.pathname, projectId, projects, title],
+  )
+  const {
+    actionPath,
+    currentProjectId: curProjectId,
+    defaultSelectedProjectId,
+    projectName,
+    routeKind,
+    supportsScopedCreateBehavior,
+  } = routeContext
+  const isInbox = routeKind === 'inbox'
 
-  let curProjectId = ''
-  let actionPath = ''
-  let projectName = ''
-  if (isInbox) {
-    actionPath = ROUTER_PATHS.INBOX.path
-    projectName = ROUTER_PATHS.INBOX.name
-    curProjectId = inboxProject?.projectId || ''
-  } else {
-    actionPath = `${ROUTER_PATHS.PROJECTS.path}/${projectId}`
-    projectName = projects.find(project => project.projectId === projectId)?.name || ''
-    curProjectId = projectId
-  }
-
-  const [selectedProjectId, setSelectedProjectId] = useState(curProjectId)
+  const [selectedProjectId, setSelectedProjectId] = useState(defaultSelectedProjectId)
   const [quickActionQuery, setQuickActionQuery] = useState<QuickActionQuery | null>(null)
   const [quickActionSource, setQuickActionSource] = useState<'typed' | 'icon' | 'token' | null>(null)
   const [quickActionIndex, setQuickActionIndex] = useState(0)
   const [quickActionAnchor, setQuickActionAnchor] = useState<QuickActionAnchor | null>(null)
   const [targetTokenId, setTargetTokenId] = useState<string | null>(null)
-  const [availableProjects, setAvailableProjects] = useState<{
-    projectId: string;
-    name: string;
-    color: string;
-    noteCount: number;
-    isFavorite: 0 | 1;
-    inboxProject: boolean;
-  }[]>([])
+  const [availableProjects, setAvailableProjects] = useState<AvailableProject[]>([])
   const [labelOptions, setLabelOptions] = useState<LabelSelectItem[]>([])
 
   const [editorContentJson, setEditorContentJson] = useState<object>({})
   const [hasEditorContent, setHasEditorContent] = useState(false)
   const [editorInstanceKey, setEditorInstanceKey] = useState(0)
 
-  const [notes, setNotes] = useState(initialNotePage.records)
+  const [notes, setNotes] = useState<NoteListItem[]>(initialNotePage.records)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const editorRef = useRef<EditorMethods>(null)
   const previousFetcherStateRef = useRef(fetcher.state)
   const activeOptimisticSaveRef = useRef<OptimisticSaveContext | null>(null)
-  const LABEL_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899']
+  const activeNavigationToastDismissRef = useRef<(() => void) | null>(null)
+  const previousRoutePathRef = useRef(location.pathname)
 
   // 避免执行多余请求
   const [hasMore, setHasMore] = useState(initialNotePage.total > initialNotePage.records.length)
@@ -161,16 +264,79 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     }
   }, [loading, hasMore])
 
-  // /app/projects/:projectId 路由之间切换更新数据
+  const restoreComposerState = useCallback((contentJson: object, nextHasEditorContent: boolean) => {
+    setEditorContentJson(contentJson)
+    setHasEditorContent(nextHasEditorContent)
+
+    const bindings = extractQuickTokenBinding(contentJson)
+    setSelectedProjectId(bindings.projectId || defaultSelectedProjectId)
+    setQuickActionQuery(null)
+    setQuickActionSource(null)
+    setQuickActionAnchor(null)
+    setTargetTokenId(null)
+  }, [defaultSelectedProjectId])
+
   useEffect(() => {
-    if (projectId) {
+    const routeChanged = previousRoutePathRef.current !== location.pathname
+    let nextNotes = initialNotePage.records
+
+    if (routeChanged) {
       setNotes(initialNotePage.records)
+      setPage(1)
+      setHasMore(initialNotePage.total > initialNotePage.records.length)
+      previousRoutePathRef.current = location.pathname
+      return
     }
-  }, [projectId, initialNotePage])
+
+    setNotes((prevNotes) => {
+      nextNotes = mergeSameRouteNoteRecords(prevNotes, initialNotePage.records)
+      return nextNotes
+    })
+    setHasMore(initialNotePage.total > nextNotes.length)
+    previousRoutePathRef.current = location.pathname
+  }, [initialNotePage, location.pathname])
+
+  const dismissNavigationHintToast = useCallback(() => {
+    activeNavigationToastDismissRef.current?.()
+    activeNavigationToastDismissRef.current = null
+  }, [])
+
+  const showNavigationHintToast = useCallback((hint: NoteNavigationHint | null) => {
+    dismissNavigationHintToast()
+    if (!hint) {
+      return
+    }
+
+    let dismissToast: (() => void) | null = null
+    const toastHandle = toast({
+      title: getCreatedNoteNavigationToastTitle(hint.projectName),
+      description: CREATED_NOTE_NAVIGATION_TOAST_DESCRIPTION,
+      action: (
+        <ToastAction
+          altText={`Open ${hint.projectName}`}
+          onClick={() => {
+            dismissToast?.()
+            navigate(hint.routePath)
+          }}
+        >
+          Open project
+        </ToastAction>
+      ),
+    })
+
+    dismissToast = toastHandle.dismiss
+    activeNavigationToastDismissRef.current = toastHandle.dismiss
+  }, [dismissNavigationHintToast, navigate, toast])
+
+  useEffect(() => {
+    dismissNavigationHintToast()
+  }, [dismissNavigationHintToast, location.pathname])
+
+  useEffect(() => dismissNavigationHintToast, [dismissNavigationHintToast])
 
   useEffect(() => {
     const incoming = inboxProject ? [inboxProject, ...projects.filter(project => project.projectId !== inboxProject.projectId)] : projects
-    setAvailableProjects(prev => {
+    setAvailableProjects((prev) => {
       const createdOnly = prev.filter(project => !incoming.some(incomingProject => incomingProject.projectId === project.projectId))
       return [...incoming, ...createdOnly]
     })
@@ -191,12 +357,18 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
   const resetComposerState = useCallback(() => {
     setEditorContentJson(getEmptyEditorContent())
     setHasEditorContent(false)
-    setSelectedProjectId(curProjectId)
+    setSelectedProjectId(defaultSelectedProjectId)
     setQuickActionQuery(null)
     setQuickActionSource(null)
     setQuickActionAnchor(null)
     setTargetTokenId(null)
-  }, [curProjectId])
+  }, [defaultSelectedProjectId])
+
+  const handleCreateFormSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
+    if (fetcher.state !== 'idle') {
+      event.preventDefault()
+    }
+  }, [fetcher.state])
 
   // Effect to load more notes when page changes
   useEffect(() => {
@@ -237,35 +409,47 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
 
     if (isSubmitStart && fetcher.formData) {
       const tempNoteId = uuidv4()
-      const contentJson = JSON.parse(fetcher.formData.get('contentJson') as string)
-      const optimisticProjectId = (fetcher.formData.get('projectId') as string) || curProjectId
-      const optimisticLabelIds = JSON.parse((fetcher.formData.get('labels') as string) || '[]') as string[]
-      const optimisticNote: FullNote = {
-        noteId: tempNoteId,
-        contentJson,
-        addedAt: new Date().toISOString(),
+      const sanitizedContentJson = JSON.parse(fetcher.formData.get('contentJson') as string)
+      const targetProjectId = (fetcher.formData.get('projectId') as string) || defaultSelectedProjectId
+      const targetLabelIds = JSON.parse((fetcher.formData.get('labels') as string) || '[]') as string[]
+      const targetProject = availableProjects.find(project => project.projectId === targetProjectId)
+      const projectLabel = targetProject?.inboxProject
+        ? ROUTER_PATHS.INBOX.name
+        : targetProject?.name || projectName || title || ROUTER_PATHS.INBOX.name
+      const shouldInsertNote = supportsScopedCreateBehavior
+        ? shouldKeepOptimisticNoteInCurrentList(curProjectId, targetProjectId)
+        : true
+      const nextActiveSave: OptimisticSaveContext = {
+        tempNoteId,
+        rawContentJson: editorContentJson,
+        sanitizedContentJson,
+        hasEditorContent,
         labels: labelOptions
-          .filter(label => optimisticLabelIds.includes(label.value))
+          .filter(label => targetLabelIds.includes(label.value))
           .map(label => ({ labelId: label.value, name: label.name })),
         project: {
-          projectId: optimisticProjectId,
-          name: availableProjects.find(project => project.projectId === optimisticProjectId)?.name || projectName,
+          projectId: targetProjectId,
+          name: targetProject?.name || projectName || title || ROUTER_PATHS.INBOX.name,
         },
-        attachmentCount: null,
-        referencedCount: null,
-        referencingCount: null,
-        updatedAt: new Date().toISOString(),
-        isDeleted: 0,
-        isPinned: 0,
-        isArchived: 0,
-        creator: '',
+        navigationHint: supportsScopedCreateBehavior && shouldShowCreatedNoteNavigationHint(curProjectId, targetProjectId)
+          ? {
+              projectId: targetProjectId,
+              projectName: projectLabel,
+              routePath: targetProject?.inboxProject
+                ? ROUTER_PATHS.INBOX.path
+                : `${ROUTER_PATHS.PROJECTS.path}/${targetProjectId}`,
+            }
+          : null,
+        shouldInsertOptimisticNote: shouldInsertNote,
       }
+      activeOptimisticSaveRef.current = nextActiveSave
+      dismissNavigationHintToast()
+      resetComposerState()
+      editorRef.current?.reset()
 
-      activeOptimisticSaveRef.current = {
-        tempNoteId,
-        contentJson,
+      if (shouldInsertNote) {
+        setNotes(prevNotes => [createSavedNoteListItem(nextActiveSave, tempNoteId), ...prevNotes])
       }
-      setNotes(prevNotes => [optimisticNote, ...prevNotes])
     } else if (isSubmitEnd) {
       const activeSave = activeOptimisticSaveRef.current
       if (!activeSave) {
@@ -275,20 +459,44 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
 
       const res = fetcher.data as { ok: boolean, note: string } | undefined
       if (res?.ok) {
-        setNotes(prevNotes => reconcileOptimisticNote(prevNotes, activeSave, res))
-        resetComposerState()
-        editorRef.current?.reset()
+        if (activeSave.shouldInsertOptimisticNote) {
+          setNotes(prevNotes => reconcileOptimisticNote(prevNotes, activeSave, res))
+          dismissNavigationHintToast()
+        } else {
+          showNavigationHintToast(activeSave.navigationHint)
+        }
+        refetchProjects()
         setEditorInstanceKey(prev => nextEditorInstanceKeyOnSave(prev, res))
       } else {
-        handleContentChange(activeSave.contentJson || {}, true)
-        editorRef.current?.setContentJson(activeSave.contentJson)
-        setNotes(prevNotes => reconcileOptimisticNote(prevNotes, activeSave))
+        if (activeSave.shouldInsertOptimisticNote) {
+          setNotes(prevNotes => reconcileOptimisticNote(prevNotes, activeSave))
+        }
+        restoreComposerState(activeSave.rawContentJson || {}, activeSave.hasEditorContent)
+        editorRef.current?.setContentJson(activeSave.rawContentJson)
       }
 
       activeOptimisticSaveRef.current = null
     }
     previousFetcherStateRef.current = currentState
-  }, [availableProjects, curProjectId, fetcher.data, fetcher.formData, fetcher.state, labelOptions, projectName, resetComposerState])
+  }, [
+    availableProjects,
+    curProjectId,
+    defaultSelectedProjectId,
+    editorContentJson,
+    fetcher.data,
+    fetcher.formData,
+    fetcher.state,
+    hasEditorContent,
+    labelOptions,
+    projectName,
+    dismissNavigationHintToast,
+    refetchProjects,
+    resetComposerState,
+    restoreComposerState,
+    showNavigationHintToast,
+    supportsScopedCreateBehavior,
+    title,
+  ])
 
   function handleContentChange(contentJson: object, hasContent: boolean) {
     setEditorContentJson(contentJson)
@@ -298,7 +506,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     if (bindings.projectId) {
       setSelectedProjectId(bindings.projectId)
     } else {
-      setSelectedProjectId(curProjectId)
+      setSelectedProjectId(defaultSelectedProjectId)
     }
   }
 
@@ -442,6 +650,10 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     setTargetTokenId(null)
   }, [quickSuggestions, toast, quickActionSource, targetTokenId])
 
+  const triggerQuickSuggestionSelection = useCallback((index: number) => {
+    applyQuickSuggestion(index).catch(() => undefined)
+  }, [applyQuickSuggestion])
+
   const handleQuickActionKeyDown = useCallback((event: globalThis.KeyboardEvent) => {
     if (!quickActionQuery || quickSuggestions.length === 0) {
       return false
@@ -461,7 +673,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
 
     if (event.key === 'Enter') {
       event.preventDefault()
-      void applyQuickSuggestion(quickActionIndex)
+      triggerQuickSuggestionSelection(quickActionIndex)
       return true
     }
 
@@ -474,9 +686,9 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     }
 
     return false
-  }, [quickActionQuery, quickSuggestions, quickActionIndex, applyQuickSuggestion])
+  }, [quickActionQuery, quickSuggestions, quickActionIndex, triggerQuickSuggestionSelection])
 
-  const effectiveProjectId = selectedProjectId || curProjectId || ''
+  const effectiveProjectId = selectedProjectId || defaultSelectedProjectId || ''
   const quickTokenBinding = useMemo(() => extractQuickTokenBinding(editorContentJson), [editorContentJson])
   const sanitizedEditorContentJson = quickTokenBinding.sanitizedContentJson
   const handleEditorQuickActionQuery = useCallback((query: QuickActionQuery | null) => {
@@ -564,7 +776,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
         )}
         <h1 className="text-2xl">{projectName ?? title}</h1>
       </div>
-      <fetcher.Form method="post" action={actionPath} className="relative mb-5">
+      <fetcher.Form method="post" action={actionPath} className="relative mb-5" onSubmit={handleCreateFormSubmit}>
         <input type="hidden" name="contentJson" value={JSON.stringify(sanitizedEditorContentJson)} />
         <input type="hidden" name="labels" value={JSON.stringify(quickTokenBinding.labelIds)} />
         <input type="hidden" name="projectId" value={quickTokenBinding.projectId || effectiveProjectId} />
@@ -584,7 +796,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
                 name="note-save"
                 value="save"
                 className="bg-slate-900 text-white hover:bg-slate-800"
-                disabled={fetcher.state === 'submitting' || (!hasEditorContent && fetcher.state === 'idle')}>
+                disabled={isCreateSubmitDisabled(fetcher.state, hasEditorContent)}>
                 保存
               </Button>
             </div>
@@ -608,7 +820,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
                   }`}
                   onMouseDown={(event) => {
                     event.preventDefault()
-                    void applyQuickSuggestion(index)
+                    triggerQuickSuggestionSelection(index)
                   }}
                 >
                   <span className="flex items-center gap-2">
