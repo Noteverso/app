@@ -24,6 +24,7 @@ export async function createProjectApi(data: NewProject) {
   const response = await request<string>({
     url: '/api/v1/projects',
     method: 'post',
+    responseType: 'text',
     data: {
       name: data.name,
       color: data.color,

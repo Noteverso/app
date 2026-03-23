@@ -13,6 +13,7 @@ export function createLabelApi(data: LabelCreateRequest) {
   return request<string>({
     url: '/api/v1/labels',
     method: 'post',
+    responseType: 'text',
     data,
   })
 }

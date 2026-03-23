@@ -66,4 +66,66 @@ describe('extractQuickTokenBinding', () => {
       ],
     })
   })
+
+  it('extracts project and labels from lowercase live-editor attrs', () => {
+    const contentJson = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'Live editor ' },
+            { type: 'quickActionToken', attrs: { tokenid: 'p1', tokentype: 'project', entityid: 'project-live-1', label: 'Live Project' } },
+            { type: 'quickActionToken', attrs: { tokenid: 'l1', tokentype: 'label', entityid: 'label-live-1', label: 'Live Label' } },
+          ],
+        },
+      ],
+    }
+
+    const result = extractQuickTokenBinding(contentJson)
+    expect(result.projectId).toBe('project-live-1')
+    expect(result.labelIds).toEqual(['label-live-1'])
+    expect(result.sanitizedContentJson).toEqual({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'Live editor ' },
+          ],
+        },
+      ],
+    })
+  })
+
+  it('normalizes numeric entity ids from the live editor to strings', () => {
+    const contentJson = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'Numeric project ' },
+            { type: 'quickActionToken', attrs: { tokenId: 'p1', tokenType: 'project', entityId: 315011398767874050, label: 'Numeric Project' } },
+            { type: 'quickActionToken', attrs: { tokenId: 'l1', tokenType: 'label', entityId: 42, label: 'Numeric Label' } },
+          ],
+        },
+      ],
+    }
+
+    const result = extractQuickTokenBinding(contentJson)
+    expect(result.projectId).toBe('315011398767874050')
+    expect(result.labelIds).toEqual(['42'])
+    expect(result.sanitizedContentJson).toEqual({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'Numeric project ' },
+          ],
+        },
+      ],
+    })
+  })
 })

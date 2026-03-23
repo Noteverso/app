@@ -128,9 +128,7 @@ export function Label() {
     try {
       const response = await deleteLabelApi(labelId)
       
-      if (response.ok) {
-        toast({ title: 'Label deleted successfully' })
-      } else {
+      if (!response.ok) {
         throw new Error('Failed to delete')
       }
     } catch (error) {

@@ -67,7 +67,75 @@ const INBOX_TARGET_CONTENT = {
   ],
 }
 
+const LOWERCASE_PROJECT_ATTR_CONTENT = {
+  type: 'doc',
+  content: [
+    {
+      type: 'paragraph',
+      content: [
+        { type: 'text', text: 'Live editor project ' },
+        {
+          type: 'quickActionToken',
+          attrs: {
+            tokenid: 'project-token-lowercase',
+            tokentype: 'project',
+            entityid: 'project-lowercase-1',
+            label: 'Lowercase Project',
+          },
+        },
+      ],
+    },
+  ],
+}
+
+const NUMERIC_PROJECT_ATTR_CONTENT = {
+  type: 'doc',
+  content: [
+    {
+      type: 'paragraph',
+      content: [
+        { type: 'text', text: 'Numeric runtime project ' },
+        {
+          type: 'quickActionToken',
+          attrs: {
+            tokenId: 'project-token-numeric',
+            tokenType: 'project',
+            entityId: 315011398767874050,
+            label: 'Numeric Runtime Project',
+          },
+        },
+      ],
+    },
+  ],
+}
+
 const sharedTestState = vi.hoisted(() => {
+  const initialOutletProjects = [
+    {
+      projectId: 'project-1',
+      name: 'Project One',
+      color: '#111111',
+      noteCount: 3,
+      isFavorite: 0,
+      inboxProject: false,
+    },
+    {
+      projectId: 'project-2',
+      name: 'Project Two',
+      color: '#222222',
+      noteCount: 5,
+      isFavorite: 0,
+      inboxProject: false,
+    },
+  ]
+  const initialInboxProject = {
+    projectId: 'inbox-1',
+    name: 'Inbox',
+    color: '#000000',
+    noteCount: 12,
+    isFavorite: 0,
+    inboxProject: true,
+  }
   const state = {
     fetcher: {
       state: 'idle',
@@ -96,40 +164,27 @@ const sharedTestState = vi.hoisted(() => {
       replaceQuickActionToken: vi.fn(),
     },
     outletContext: {
-      projects: [
-        {
-          projectId: 'project-1',
-          name: 'Project One',
-          color: '#111111',
-          noteCount: 3,
-          isFavorite: 0,
-          inboxProject: false,
-        },
-        {
-          projectId: 'project-2',
-          name: 'Project Two',
-          color: '#222222',
-          noteCount: 5,
-          isFavorite: 0,
-          inboxProject: false,
-        },
-      ],
-      inboxProject: {
-        projectId: 'inbox-1',
-        name: 'Inbox',
-        color: '#000000',
-        noteCount: 12,
-        isFavorite: 0,
-        inboxProject: true,
-      },
+      projects: initialOutletProjects.map(project => ({ ...project })),
+      inboxProject: { ...initialInboxProject },
       refetchProjects: vi.fn(),
+      upsertProject: vi.fn(),
       isSidebarVisible: true,
       onToggleSidebar: vi.fn(),
     },
   }
 
+  state.outletContext.upsertProject = vi.fn((project) => {
+    state.outletContext.projects = [
+      ...state.outletContext.projects.filter(existingProject => existingProject.projectId !== project.projectId),
+      project,
+    ]
+  })
+
   return {
     ...state,
+    initialOutletProjects,
+    initialInboxProject,
+    upsertProject: state.outletContext.upsertProject,
     toast: vi.fn((..._args: unknown[]) => ({
       id: 'toast-1',
       dismiss: state.dismissToast,
@@ -176,6 +231,22 @@ vi.mock('@/features/editor', async () => {
         </button>
         <button type="button" onClick={() => props.onChange?.(INBOX_TARGET_CONTENT, true)}>
           Set inbox-target content
+        </button>
+        <button type="button" onClick={() => props.onChange?.(LOWERCASE_PROJECT_ATTR_CONTENT, true)}>
+          Set lowercase project token content
+        </button>
+        <button type="button" onClick={() => props.onChange?.(NUMERIC_PROJECT_ATTR_CONTENT, true)}>
+          Set numeric project token content
+        </button>
+        <button
+          type="button"
+          onClick={() => props.onQuickActionQuery?.({
+            type: 'project',
+            keyword: 'Project',
+            token: '#Project',
+          })}
+        >
+          Open project suggestions
         </button>
         <button
           type="button"
@@ -319,7 +390,11 @@ describe('SharedNotesPage component regressions', () => {
     sharedTestState.editor.consumeQuickActionToken.mockReset()
     sharedTestState.editor.insertQuickActionToken.mockReset()
     sharedTestState.editor.replaceQuickActionToken.mockReset()
+    sharedTestState.upsertProject.mockClear()
+    sharedTestState.outletContext.projects = sharedTestState.initialOutletProjects.map(project => ({ ...project }))
+    sharedTestState.outletContext.inboxProject = { ...sharedTestState.initialInboxProject }
     sharedTestState.outletContext.refetchProjects = sharedTestState.refetchProjects
+    sharedTestState.outletContext.upsertProject = sharedTestState.upsertProject
     sharedTestState.outletContext.onToggleSidebar = sharedTestState.onToggleSidebar
     sharedTestState.outletContext.isSidebarVisible = true
     sharedTestState.getLabelSelectItemsApi.mockResolvedValue({
@@ -387,6 +462,26 @@ describe('SharedNotesPage component regressions', () => {
 
     expect(getHiddenInput(view.container, 'projectId').value).toBe('project-1')
     expect(getHiddenInput(view.container, 'contentJson').value).toContain('Plain note body')
+  })
+
+  it('uses lowercase quick-action project attrs from the live editor as the submitted project id', async () => {
+    const view = render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByRole('button', { name: 'Set lowercase project token content' }))
+
+    expect(getHiddenInput(view.container, 'projectId').value).toBe('project-lowercase-1')
+    expect(getHiddenInput(view.container, 'contentJson').value).not.toContain('Lowercase Project')
+  })
+
+  it('uses numeric quick-action project ids from the live editor as the submitted project id', async () => {
+    const view = render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByRole('button', { name: 'Set numeric project token content' }))
+
+    expect(getHiddenInput(view.container, 'projectId').value).toBe('315011398767874050')
+    expect(getHiddenInput(view.container, 'contentJson').value).not.toContain('Numeric Runtime Project')
   })
 
   it('restores the exact draft project and labels when create fails after an immediate clear', async () => {
@@ -470,16 +565,33 @@ describe('SharedNotesPage component regressions', () => {
 
     expect(sharedTestState.toast).toHaveBeenCalledTimes(1)
     expect(sharedTestState.toast).toHaveBeenCalledWith(expect.objectContaining({
+      duration: 10000,
+      className: 'w-auto max-w-[24rem] items-center gap-2 border-slate-900 bg-slate-900 p-3 pr-9 text-white shadow-lg',
+      contentClassName: 'min-w-0 flex-1',
+      titleClassName: 'truncate whitespace-nowrap text-xs font-medium leading-none text-white',
+      closeClassName: 'text-white/60 hover:text-white focus:text-white focus:ring-white/30 focus:ring-offset-slate-900',
       title: 'Note created in Project Two',
-      description: 'Open the destination project to view it.',
     }))
     expect(sharedTestState.refetchProjects).toHaveBeenCalledTimes(1)
 
     const firstToastCall = sharedTestState.toast.mock.calls.at(0)
     const toastArgs = firstToastCall?.[0] as {
-      action: { props: { onClick: () => void } };
+      duration: number;
+      className: string;
+      contentClassName: string;
+      titleClassName: string;
+      closeClassName: string;
+      description?: string;
+      action: { props: { className?: string; onClick: () => void } };
     } | undefined
     expect(toastArgs).toBeDefined()
+    expect(toastArgs?.duration).toBe(10000)
+    expect(toastArgs?.description).toBeUndefined()
+    expect(toastArgs?.className).toBe('w-auto max-w-[24rem] items-center gap-2 border-slate-900 bg-slate-900 p-3 pr-9 text-white shadow-lg')
+    expect(toastArgs?.contentClassName).toBe('min-w-0 flex-1')
+    expect(toastArgs?.titleClassName).toBe('truncate whitespace-nowrap text-xs font-medium leading-none text-white')
+    expect(toastArgs?.closeClassName).toBe('text-white/60 hover:text-white focus:text-white focus:ring-white/30 focus:ring-offset-slate-900')
+    expect(toastArgs?.action.props.className).toBe('h-7 shrink-0 border-white/15 px-2 text-xs text-white hover:bg-white/10 hover:text-white focus:ring-white/30 focus:ring-offset-slate-900')
     await act(async () => {
       toastArgs?.action.props.onClick()
     })
@@ -577,6 +689,14 @@ describe('SharedNotesPage component regressions', () => {
     fireEvent.mouseDown(createSuggestion)
 
     await waitFor(() => expect(sharedTestState.createProjectApi).toHaveBeenCalledTimes(1))
+    expect(sharedTestState.upsertProject).toHaveBeenCalledWith({
+      projectId: 'project-inline-1',
+      name: 'Inline Created Project',
+      color: expect.any(String),
+      noteCount: 0,
+      isFavorite: 0,
+      inboxProject: false,
+    })
     expect(getHiddenInput(view.container, 'projectId').value).toBe('project-inline-1')
 
     const submitFormData = buildSubmitFormData(view.container)
@@ -586,6 +706,24 @@ describe('SharedNotesPage component regressions', () => {
     expect(sharedTestState.toast).toHaveBeenCalledWith(expect.objectContaining({
       title: 'Note created in Inline Created Project',
     }))
+  })
+
+  it('removes deleted projects from the quick-action dropdown when outlet projects change', async () => {
+    const view = render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByRole('button', { name: 'Open project suggestions' }))
+
+    expect(await screen.findByRole('button', { name: 'Project Two' })).toBeInTheDocument()
+
+    sharedTestState.outletContext.projects = sharedTestState.initialOutletProjects
+      .filter(project => project.projectId !== 'project-2')
+      .map(project => ({ ...project }))
+    view.rerender(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Project Two' })).not.toBeInTheDocument()
+    })
   })
 
   it('treats label detail as outside the scoped cross-project toast flow', async () => {

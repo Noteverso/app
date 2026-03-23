@@ -11,6 +11,20 @@ export type QuickTokenBinding = {
   labelIds: string[];
 }
 
+function getStringAttr(node: JsonObject, ...keys: string[]) {
+  for (const key of keys) {
+    const value = node[key]
+    if (typeof value === 'string' && value) {
+      return value
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return String(value)
+    }
+  }
+
+  return ''
+}
+
 export function extractQuickTokenBinding(contentJson: object): QuickTokenBinding {
   const labelIds: string[] = []
   let projectId: string | null = null
@@ -32,8 +46,9 @@ export function extractQuickTokenBinding(contentJson: object): QuickTokenBinding
     if (nodeType === 'quickActionToken') {
       const attrs = node.attrs
       if (attrs && typeof attrs === 'object' && !Array.isArray(attrs)) {
-        const tokenType = typeof attrs.tokenType === 'string' ? attrs.tokenType : ''
-        const entityId = typeof attrs.entityId === 'string' ? attrs.entityId : ''
+        const normalizedAttrs = attrs as JsonObject
+        const tokenType = getStringAttr(normalizedAttrs, 'tokenType', 'tokentype')
+        const entityId = getStringAttr(normalizedAttrs, 'entityId', 'entityid')
         if (tokenType === 'project' && entityId) {
           projectId = entityId
         }

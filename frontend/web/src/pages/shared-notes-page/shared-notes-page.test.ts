@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  CREATED_NOTE_NAVIGATION_TOAST_DESCRIPTION,
   createSavedNoteListItem,
   getCreatedNoteNavigationToastTitle,
   isCreateSubmitDisabled,
@@ -129,7 +128,6 @@ describe('shared notes optimistic save guards', () => {
 
   it('builds global navigation toast copy for the destination project', () => {
     expect(getCreatedNoteNavigationToastTitle('Project Two')).toBe('Note created in Project Two')
-    expect(CREATED_NOTE_NAVIGATION_TOAST_DESCRIPTION).toBe('Open the destination project to view it.')
   })
 
   it('merges same-route refresh data without dropping already loaded notes', () => {

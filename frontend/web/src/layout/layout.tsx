@@ -12,6 +12,18 @@ export function getContentTopControlsClass() {
   return 'mb-2 flex h-10 items-center md:hidden'
 }
 
+export function upsertProjectList(projects: FullProject[], nextProject: FullProject) {
+  const existingIndex = projects.findIndex(project => project.projectId === nextProject.projectId)
+
+  if (existingIndex === -1) {
+    return [...projects, nextProject]
+  }
+
+  return projects.map(project => (
+    project.projectId === nextProject.projectId ? nextProject : project
+  ))
+}
+
 export function Layout() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true)
   const sidebarRef = useRef<HTMLDivElement>(null)
@@ -52,6 +64,10 @@ export function Layout() {
 
   const refetchProjects = () => {
     revalidator.revalidate()
+  }
+
+  const upsertProject = (nextProject: FullProject) => {
+    setProjects(prevProjects => upsertProjectList(prevProjects, nextProject))
   }
 
   return (
@@ -104,6 +120,7 @@ export function Layout() {
               projects: otherProjects,
               inboxProject,
               refetchProjects,
+              upsertProject,
               isSidebarVisible,
               onToggleSidebar: handleNavToggle,
             }} />

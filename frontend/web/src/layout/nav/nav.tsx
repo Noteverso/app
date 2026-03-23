@@ -338,7 +338,6 @@ export function Nav({
         toast({ title: '成功', description: '项目已归档' })
       } else {
         await deleteProjectApi(curProject.projectId)
-        toast({ title: '成功', description: '项目已删除' })
       }
     } catch (error) {
       // Refetch on failure (simpler than re-adding)
@@ -489,7 +488,7 @@ export function Nav({
                             style={{ color: `var(--named-color-${project.color.replace('_', '-')})` }}
                           />
                           <span>{project.name}</span>
-                          { project.noteCount && <span className="ml-auto bg-transparent text-muted-foreground flex h-6 w-6 shrink-0 items-center justify-center">
+                          { project.noteCount > 0 && <span className="ml-auto bg-transparent text-muted-foreground flex h-6 w-6 shrink-0 items-center justify-center">
                             {project.noteCount}
                             </span>
                           }

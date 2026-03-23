@@ -29,15 +29,6 @@ type SharedNotesOutletContext = ProjectOutletContext & {
   onToggleSidebar: () => void;
 }
 
-type AvailableProject = {
-  projectId: string;
-  name: string;
-  color: string;
-  noteCount: number;
-  isFavorite: 0 | 1;
-  inboxProject: boolean;
-}
-
 type QuickSuggestion = {
   id: string;
   type: 'existing' | 'create';
@@ -194,10 +185,15 @@ export function getCreatedNoteNavigationToastTitle(projectName: string) {
   return `Note created in ${projectName}`
 }
 
-export const CREATED_NOTE_NAVIGATION_TOAST_DESCRIPTION = 'Open the destination project to view it.'
+export const CREATED_NOTE_NAVIGATION_TOAST_DURATION = 10000
+export const CREATED_NOTE_NAVIGATION_TOAST_CLASS_NAME = 'w-auto max-w-[24rem] items-center gap-2 border-slate-900 bg-slate-900 p-3 pr-9 text-white shadow-lg'
+export const CREATED_NOTE_NAVIGATION_TOAST_CONTENT_CLASS_NAME = 'min-w-0 flex-1'
+export const CREATED_NOTE_NAVIGATION_TOAST_TITLE_CLASS_NAME = 'truncate whitespace-nowrap text-xs font-medium leading-none text-white'
+export const CREATED_NOTE_NAVIGATION_TOAST_ACTION_CLASS_NAME = 'h-7 shrink-0 border-white/15 px-2 text-xs text-white hover:bg-white/10 hover:text-white focus:ring-white/30 focus:ring-offset-slate-900'
+export const CREATED_NOTE_NAVIGATION_TOAST_CLOSE_CLASS_NAME = 'text-white/60 hover:text-white focus:text-white focus:ring-white/30 focus:ring-offset-slate-900'
 
 export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
-  const { projects, inboxProject, refetchProjects, isSidebarVisible, onToggleSidebar } = useOutletContext() as SharedNotesOutletContext
+  const { projects, inboxProject, refetchProjects, upsertProject, isSidebarVisible, onToggleSidebar } = useOutletContext() as SharedNotesOutletContext
   const { toast } = useToast()
   const fetcher = useFetcher()
   const location = useLocation()
@@ -223,7 +219,6 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
   const [quickActionIndex, setQuickActionIndex] = useState(0)
   const [quickActionAnchor, setQuickActionAnchor] = useState<QuickActionAnchor | null>(null)
   const [targetTokenId, setTargetTokenId] = useState<string | null>(null)
-  const [availableProjects, setAvailableProjects] = useState<AvailableProject[]>([])
   const [labelOptions, setLabelOptions] = useState<LabelSelectItem[]>([])
 
   const [editorContentJson, setEditorContentJson] = useState<object>({})
@@ -309,10 +304,15 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
 
     let dismissToast: (() => void) | null = null
     const toastHandle = toast({
+      duration: CREATED_NOTE_NAVIGATION_TOAST_DURATION,
+      className: CREATED_NOTE_NAVIGATION_TOAST_CLASS_NAME,
+      contentClassName: CREATED_NOTE_NAVIGATION_TOAST_CONTENT_CLASS_NAME,
+      titleClassName: CREATED_NOTE_NAVIGATION_TOAST_TITLE_CLASS_NAME,
+      closeClassName: CREATED_NOTE_NAVIGATION_TOAST_CLOSE_CLASS_NAME,
       title: getCreatedNoteNavigationToastTitle(hint.projectName),
-      description: CREATED_NOTE_NAVIGATION_TOAST_DESCRIPTION,
       action: (
         <ToastAction
+          className={CREATED_NOTE_NAVIGATION_TOAST_ACTION_CLASS_NAME}
           altText={`Open ${hint.projectName}`}
           onClick={() => {
             dismissToast?.()
@@ -334,13 +334,11 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
 
   useEffect(() => dismissNavigationHintToast, [dismissNavigationHintToast])
 
-  useEffect(() => {
-    const incoming = inboxProject ? [inboxProject, ...projects.filter(project => project.projectId !== inboxProject.projectId)] : projects
-    setAvailableProjects((prev) => {
-      const createdOnly = prev.filter(project => !incoming.some(incomingProject => incomingProject.projectId === project.projectId))
-      return [...incoming, ...createdOnly]
-    })
-  }, [projects, inboxProject])
+  const availableProjects = useMemo(() => (
+    inboxProject
+      ? [inboxProject, ...projects.filter(project => project.projectId !== inboxProject.projectId)]
+      : projects
+  ), [projects, inboxProject])
 
   useEffect(() => {
     setSelectedProjectId(curProjectId)
@@ -571,7 +569,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
 
   useEffect(() => {
     setQuickActionIndex(0)
-  }, [quickActionQuery?.type, quickActionQuery?.keyword])
+  }, [quickActionQuery?.type, quickActionQuery?.keyword, quickSuggestions.length])
 
   const applyQuickSuggestion = useCallback(async (index: number) => {
     const suggestion = quickSuggestions[index]
@@ -597,14 +595,14 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
           return
         }
 
-        setAvailableProjects(prev => [...prev, {
+        upsertProject({
           projectId: response,
           name: suggestion.name,
           color: PROJECT_COLORS[0].value,
           noteCount: 0,
           isFavorite: 0,
           inboxProject: false,
-        }])
+        })
         setSelectedProjectId(response)
         resolvedEntityId = response
       }
@@ -648,7 +646,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     setQuickActionQuery(null)
     setQuickActionAnchor(null)
     setTargetTokenId(null)
-  }, [quickSuggestions, toast, quickActionSource, targetTokenId])
+  }, [quickSuggestions, toast, quickActionSource, targetTokenId, upsertProject])
 
   const triggerQuickSuggestionSelection = useCallback((index: number) => {
     applyQuickSuggestion(index).catch(() => undefined)
