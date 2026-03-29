@@ -101,8 +101,8 @@ vi.mock('@/components/ui/dropdown-menu/dropdown-menu', () => ({
 }))
 
 vi.mock('@/components/ui/dialog/dialog', () => ({
-  Dialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogContent: () => null,
+  Dialog: ({ open, children }: { open?: boolean; children: React.ReactNode }) => (open ? <div>{children}</div> : null),
+  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DialogDescription: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -175,6 +175,7 @@ describe('Nav delete behavior', () => {
     navTestState.unfavoriteProjectApi.mockReset()
     navTestState.location.pathname = '/app/inbox'
     navTestState.deleteProjectApi.mockResolvedValue(undefined)
+    navTestState.createProjectApi.mockResolvedValue('project-created-1')
   })
 
   it('does not show a success toast after deleting a project', async () => {
@@ -240,5 +241,41 @@ describe('Nav delete behavior', () => {
 
     expect(screen.getByText('Project Zero')).toBeInTheDocument()
     expect(screen.queryByText(/^0$/)).not.toBeInTheDocument()
+  })
+
+  it('creates a project through the shared project dialog', async () => {
+    const setProjects = vi.fn()
+
+    render(
+      <Nav
+        projects={[
+          {
+            projectId: 'inbox-1',
+            name: 'Inbox',
+            color: '#000000',
+            noteCount: 12,
+            isFavorite: 0,
+            inboxProject: true,
+          },
+        ]}
+        setProjects={setProjects}
+        refetchProjects={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'New project' }))
+    fireEvent.change(screen.getByRole('textbox', { name: '名称' }), { target: { value: 'Shared Dialog Project' } })
+    fireEvent.click(screen.getByRole('button', { name: '创建项目' }))
+
+    await waitFor(() => {
+      expect(navTestState.createProjectApi).toHaveBeenCalledWith({
+        name: 'Shared Dialog Project',
+        color: 'berry_red',
+        isFavorite: 0,
+        noteCount: 0,
+      })
+    })
+
+    expect(setProjects).toHaveBeenCalled()
   })
 })

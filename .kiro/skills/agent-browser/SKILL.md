@@ -21,7 +21,7 @@ agent-browser snapshot -i
 # Output: @e1 [input type="email"], @e2 [input type="password"], @e3 [button] "Submit"
 
 agent-browser fill @e1 "user@example.com"
-agent-browser fill @e2 "password123"
+agent-browser fill @e2 "Admin123456"
 agent-browser click @e3
 agent-browser wait --load networkidle
 agent-browser snapshot -i  # Check result
@@ -36,7 +36,7 @@ Commands can be chained with `&&` in a single shell invocation. The browser pers
 agent-browser open https://example.com && agent-browser wait --load networkidle && agent-browser snapshot -i
 
 # Chain multiple interactions
-agent-browser fill @e1 "user@example.com" && agent-browser fill @e2 "password123" && agent-browser click @e3
+agent-browser fill @e1 "user@example.com" && agent-browser fill @e2 "Admin123456" && agent-browser click @e3
 
 # Navigate and capture
 agent-browser open https://example.com && agent-browser wait --load networkidle && agent-browser screenshot page.png

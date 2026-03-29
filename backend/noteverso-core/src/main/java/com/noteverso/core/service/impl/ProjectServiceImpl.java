@@ -233,7 +233,7 @@ public class ProjectServiceImpl implements ProjectService {
         queryWrapper.eq(Project::getCreator, userId);
 //        queryWrapper.eq(Project::getIsInboxProject, NUM_O);
         queryWrapper.eq(Project::getIsArchived, NUM_O);
-        queryWrapper.orderByAsc(Project::getName);
+        queryWrapper.orderByAsc(Project::getAddedAt);
         List<Project> projects = projectMapper.selectList(queryWrapper);
 
         List<String> projectIds = projects.stream().map(Project::getProjectId).collect(Collectors.toList());

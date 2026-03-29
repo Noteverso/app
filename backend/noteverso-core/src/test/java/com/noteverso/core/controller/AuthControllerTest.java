@@ -58,7 +58,7 @@ class AuthControllerTest {
     @Test
     void should_sendCaptcha_successfully() throws Exception {
         // Arrange
-        String email = "test@example.com";
+        String email = "test@gmail.com";
         when(userService.existsByEmail(email)).thenReturn(false);
         when(redisUtils.get(anyString())).thenReturn(null);
         when(redisUtils.hasKey(anyString())).thenReturn(false);
@@ -91,7 +91,7 @@ class AuthControllerTest {
     @Test
     void should_rejectCaptcha_whenRateLimited() throws Exception {
         // Arrange
-        String email = "test@example.com";
+        String email = "test@gmail.com";
         when(userService.existsByEmail(email)).thenReturn(false);
         when(redisUtils.get("captcha:verification:" + email + ":create_time"))
                 .thenReturn(String.valueOf(System.currentTimeMillis()));
@@ -111,7 +111,7 @@ class AuthControllerTest {
         CreateUserRequest request = new CreateUserRequest();
         request.setEmail("newuser@example.com");
         request.setUsername("newuser");
-        request.setPassword("password123");
+        request.setPassword("Admin123456");
         request.setCaptchaCode("123456");
 
         when(userService.existsByEmail(request.getEmail())).thenReturn(false);
@@ -135,7 +135,7 @@ class AuthControllerTest {
         CreateUserRequest request = new CreateUserRequest();
         request.setEmail("existing@example.com");
         request.setUsername("user");
-        request.setPassword("password123");
+        request.setPassword("Admin123456");
         request.setCaptchaCode("123456");
 
         when(userService.existsByEmail(request.getEmail())).thenReturn(true);
@@ -154,9 +154,9 @@ class AuthControllerTest {
     void should_rejectSignup_whenInvalidCaptcha() throws Exception {
         // Arrange
         CreateUserRequest request = new CreateUserRequest();
-        request.setEmail("test@example.com");
+        request.setEmail("test@gmail.com");
         request.setUsername("user");
-        request.setPassword("password123");
+        request.setPassword("Admin123456");
         request.setCaptchaCode("000000");
 
         when(userService.existsByEmail(request.getEmail())).thenReturn(false);
@@ -177,7 +177,7 @@ class AuthControllerTest {
     void should_rejectSignup_whenPasswordTooShort() throws Exception {
         // Arrange
         CreateUserRequest request = new CreateUserRequest();
-        request.setEmail("test@example.com");
+        request.setEmail("test@gmail.com");
         request.setUsername("user");
         request.setPassword("pass");
         request.setCaptchaCode("123456");
@@ -197,7 +197,7 @@ class AuthControllerTest {
         // Arrange
         LoginRequest request = new LoginRequest();
         request.setEmail("user@example.com");
-        request.setPassword("password123");
+        request.setPassword("Admin123456");
 
         // Mock authentication
         Authentication authentication = mock(Authentication.class);

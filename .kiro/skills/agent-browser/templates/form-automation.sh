@@ -40,7 +40,7 @@ agent-browser snapshot -i
 #
 # Uncomment and modify:
 # agent-browser fill @e1 "Test User"
-# agent-browser fill @e2 "test@example.com"
+# agent-browser fill @e2 "test@gmail.com"
 # agent-browser click @e3  # Submit button
 
 # Step 4: Wait for submission

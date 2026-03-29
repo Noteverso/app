@@ -27,14 +27,14 @@ test.describe('Signup Flow', () => {
   })
 
   test('should show error for short username', async ({ page }) => {
-    await page.getByLabel(/邮箱/i).fill('test@example.com')
+    await page.getByLabel(/邮箱/i).fill('test@gmail.com')
     await page.getByLabel(/用户名/i).fill('ab')
     await page.getByRole('button', { name: /sign up/i }).click()
     await expect(page.getByText(/username must be at least 3 characters/i)).toBeVisible()
   })
 
   test('should show error for weak password', async ({ page }) => {
-    await page.getByLabel(/邮箱/i).fill('test@example.com')
+    await page.getByLabel(/邮箱/i).fill('test@gmail.com')
     await page.getByLabel(/用户名/i).fill('testuser')
     await page.getByLabel(/^密码$/i).fill('weak')
     await page.getByRole('button', { name: /sign up/i }).click()
@@ -42,9 +42,9 @@ test.describe('Signup Flow', () => {
   })
 
   test('should show error when passwords do not match', async ({ page }) => {
-    await page.getByLabel(/邮箱/i).fill('test@example.com')
+    await page.getByLabel(/邮箱/i).fill('test@gmail.com')
     await page.getByLabel(/用户名/i).fill('testuser')
-    await page.getByLabel(/^密码$/i).fill('Password123')
+    await page.getByLabel(/^密码$/i).fill('Admin123456')
     await page.getByLabel(/确认密码/i).fill('DifferentPass123')
     await page.getByLabel(/验证码/i).fill('123456')
     await page.getByRole('button', { name: /sign up/i }).click()
@@ -55,7 +55,7 @@ test.describe('Signup Flow', () => {
     const sendButton = page.getByRole('button', { name: /send/i })
     await expect(sendButton).toBeEnabled()
     
-    await page.getByLabel(/邮箱/i).fill('test@example.com')
+    await page.getByLabel(/邮箱/i).fill('test@gmail.com')
     await sendButton.click()
     
     // Button should be disabled during countdown
@@ -71,8 +71,8 @@ test.describe('Signup Flow', () => {
     // Fill form
     await page.getByLabel(/邮箱/i).fill('newuser@example.com')
     await page.getByLabel(/用户名/i).fill('newuser123')
-    await page.getByLabel(/^密码$/i).fill('Password123')
-    await page.getByLabel(/确认密码/i).fill('Password123')
+    await page.getByLabel(/^密码$/i).fill('Admin123456')
+    await page.getByLabel(/确认密码/i).fill('Admin123456')
     
     // Send captcha
     await page.getByRole('button', { name: /send/i }).click()
@@ -90,10 +90,10 @@ test.describe('Signup Flow', () => {
   })
 
   test('should show loading state during submission', async ({ page }) => {
-    await page.getByLabel(/邮箱/i).fill('test@example.com')
+    await page.getByLabel(/邮箱/i).fill('test@gmail.com')
     await page.getByLabel(/用户名/i).fill('testuser')
-    await page.getByLabel(/^密码$/i).fill('Password123')
-    await page.getByLabel(/确认密码/i).fill('Password123')
+    await page.getByLabel(/^密码$/i).fill('Admin123456')
+    await page.getByLabel(/确认密码/i).fill('Admin123456')
     await page.getByLabel(/验证码/i).fill('123456')
     
     const submitButton = page.getByRole('button', { name: /sign up/i })

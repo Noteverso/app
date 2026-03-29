@@ -26,7 +26,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { NavMainButton } from './nav-main-button'
 import { BreadcrumbButton } from './nav-breadcrumb-button'
-import { PROJECT_COLORS, ROUTER_PATHS } from '@/constants'
+import { ROUTER_PATHS } from '@/constants'
 import type { FullProject } from '@/types/project'
 import { Button } from '@/components/ui/button/button'
 import { useToast } from '@/components/ui/toast/use-toast'
@@ -64,25 +64,6 @@ import {
 } from '@/components/ui/dropdown-menu/dropdown-menu'
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  // DialogTrigger,
-} from '@/components/ui/dialog/dialog'
-import { Input } from '@/components/ui/input/input'
-import { Label } from '@/components/ui/label/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select/select'
-
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -104,8 +85,10 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@/components/ui/command/command'
-
-import { Switch } from '@/components/ui/switch/switch'
+import {
+  ProjectFormDialog,
+  type ProjectFormValues,
+} from '@/features/project/project-form-dialog'
 // import { Badge } from '@/components/badge/badge'
 
 export type SidebarProprs = {
@@ -132,11 +115,6 @@ export function Nav({
   const [operation, setOperation] = useState<'archive' | 'delete'>('archive')
   const [isCommandDialogOpen, setIsCommandDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-
-  // Form state
-  const [projectName, setProjectName] = useState('')
-  const [projectColor, setProjectColor] = useState('')
-  const [projectIsFavorite, setProjectIsFavorite] = useState(false)
 
   // const initialInbox = projects.find(project => project.inboxProject) as FullProject
   const [inboxProject, setInboxProject] = useState<FullProject | null>(null)
@@ -171,32 +149,16 @@ export function Nav({
       // Edit mode
       setIsCreateProject(false)
       setCurProject(project)
-      setProjectName(project.name)
-      setProjectColor(project.color)
-      setProjectIsFavorite(project.isFavorite === 1)
     } else {
       // Create mode
       setIsCreateProject(true)
       setCurProject(null)
-      setProjectName('')
-      setProjectColor(PROJECT_COLORS[0].value)
-      setProjectIsFavorite(false)
     }
     setIsProjectDialogOpen(true)
   }
 
   // Handle create/update project with optimistic update
-  async function handleSaveProject() {
-    // Validation
-    if (!projectName.trim()) {
-      toast({ title: '错误', description: '项目名称不能为空', variant: 'destructive' })
-      return
-    }
-    if (!projectColor) {
-      toast({ title: '错误', description: '请选择项目颜色', variant: 'destructive' })
-      return
-    }
-
+  async function handleSaveProject(values: ProjectFormValues) {
     setIsLoading(true)
 
     try {
@@ -205,9 +167,9 @@ export function Nav({
         const tempId = `temp-${Date.now()}`
         const newProject: FullProject = {
           projectId: tempId,
-          name: projectName,
-          color: projectColor,
-          isFavorite: projectIsFavorite ? 1 : 0,
+          name: values.name,
+          color: values.color,
+          isFavorite: values.isFavorite ? 1 : 0,
           noteCount: 0,
           inboxProject: false,
         }
@@ -218,9 +180,9 @@ export function Nav({
 
         // API call
         const realId = await createProjectApi({
-          name: projectName,
-          color: projectColor,
-          isFavorite: projectIsFavorite ? 1 : 0,
+          name: values.name,
+          color: values.color,
+          isFavorite: values.isFavorite ? 1 : 0,
           noteCount: 0,
         })
 
@@ -236,9 +198,9 @@ export function Nav({
 
         const updatedProject: FullProject = {
           ...curProject,
-          name: projectName,
-          color: projectColor,
-          isFavorite: projectIsFavorite ? 1 : 0,
+          name: values.name,
+          color: values.color,
+          isFavorite: values.isFavorite ? 1 : 0,
         }
 
         // Optimistic update
@@ -249,9 +211,9 @@ export function Nav({
 
         // API call
         await updateProjectApi(curProject.projectId, {
-          name: projectName,
-          color: projectColor,
-          isFavorite: projectIsFavorite ? 1 : 0,
+          name: values.name,
+          color: values.color,
+          isFavorite: values.isFavorite ? 1 : 0,
           noteCount: 0,
         })
 
@@ -556,85 +518,14 @@ export function Nav({
       {/* </div> */}
 
       {/* All Dialogs */}
-      <Dialog open={isProjectDialogOpen} onOpenChange={setIsProjectDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{isCreateProject ? '新增项目' : '编辑项目'}</DialogTitle>
-            <DialogDescription>
-              {isCreateProject ? '创建一个新项目来组织你的笔记' : '修改项目信息'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                名称
-              </Label>
-              <Input
-                id="name"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                placeholder="请输入项目名称"
-                className="col-span-3"
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="color" className="text-right">
-                颜色
-              </Label>
-
-              <Select value={projectColor} onValueChange={setProjectColor} disabled={isLoading}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="选择一个颜色" />
-                </SelectTrigger>
-                <SelectContent>
-                  {
-                    PROJECT_COLORS.map(color => (
-                      <SelectItem key={color.value} value={color.value}>
-                        <div className="flex items-center gap-x-2">
-                          <div
-                            className="w-3 h-3 rounded-full mr-2 bg-black"
-                            style={{ backgroundColor: `var(--named-color-${color.value.replace('_', '-')})` }}
-                          />
-                          <span>{color.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="add-to-favorites" className="text-right">
-                添加到收藏
-              </Label>
-              <Switch 
-                id="add-to-favorites" 
-                checked={projectIsFavorite}
-                onCheckedChange={setProjectIsFavorite}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="secondary" 
-              onClick={() => setIsProjectDialogOpen(false)}
-              disabled={isLoading}
-            >
-              取消
-            </Button>
-            <Button 
-              type="button" 
-              onClick={handleSaveProject}
-              disabled={isLoading}
-            >
-              {isLoading ? '保存中...' : '保存'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ProjectFormDialog
+        open={isProjectDialogOpen}
+        onOpenChange={setIsProjectDialogOpen}
+        mode={isCreateProject ? 'create' : 'edit'}
+        initialProject={curProject}
+        isLoading={isLoading}
+        onSubmit={handleSaveProject}
+      />
 
       <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
         <AlertDialogContent>

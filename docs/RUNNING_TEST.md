@@ -61,6 +61,8 @@ Core flow:
 4. Validate UI/API state.
 5. Close session.
 
+Use `test@gmail.com/Admin123456` for testing auth flows.
+
 Example:
 
 ```bash

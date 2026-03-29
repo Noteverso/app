@@ -1,7 +1,7 @@
 import type { APIRequestContext, Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 
-const AUTH_EMAIL = 'byodian@gmail.com'
+const AUTH_EMAIL = 'test@gmail.com'
 const AUTH_PASSWORD = 'Admin123456'
 const INBOX_PROJECT_ID = '313956719430602752'
 const MYSQL_PROJECT_ID = '313956886909161472'

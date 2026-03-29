@@ -4,8 +4,8 @@ test.describe('Search Workflow', () => {
   test.beforeEach(async ({ page }) => {
     // Login first
     await page.goto('/login')
-    await page.fill('input[type="email"]', 'test@example.com')
-    await page.fill('input[type="password"]', 'password123')
+    await page.fill('input[type="email"]', 'test@gmail.com')
+    await page.fill('input[type="password"]', 'Admin123456')
     await page.click('button[type="submit"]')
     await page.waitForURL('/notes')
   })
