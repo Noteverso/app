@@ -33,6 +33,14 @@ export interface NewNote {
   linkedNotes?: string[];
 }
 
+export interface UpdateNotePayload {
+  contentJson: object;
+  projectId?: string;
+  labels?: string[];
+  files?: string[];
+  linkedNotes?: string[];
+}
+
 // 笔记分页请求
 export type NotePageRequestParams = {
   objectId?: string;

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 interface NoteActionsProps {
   onEdit: () => void
   onDelete: () => void
-  onFavorite: () => void
+  onFavorite?: () => void
   className?: string
 }
 export function NoteActions({ onEdit, onDelete, onFavorite, className }: NoteActionsProps) {
@@ -15,7 +15,7 @@ export function NoteActions({ onEdit, onDelete, onFavorite, className }: NoteAct
       <Button variant="ghost" size="icon" onClick={onEdit} className="invisible group-hover/item:visible">
         <Pencil className="w-4 h-4" />
       </Button>
-      <Button variant="ghost" size="icon" onClick={onFavorite} className="invisible group-hover/item:visible">
+      <Button variant="ghost" size="icon" onClick={onFavorite} className="invisible group-hover/item:visible" disabled={!onFavorite}>
         <Star className="w-4 h-4" />
       </Button>
       <DropdownMenu>
@@ -25,10 +25,10 @@ export function NoteActions({ onEdit, onDelete, onFavorite, className }: NoteAct
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={onEdit}>
+          <DropdownMenuItem onSelect={onEdit}>
             <Pencil className="w-4 h-4 mr-2" /> 编辑
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onDelete} className="text-red-500">
+          <DropdownMenuItem onSelect={onDelete} className="text-red-500">
             <Trash className="w-4 h-4 mr-2" /> 删除
           </DropdownMenuItem>
         </DropdownMenuContent>

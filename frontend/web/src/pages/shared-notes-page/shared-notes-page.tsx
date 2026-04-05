@@ -6,9 +6,19 @@ import { extractQuickTokenBinding } from './quick-action-binding'
 import { NoteList } from '@/features/note'
 import { TextEditor } from '@/features/editor'
 import { Button } from '@/components/ui/button/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog/alert-dialog'
 import { ROUTER_PATHS } from '@/constants'
 import type { FullNote, NoteListItem, NoteNavigationHint, NotePageLoaderData } from '@/types/note'
-import { getNotesApi } from '@/api/note/note'
+import { getNotesApi, moveNoteToTrashApi, updateNoteApi } from '@/api/note/note'
 import type { ProjectOutletContext } from '@/types/project'
 import type { EditorMethods, QuickActionQuery, QuickActionTokenClickPayload } from '@/features/editor/text-editor'
 import { createLabelApi, getLabelSelectItemsApi } from '@/api/label/label'
@@ -177,8 +187,83 @@ export function createSavedNoteListItem(
   }
 }
 
+function createQuickActionTokenNode(tokenType: 'project' | 'label', entityId: string, label: string) {
+  return {
+    type: 'quickActionToken',
+    attrs: {
+      tokenId: `${tokenType}-${entityId}`,
+      tokenType,
+      entityId,
+      label,
+    },
+  }
+}
+
+export function buildEditorContentWithQuickBindings(note: Pick<NoteListItem, 'contentJson' | 'project' | 'labels'>) {
+  const { sanitizedContentJson, projectId, labelIds } = extractQuickTokenBinding(note.contentJson || {})
+  const doc = sanitizedContentJson as { type?: string; content?: Array<{ type?: string; content?: unknown[] }> }
+  const nextContent = Array.isArray(doc.content) ? [...doc.content] : []
+  const firstParagraph = nextContent[0]?.type === 'paragraph' && Array.isArray(nextContent[0].content)
+    ? { ...nextContent[0], content: [...(nextContent[0].content as unknown[])] }
+    : { type: 'paragraph', content: [] as unknown[] }
+
+  const tokenNodes: unknown[] = []
+  const noteProject = note.project ?? { projectId: '', name: '' }
+  const noteLabels = note.labels ?? []
+  const effectiveProjectId = projectId || noteProject.projectId
+  if (effectiveProjectId) {
+    const effectiveProjectName = noteProject.name || ''
+    tokenNodes.push(createQuickActionTokenNode('project', effectiveProjectId, effectiveProjectName))
+  }
+
+  for (const label of noteLabels) {
+    if (!labelIds.includes(label.labelId)) {
+      tokenNodes.push(createQuickActionTokenNode('label', label.labelId, label.name))
+    }
+  }
+
+  if (tokenNodes.length === 0) {
+    return note.contentJson || {}
+  }
+
+  firstParagraph.content = [...tokenNodes, ...firstParagraph.content]
+
+  if (nextContent.length === 0) {
+    nextContent.push(firstParagraph)
+  } else {
+    nextContent[0] = firstParagraph
+  }
+
+  return {
+    ...doc,
+    type: doc.type || 'doc',
+    content: nextContent,
+  }
+}
+
 function getEmptyEditorContent() {
   return {}
+}
+
+function getApiErrorMessage(
+  response: { data?: { error?: { message?: string; payload?: unknown } } } | undefined,
+  fallbackMessage: string,
+) {
+  const payload = response?.data?.error?.payload
+  if (payload && typeof payload === 'object') {
+    if ('error' in payload) {
+      const payloadError = (payload as { error?: unknown }).error
+      if (payloadError && typeof payloadError === 'object' && 'message' in payloadError && typeof payloadError.message === 'string') {
+        return payloadError.message
+      }
+    }
+
+    if ('message' in payload && typeof payload.message === 'string') {
+      return payload.message
+    }
+  }
+
+  return response?.data?.error?.message || fallbackMessage
 }
 
 export function getCreatedNoteNavigationToastTitle(projectName: string) {
@@ -226,6 +311,11 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
   const [editorInstanceKey, setEditorInstanceKey] = useState(0)
 
   const [notes, setNotes] = useState<NoteListItem[]>(initialNotePage.records)
+  const [editingNote, setEditingNote] = useState<NoteListItem | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [pendingDeleteNote, setPendingDeleteNote] = useState<NoteListItem | null>(null)
+  const [isUpdatingNote, setIsUpdatingNote] = useState(false)
+  const [isDeletingNote, setIsDeletingNote] = useState(false)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const editorRef = useRef<EditorMethods>(null)
@@ -361,6 +451,24 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     setQuickActionAnchor(null)
     setTargetTokenId(null)
   }, [defaultSelectedProjectId])
+
+  const exitEditMode = useCallback(() => {
+    setEditingNote(null)
+    resetComposerState()
+    editorRef.current?.reset()
+  }, [resetComposerState])
+
+  const handleEditNote = useCallback((note: NoteListItem) => {
+    const editContentJson = buildEditorContentWithQuickBindings(note)
+    setEditingNote(note)
+    restoreComposerState(editContentJson, Boolean(editContentJson && JSON.stringify(editContentJson) !== '{}'))
+    editorRef.current?.setContentJson(editContentJson)
+  }, [restoreComposerState])
+
+  const handleRequestDeleteNote = useCallback((note: NoteListItem) => {
+    setPendingDeleteNote(note)
+    setDeleteDialogOpen(true)
+  }, [])
 
   const handleCreateFormSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
     if (fetcher.state !== 'idle') {
@@ -504,7 +612,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     if (bindings.projectId) {
       setSelectedProjectId(bindings.projectId)
     } else {
-      setSelectedProjectId(defaultSelectedProjectId)
+      setSelectedProjectId(editingNote?.project.projectId || defaultSelectedProjectId)
     }
   }
 
@@ -686,9 +794,106 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     return false
   }, [quickActionQuery, quickSuggestions, quickActionIndex, triggerQuickSuggestionSelection])
 
-  const effectiveProjectId = selectedProjectId || defaultSelectedProjectId || ''
+  const effectiveProjectId = selectedProjectId || editingNote?.project.projectId || defaultSelectedProjectId || ''
   const quickTokenBinding = useMemo(() => extractQuickTokenBinding(editorContentJson), [editorContentJson])
   const sanitizedEditorContentJson = quickTokenBinding.sanitizedContentJson
+
+  const handleUpdateNote = useCallback(async () => {
+    if (!editingNote || isUpdatingNote || !hasEditorContent) {
+      return
+    }
+
+    const targetProjectId = quickTokenBinding.projectId || selectedProjectId || editingNote.project.projectId || defaultSelectedProjectId || undefined
+    const resolvedProjectId = targetProjectId || editingNote.project.projectId
+    const targetProject = resolvedProjectId
+      ? availableProjects.find(project => project.projectId === resolvedProjectId)
+      : undefined
+    const targetProjectName = targetProject?.name || editingNote.project.name
+    const targetLabels = labelOptions
+      .filter(label => quickTokenBinding.labelIds.includes(label.value))
+      .map(label => ({ labelId: label.value, name: label.name }))
+
+    setIsUpdatingNote(true)
+    const response = await updateNoteApi(editingNote.noteId, {
+      contentJson: sanitizedEditorContentJson,
+      labels: quickTokenBinding.labelIds,
+      ...(targetProjectId ? { projectId: targetProjectId } : {}),
+      linkedNotes: [],
+      files: [],
+    })
+    setIsUpdatingNote(false)
+
+    if (!response.ok) {
+      toast({ title: getApiErrorMessage(response, 'Failed to update note'), variant: 'destructive' })
+      return
+    }
+
+    const shouldRemoveFromCurrentList = supportsScopedCreateBehavior
+      && Boolean(curProjectId && resolvedProjectId)
+      && curProjectId !== resolvedProjectId
+
+    if (shouldRemoveFromCurrentList) {
+      setNotes(prevNotes => prevNotes.filter(note => note.noteId !== editingNote.noteId))
+      toast({ title: `Note moved to ${targetProjectName}` })
+    } else {
+      const updatedAt = new Date().toISOString()
+      setNotes(prevNotes => prevNotes.map(note => (
+        note.noteId === editingNote.noteId
+          ? {
+              ...note,
+              contentJson: sanitizedEditorContentJson,
+              updatedAt,
+              labels: targetLabels,
+              project: {
+                projectId: resolvedProjectId,
+                name: targetProjectName,
+              },
+            }
+          : note
+      )))
+      toast({ title: 'Note updated' })
+    }
+
+    exitEditMode()
+  }, [
+    availableProjects,
+    curProjectId,
+    defaultSelectedProjectId,
+    editingNote,
+    exitEditMode,
+    hasEditorContent,
+    isUpdatingNote,
+    labelOptions,
+    quickTokenBinding.labelIds,
+    quickTokenBinding.projectId,
+    sanitizedEditorContentJson,
+    selectedProjectId,
+    supportsScopedCreateBehavior,
+    toast,
+  ])
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!pendingDeleteNote || isDeletingNote) {
+      return
+    }
+
+    setIsDeletingNote(true)
+    const response = await moveNoteToTrashApi(pendingDeleteNote.noteId)
+    setIsDeletingNote(false)
+
+    if (!response.ok) {
+      toast({ title: 'Failed to delete note', variant: 'destructive' })
+      return
+    }
+
+    setNotes(prevNotes => prevNotes.filter(note => note.noteId !== pendingDeleteNote.noteId))
+    if (editingNote?.noteId === pendingDeleteNote.noteId) {
+      exitEditMode()
+    }
+    setDeleteDialogOpen(false)
+    setPendingDeleteNote(null)
+    toast({ title: 'Note moved to trash' })
+  }, [editingNote?.noteId, exitEditMode, isDeletingNote, pendingDeleteNote, toast])
   const handleEditorQuickActionQuery = useCallback((query: QuickActionQuery | null) => {
     setQuickActionSource(query ? 'typed' : null)
     setQuickActionQuery(query)
@@ -775,6 +980,12 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
         <h1 className="text-2xl">{projectName ?? title}</h1>
       </div>
       <fetcher.Form method="post" action={actionPath} className="relative mb-5" onSubmit={handleCreateFormSubmit}>
+        {editingNote && (
+          <div className="mb-3 flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <span>Editing note</span>
+            <Button type="button" variant="ghost" size="sm" onClick={exitEditMode}>Cancel</Button>
+          </div>
+        )}
         <input type="hidden" name="contentJson" value={JSON.stringify(sanitizedEditorContentJson)} />
         <input type="hidden" name="labels" value={JSON.stringify(quickTokenBinding.labelIds)} />
         <input type="hidden" name="projectId" value={quickTokenBinding.projectId || effectiveProjectId} />
@@ -789,13 +1000,19 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
           onQuickActionTokenClick={handleQuickActionTokenClick}
           footer={(
             <div className="flex items-center justify-end">
+              {editingNote && (
+                <Button type="button" variant="ghost" onClick={exitEditMode} disabled={isUpdatingNote}>
+                  Cancel
+                </Button>
+              )}
               <Button
-                type="submit"
+                type={editingNote ? 'button' : 'submit'}
                 name="note-save"
                 value="save"
                 className="bg-slate-900 text-white hover:bg-slate-800"
-                disabled={isCreateSubmitDisabled(fetcher.state, hasEditorContent)}>
-                保存
+                onClick={editingNote ? () => { void handleUpdateNote() } : undefined}
+                disabled={editingNote ? (isUpdatingNote || !hasEditorContent) : isCreateSubmitDisabled(fetcher.state, hasEditorContent)}>
+                {editingNote ? '更新' : '保存'}
               </Button>
             </div>
           )}
@@ -840,7 +1057,22 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
         )}
       </fetcher.Form>
 
-      <NoteList notes={notes} refFunc={lastNoteElementRef} />
+      <NoteList notes={notes} refFunc={lastNoteElementRef} onEdit={handleEditNote} onDelete={handleRequestDeleteNote} />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>删除这条笔记？</AlertDialogTitle>
+            <AlertDialogDescription>
+              删除后笔记将移入回收站，你可以稍后恢复。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingNote}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { void handleConfirmDelete() }} disabled={isDeletingNote}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

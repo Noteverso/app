@@ -1,7 +1,14 @@
 import { NoteCard } from './note-card'
 import type { NoteListItem } from '@/types/note'
 
-export function NoteList({ notes, refFunc }: { notes: NoteListItem[], refFunc: (node: HTMLElement | null) => void }) {
+interface NoteListProps {
+  notes: NoteListItem[]
+  refFunc: (node: HTMLElement | null) => void
+  onEdit?: (note: NoteListItem) => void
+  onDelete?: (note: NoteListItem) => void
+}
+
+export function NoteList({ notes, refFunc, onEdit, onDelete }: NoteListProps) {
   return (
     <ul className="flex flex-col gap-x-4">
       {notes.map((note, index) => (
@@ -18,6 +25,8 @@ export function NoteList({ notes, refFunc }: { notes: NoteListItem[], refFunc: (
             attachmentCount={note.attachmentCount}
             referencedCount={note.referencedCount}
             referencingCount={note.referencingCount}
+            onEdit={onEdit ? () => onEdit(note) : undefined}
+            onDelete={onDelete ? () => onDelete(note) : undefined}
           />
         </li>
       ))}

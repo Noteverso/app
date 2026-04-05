@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.noteverso.common.exceptions.NoSuchDataException;
+import com.noteverso.common.exceptions.RequestVerifyException;
 import com.noteverso.common.util.IPUtils;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.NoteMapper;
@@ -26,6 +27,7 @@ import com.noteverso.core.service.ViewOptionService;
 import com.noteverso.core.service.HtmlGeneratorService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +43,8 @@ import static com.noteverso.core.constant.ExceptionConstants.PROJECT_NOT_FOUND;
 @AllArgsConstructor
 @Slf4j
 public class NoteServiceImpl implements NoteService {
+    private static final String PROJECT_ID_BLANK = "Project id must not be blank";
+
     private final NoteMapper noteMapper;
     private final RelationService relationService;
     private final ProjectMapper projectMapper;
@@ -79,17 +83,26 @@ public class NoteServiceImpl implements NoteService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void updateNote(String noteId, String userId, NoteUpdateRequest request) {
-        LambdaUpdateWrapper<Note> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(Note::getNoteId, noteId);
-        wrapper.eq(Note::getIsDeleted, NUM_O);
-        wrapper.set(Note::getContentJson, request.getContentJson());
-        wrapper.set(Note::getUpdatedAt, Instant.now());
+        LambdaQueryWrapper<Note> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Note::getNoteId, noteId);
+        queryWrapper.eq(Note::getCreator, userId);
+        queryWrapper.eq(Note::getIsDeleted, NUM_O);
 
-        if (null != request.getProjectId()) {
-            wrapper.set(Note::getProjectId, request.getProjectId());
+        Note existingNote = noteMapper.selectOne(queryWrapper);
+        if (existingNote == null) {
+            throw new NoSuchDataException(NOTE_NOT_FOUND);
         }
 
-        noteMapper.update(null, wrapper);
+        String projectId = normalizeProjectId(request.getProjectId());
+        if (projectId != null) {
+            Project project = projectMapper.selectByProjectId(projectId, userId);
+            if (project == null) {
+                throw new NoSuchDataException(PROJECT_NOT_FOUND);
+            }
+        }
+
+        Instant updatedAt = Instant.now();
+        noteMapper.updateNoteWithJsonb(noteId, userId, request.getContentJson(), projectId, updatedAt, userId);
 
         // update the relation with labels
         relationService.updateNoteLabelRelation(request.getLabels(), noteId, userId);
@@ -99,6 +112,18 @@ public class NoteServiceImpl implements NoteService {
 
         // update the relation with the attachments
         relationService.updateNoteAttachment(request.getFiles(), noteId, userId);
+    }
+
+    private String normalizeProjectId(String projectId) {
+        if (projectId == null) {
+            return null;
+        }
+
+        if (StringUtils.isBlank(projectId)) {
+            throw new RequestVerifyException(PROJECT_ID_BLANK);
+        }
+
+        return projectId.trim();
     }
 
     public Note constructNote(String noteId, String projectId, Object contentJson, String userId) {
@@ -377,6 +402,15 @@ public class NoteServiceImpl implements NoteService {
         // Convert to NoteItem with relations
         List<Note> notes = notePage.getRecords();
         List<String> resultNoteIds = notes.stream().map(Note::getNoteId).toList();
+
+        if (resultNoteIds.isEmpty()) {
+            PageResult<NoteItem> emptyResult = new PageResult<>();
+            emptyResult.setRecords(new ArrayList<>());
+            emptyResult.setTotal(0L);
+            emptyResult.setPageIndex(pageIndex);
+            emptyResult.setPageSize(pageSize);
+            return emptyResult;
+        }
 
         Map<String, Project> projectMap = new HashMap<>();
         Set<String> projectIds = notes.stream().map(Note::getProjectId).collect(Collectors.toSet());

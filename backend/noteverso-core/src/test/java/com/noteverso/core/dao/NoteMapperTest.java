@@ -13,9 +13,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import java.util.List;
-import java.util.Map;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @MybatisPlusTest
@@ -188,6 +185,44 @@ class NoteMapperTest {
 
         // Assert
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void should_updateNoteJsonbSuccessfully() {
+        // Arrange
+        String noteId = "jsonb-update-1";
+        String userId = "123456789";
+        Note note = buildNote(noteId, "Hello World!", "123456789", userId);
+        noteMapper.insertWithJsonb(note);
+
+        Object updatedContentJson = Map.of(
+                "type", "doc",
+                "content", List.of(Map.of(
+                        "type", "paragraph",
+                        "content", List.of(Map.of(
+                                "type", "text",
+                                "text", "Updated content"
+                        ))
+                ))
+        );
+        Instant updatedAt = Instant.now();
+
+        // Act
+        int updatedRows = noteMapper.updateNoteWithJsonb(
+                noteId,
+                userId,
+                updatedContentJson,
+                "project-2",
+                updatedAt,
+                userId
+        );
+
+        // Assert
+        assertThat(updatedRows).isEqualTo(1);
+        Note updatedNote = noteMapper.selectByNoteId(noteId, 0);
+        assertThat(updatedNote.getProjectId()).isEqualTo("project-2");
+        assertThat(updatedNote.getContentJson()).isNotNull();
+        assertThat(updatedNote.getContentJson().toString()).contains("Updated content");
     }
 
     private Note buildNote(String noteId, String content, String projectId, String userId) {

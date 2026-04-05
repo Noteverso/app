@@ -66,4 +66,19 @@
             COALESCE(#{isFavorite}, 0), COALESCE(#{noteType}, 0), COALESCE(#{status}, 1), #{url}
         )
     </insert>
+
+    <update id="updateNoteWithJsonb">
+        UPDATE noteverso_note
+        <trim prefix="SET" suffixOverrides=",">
+            content_json = #{contentJson,typeHandler=com.noteverso.core.config.JsonbTypeHandler}::jsonb,
+            updated_at = #{updatedAt},
+            updater = #{updater},
+            <if test="projectId != null">
+                project_id = #{projectId},
+            </if>
+        </trim>
+        WHERE note_id = #{noteId}
+        AND creator = #{userId}
+        AND is_deleted = 0
+    </update>
 </mapper>

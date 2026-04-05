@@ -1,5 +1,5 @@
 import { request } from '@/lib/http'
-import type { NewNote, NotePageLoaderData, NotePageRequestParams } from '@/types/note'
+import type { NewNote, NotePageLoaderData, NotePageRequestParams, UpdateNotePayload } from '@/types/note'
 
 export function getNotesApi(params: NotePageRequestParams, isInbox = false) {
   if (isInbox) {
@@ -33,6 +33,23 @@ export function addNote(newNote: NewNote) {
     url: '/api/v1/notes',
     method: 'post',
     data: newNote,
+  })
+}
+
+// 更新笔记
+export function updateNoteApi(noteId: string, note: UpdateNotePayload) {
+  return request<void>({
+    url: `/api/v1/notes/${noteId}`,
+    method: 'patch',
+    data: note,
+  })
+}
+
+// 软删除笔记（移入回收站）
+export function moveNoteToTrashApi(noteId: string) {
+  return request<void>({
+    url: `/api/v1/notes/${noteId}`,
+    method: 'delete',
   })
 }
 

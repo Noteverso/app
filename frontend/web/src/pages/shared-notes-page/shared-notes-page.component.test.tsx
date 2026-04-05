@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type * as ReactRouterDom from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { SharedNotesPage } from './shared-notes-page'
+import { buildEditorContentWithQuickBindings, SharedNotesPage } from './shared-notes-page'
 
 const PLAIN_CONTENT = {
   type: 'doc',
@@ -156,6 +156,8 @@ const sharedTestState = vi.hoisted(() => {
     getLabelSelectItemsApi: vi.fn(),
     getNotesApi: vi.fn(),
     createProjectApi: vi.fn(),
+    updateNoteApi: vi.fn(),
+    moveNoteToTrashApi: vi.fn(),
     editor: {
       reset: vi.fn(),
       setContentJson: vi.fn(),
@@ -269,8 +271,24 @@ vi.mock('@/features/editor', async () => {
 })
 
 vi.mock('@/features/note', () => ({
-  NoteList: ({ notes }: { notes: Array<{ noteId: string }> }) => (
-    <div data-testid="note-list">{notes.map(note => <span key={note.noteId}>{note.noteId}</span>)}</div>
+  NoteList: ({
+    notes,
+    onEdit,
+    onDelete,
+  }: {
+    notes: Array<{ noteId: string }>
+    onEdit?: (note: { noteId: string }) => void
+    onDelete?: (note: { noteId: string }) => void
+  }) => (
+    <div data-testid="note-list">
+      {notes.map(note => (
+        <div key={note.noteId}>
+          <span>{note.noteId}</span>
+          <button type="button" onClick={() => onEdit?.(note)} aria-label={`edit-${note.noteId}`}>Edit {note.noteId}</button>
+          <button type="button" onClick={() => onDelete?.(note)} aria-label={`delete-${note.noteId}`}>Delete {note.noteId}</button>
+        </div>
+      ))}
+    </div>
   ),
 }))
 
@@ -293,6 +311,8 @@ vi.mock('@/api/project/project', () => ({
 
 vi.mock('@/api/note/note', () => ({
   getNotesApi: sharedTestState.getNotesApi,
+  updateNoteApi: sharedTestState.updateNoteApi,
+  moveNoteToTrashApi: sharedTestState.moveNoteToTrashApi,
 }))
 
 function createInitialNotePage() {
@@ -306,6 +326,33 @@ function createInitialNotePage() {
         contentJson: PLAIN_CONTENT,
         labels: [],
         project: { projectId: 'inbox-1', name: 'Inbox' },
+        addedAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        isArchived: 0 as const,
+        isDeleted: 0 as const,
+        isPinned: 0 as const,
+        attachmentCount: null,
+        referencedCount: null,
+        referencingCount: null,
+        creator: 'u1',
+      },
+    ],
+  }
+}
+
+function createEditBoundNotePage() {
+  return {
+    pageIndex: 1,
+    pageSize: 10,
+    total: 1,
+    records: [
+      {
+        noteId: 'existing-note',
+        contentJson: PLAIN_CONTENT,
+        labels: [
+          { labelId: 'label-1', name: 'Label One' },
+        ],
+        project: { projectId: 'project-2', name: 'Project Two' },
         addedAt: '2026-01-01T00:00:00.000Z',
         updatedAt: '2026-01-01T00:00:00.000Z',
         isArchived: 0 as const,
@@ -409,6 +456,10 @@ describe('SharedNotesPage component regressions', () => {
     })
     sharedTestState.createProjectApi.mockReset()
     sharedTestState.createProjectApi.mockResolvedValue('project-inline-1')
+    sharedTestState.updateNoteApi.mockReset()
+    sharedTestState.updateNoteApi.mockResolvedValue({ ok: true })
+    sharedTestState.moveNoteToTrashApi.mockReset()
+    sharedTestState.moveNoteToTrashApi.mockResolvedValue({ ok: true })
   })
 
   it('clears the composer immediately when create starts on the current route project', async () => {
@@ -760,5 +811,146 @@ describe('SharedNotesPage component regressions', () => {
     view.rerender(<SharedNotesPage initialNotePage={createInitialNotePage()} />)
 
     expect(sharedTestState.dismissToast).toHaveBeenCalledTimes(1)
+  })
+
+  it('loads an existing note into the shared editor when edit is clicked', async () => {
+    render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByLabelText('edit-existing-note'))
+
+    expect(sharedTestState.editor.setContentJson).toHaveBeenCalledWith(expect.objectContaining({ type: 'doc' }))
+    expect(screen.getByText('Editing note')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '更新' })).toBeInTheDocument()
+  })
+
+  it('enters edit mode when the note action menu edit callback is triggered', async () => {
+    render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByLabelText('edit-existing-note'))
+
+    expect(screen.getByText('Editing note')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '更新' })).toBeInTheDocument()
+  })
+
+  it('restores the edited note project and labels as quick-action bindings when edit starts', async () => {
+    const view = render(<SharedNotesPage title="Inbox" initialNotePage={createEditBoundNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByLabelText('edit-existing-note'))
+
+    const editContent = sharedTestState.editor.setContentJson.mock.calls.at(-1)?.[0] as {
+      type: string
+      content: Array<{ type: string; content: Array<{ type: string; text?: string; attrs?: { tokenType?: string; entityId?: string; label?: string } }> }>
+    }
+
+    expect(editContent.type).toBe('doc')
+    expect(editContent.content[0]).toEqual(expect.objectContaining({
+      type: 'paragraph',
+    }))
+    expect(editContent.content[0].content.slice(0, 3)).toEqual([
+      expect.objectContaining({
+        type: 'quickActionToken',
+        attrs: expect.objectContaining({ tokenType: 'project', entityId: 'project-2', label: 'Project Two' }),
+      }),
+      expect.objectContaining({
+        type: 'quickActionToken',
+        attrs: expect.objectContaining({ tokenType: 'label', entityId: 'label-1', label: 'Label One' }),
+      }),
+      expect.objectContaining({ type: 'text', text: 'Plain note body' }),
+    ])
+    expect(getHiddenInput(view.container, 'projectId').value).toBe('project-2')
+    expect(getHiddenInput(view.container, 'labels').value).toBe('["label-1"]')
+    expect(screen.getByText('Editing note')).toBeInTheDocument()
+  })
+
+  it('builds edit content safely when note labels are missing', () => {
+    const content = buildEditorContentWithQuickBindings({
+      contentJson: PLAIN_CONTENT,
+      project: { projectId: 'inbox-1', name: 'Inbox' },
+      labels: undefined as never,
+    })
+
+    expect(content).toEqual(expect.objectContaining({ type: 'doc' }))
+  })
+
+  it('removes the edited note from the current scoped list when it is moved to another project', async () => {
+    render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByLabelText('edit-existing-note'))
+    fireEvent.click(screen.getByRole('button', { name: 'Set cross-project content' }))
+    fireEvent.click(screen.getByRole('button', { name: '更新' }))
+
+    await waitFor(() => expect(sharedTestState.updateNoteApi).toHaveBeenCalledWith('existing-note', expect.objectContaining({
+      projectId: 'project-2',
+      labels: ['label-1'],
+      linkedNotes: [],
+      files: [],
+    })))
+    expect(sharedTestState.editor.reset).toHaveBeenCalled()
+    expect(screen.queryByText('Editing note')).not.toBeInTheDocument()
+    expect(screen.getByTestId('note-list')).not.toHaveTextContent('existing-note')
+    expect(sharedTestState.toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Note moved to Project Two' }))
+  })
+
+  it('keeps the edited note project when the quick-action project token is removed before save', async () => {
+    render(<SharedNotesPage title="Inbox" initialNotePage={createEditBoundNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByLabelText('edit-existing-note'))
+    fireEvent.click(screen.getByRole('button', { name: 'Set plain content' }))
+    fireEvent.click(screen.getByRole('button', { name: '更新' }))
+
+    await waitFor(() => expect(sharedTestState.updateNoteApi).toHaveBeenCalledWith('existing-note', expect.objectContaining({
+      projectId: 'project-2',
+    })))
+  })
+
+  it('shows the backend update error message and stays in edit mode when note update fails', async () => {
+    sharedTestState.updateNoteApi.mockResolvedValue({
+      ok: false,
+      status: 404,
+      data: {
+        error: {
+          message: 'Request failed with status code 404',
+          payload: {
+            error: {
+              message: 'Note not found',
+            },
+          },
+        },
+      },
+    })
+
+    render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByLabelText('edit-existing-note'))
+    fireEvent.click(screen.getByRole('button', { name: 'Set plain content' }))
+    fireEvent.click(screen.getByRole('button', { name: '更新' }))
+
+    await waitFor(() => expect(sharedTestState.toast).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Note not found',
+      variant: 'destructive',
+    })))
+    expect(screen.getByText('Editing note')).toBeInTheDocument()
+    expect(screen.getByTestId('note-list')).toHaveTextContent('existing-note')
+    expect(sharedTestState.editor.reset).not.toHaveBeenCalled()
+  })
+
+  it('moves a note to trash and removes it from the list after delete confirmation', async () => {
+    render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByLabelText('delete-existing-note'))
+
+    expect(screen.getByText('删除这条笔记？')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => expect(sharedTestState.moveNoteToTrashApi).toHaveBeenCalledWith('existing-note'))
+    expect(screen.getByTestId('note-list')).not.toHaveTextContent('existing-note')
+    expect(sharedTestState.toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Note moved to trash' }))
   })
 })

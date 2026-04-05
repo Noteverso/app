@@ -1,16 +1,20 @@
 package com.noteverso.core.service;
 
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.noteverso.common.exceptions.NoSuchDataException;
+import com.noteverso.common.exceptions.RequestVerifyException;
 import com.noteverso.common.util.SnowFlakeUtils;
 import com.noteverso.core.dao.NoteMapper;
 import com.noteverso.core.dao.ProjectMapper;
 import com.noteverso.core.model.dto.NoteDTO;
 import com.noteverso.core.model.entity.Note;
+import com.noteverso.core.model.entity.Project;
 import com.noteverso.core.model.request.NoteCreateRequest;
+import com.noteverso.core.model.request.NoteUpdateRequest;
 import com.noteverso.core.service.impl.NoteServiceImpl;
-
-import java.util.List;
-import java.util.Map;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
+import org.junit.jupiter.api.BeforeAll;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,17 +23,28 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NoteServiceTest {
+    @BeforeAll
+    static void initTableInfo() {
+        TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), Note.class);
+    }
+
     @Mock
     NoteMapper noteMapper;
 
@@ -192,5 +207,114 @@ class NoteServiceTest {
         // Assert
         verify(noteMapper).insertWithJsonb(any(Note.class));
         verify(relationService).insertNoteLabelRelation(eq(List.of()), any(), eq(userId));
+    }
+
+    @Test
+    void should_updateNoteSuccessfully_whenNoteExistsAndProjectIsValid() {
+        // Arrange
+        String noteId = "note-1";
+        String userId = "user-1";
+        NoteUpdateRequest request = new NoteUpdateRequest();
+        request.setContentJson(Map.of("type", "doc", "content", List.of()));
+        request.setProjectId("project-2");
+        request.setLabels(List.of("label-1"));
+        request.setLinkedNotes(List.of("linked-1"));
+        request.setFiles(List.of("file-1"));
+
+        when(noteMapper.selectOne(any())).thenReturn(Note.builder().noteId(noteId).creator(userId).projectId("project-1").build());
+        when(projectMapper.selectByProjectId("project-2", userId)).thenReturn(Project.builder().projectId("project-2").build());
+
+        // Act
+        noteService.updateNote(noteId, userId, request);
+
+        // Assert
+        verify(noteMapper).selectOne(any());
+        verify(projectMapper).selectByProjectId("project-2", userId);
+        verify(noteMapper).updateNoteWithJsonb(eq(noteId), eq(userId), eq(request.getContentJson()), eq("project-2"), any(Instant.class), eq(userId));
+        verify(relationService).updateNoteLabelRelation(request.getLabels(), noteId, userId);
+        verify(relationService).updateNoteRelation(request.getLinkedNotes(), noteId, userId);
+        verify(relationService).updateNoteAttachment(request.getFiles(), noteId, userId);
+    }
+
+    @Test
+    void should_updateNoteWithoutChangingProject_whenProjectIdIsNull() {
+        // Arrange
+        String noteId = "note-1";
+        String userId = "user-1";
+        NoteUpdateRequest request = new NoteUpdateRequest();
+        request.setContentJson(Map.of("type", "doc", "content", List.of()));
+        request.setLabels(List.of());
+        request.setLinkedNotes(List.of());
+        request.setFiles(List.of());
+
+        when(noteMapper.selectOne(any())).thenReturn(Note.builder().noteId(noteId).creator(userId).projectId("project-1").build());
+
+        // Act
+        noteService.updateNote(noteId, userId, request);
+
+        // Assert
+        verify(projectMapper, never()).selectByProjectId(anyString(), anyString());
+        verify(noteMapper).updateNoteWithJsonb(eq(noteId), eq(userId), eq(request.getContentJson()), isNull(), any(Instant.class), eq(userId));
+        verify(relationService).updateNoteLabelRelation(request.getLabels(), noteId, userId);
+        verify(relationService).updateNoteRelation(request.getLinkedNotes(), noteId, userId);
+        verify(relationService).updateNoteAttachment(request.getFiles(), noteId, userId);
+    }
+
+    @Test
+    void updateNote_shouldThrowException_whenNoteIsNotFound() {
+        // Arrange
+        String noteId = "note-1";
+        String userId = "user-1";
+        NoteUpdateRequest request = new NoteUpdateRequest();
+        request.setContentJson(Map.of("type", "doc", "content", List.of()));
+
+        when(noteMapper.selectOne(any())).thenReturn(null);
+
+        // Act
+        ThrowableAssert.ThrowingCallable callable = () -> noteService.updateNote(noteId, userId, request);
+
+        // Assert
+        assertThatThrownBy(callable).isInstanceOf(NoSuchDataException.class).hasMessage("Note not found");
+        verify(noteMapper, never()).updateNoteWithJsonb(anyString(), anyString(), any(), any(), any(), anyString());
+    }
+
+    @Test
+    void updateNote_shouldThrowException_whenProjectIdIsBlank() {
+        // Arrange
+        String noteId = "note-1";
+        String userId = "user-1";
+        NoteUpdateRequest request = new NoteUpdateRequest();
+        request.setContentJson(Map.of("type", "doc", "content", List.of()));
+        request.setProjectId("   ");
+
+        when(noteMapper.selectOne(any())).thenReturn(Note.builder().noteId(noteId).creator(userId).build());
+
+        // Act
+        ThrowableAssert.ThrowingCallable callable = () -> noteService.updateNote(noteId, userId, request);
+
+        // Assert
+        assertThatThrownBy(callable).isInstanceOf(RequestVerifyException.class).hasMessage("Project id must not be blank");
+        verify(projectMapper, never()).selectByProjectId(anyString(), anyString());
+        verify(noteMapper, never()).updateNoteWithJsonb(anyString(), anyString(), any(), any(), any(), anyString());
+    }
+
+    @Test
+    void updateNote_shouldThrowException_whenProjectIsNotFound() {
+        // Arrange
+        String noteId = "note-1";
+        String userId = "user-1";
+        NoteUpdateRequest request = new NoteUpdateRequest();
+        request.setContentJson(Map.of("type", "doc", "content", List.of()));
+        request.setProjectId("missing-project");
+
+        when(noteMapper.selectOne(any())).thenReturn(Note.builder().noteId(noteId).creator(userId).build());
+        when(projectMapper.selectByProjectId("missing-project", userId)).thenReturn(null);
+
+        // Act
+        ThrowableAssert.ThrowingCallable callable = () -> noteService.updateNote(noteId, userId, request);
+
+        // Assert
+        assertThatThrownBy(callable).isInstanceOf(NoSuchDataException.class).hasMessage("Project not found");
+        verify(noteMapper, never()).updateNoteWithJsonb(anyString(), anyString(), any(), any(), any(), anyString());
     }
 }

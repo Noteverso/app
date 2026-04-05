@@ -111,37 +111,49 @@ public class RelationServiceImpl implements RelationService {
 
     @Override
     public void updateNoteRelation(List<String> linkedNotes, String noteId, String userId) {
-        if (linkedNotes == null || linkedNotes.isEmpty()) {
+        if (linkedNotes == null) {
             return;
         }
         LambdaUpdateWrapper<NoteRelation> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(NoteRelation::getNoteId, noteId);
         noteRelationMapper.delete(updateWrapper);
 
+        if (linkedNotes.isEmpty()) {
+            return;
+        }
+
         insertNoteRelation(linkedNotes, noteId, userId);
     }
 
     @Override
     public void updateNoteLabelRelation(List<String> labels, String noteId, String userId) {
-        if (labels == null || labels.isEmpty()) {
+        if (labels == null) {
             return;
         }
         LambdaUpdateWrapper<NoteLabelRelation> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(NoteLabelRelation::getNoteId, noteId);
         noteLabelRelationMapper.delete(updateWrapper);
 
+        if (labels.isEmpty()) {
+            return;
+        }
+
         insertNoteLabelRelation(labels, noteId, userId);
     }
 
     @Override
     public void updateNoteAttachment(List<String> attachmentIds, String noteId, String userId) {
-        if (attachmentIds == null || attachmentIds.isEmpty()) {
+        if (attachmentIds == null) {
             return;
         }
 
         LambdaUpdateWrapper<AttachmentRelation> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(AttachmentRelation::getObjectId, noteId);
         attachmentRelationMapper.delete(updateWrapper);
+
+        if (attachmentIds.isEmpty()) {
+            return;
+        }
 
         insertNoteAttachmentRelation(attachmentIds, noteId, userId);
     }

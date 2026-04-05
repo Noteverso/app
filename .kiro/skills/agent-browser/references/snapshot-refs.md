@@ -72,7 +72,7 @@ agent-browser click @e6
 agent-browser fill @e10 "user@example.com"
 
 # Fill password
-agent-browser fill @e11 "password123"
+agent-browser fill @e11 "Admin123456"
 
 # Submit the form
 agent-browser click @e12

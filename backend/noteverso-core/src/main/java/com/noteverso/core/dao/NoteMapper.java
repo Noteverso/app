@@ -5,7 +5,9 @@ import com.noteverso.core.model.dto.NoteCountForProject;
 import com.noteverso.core.model.dto.ProjectViewOption;
 import com.noteverso.core.model.entity.Note;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
+import java.time.Instant;
 import java.util.List;
 
 @Mapper
@@ -20,4 +22,13 @@ public interface NoteMapper extends BaseMapper<Note> {
     void updateNotesIsDeletedByProject(String projectId, String userId);
     
     int insertWithJsonb(Note note);
+
+    int updateNoteWithJsonb(
+            @Param("noteId") String noteId,
+            @Param("userId") String userId,
+            @Param("contentJson") Object contentJson,
+            @Param("projectId") String projectId,
+            @Param("updatedAt") Instant updatedAt,
+            @Param("updater") String updater
+    );
 }

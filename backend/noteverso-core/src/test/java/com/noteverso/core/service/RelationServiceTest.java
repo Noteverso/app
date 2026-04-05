@@ -1,6 +1,8 @@
 package com.noteverso.core.service;
 
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.noteverso.core.dao.AttachmentRelationMapper;
 import com.noteverso.core.dao.NoteLabelRelationMapper;
 import com.noteverso.core.dao.NoteRelationMapper;
@@ -10,7 +12,10 @@ import com.noteverso.core.model.dto.ReferencedNoteCount;
 import com.noteverso.core.model.dto.ReferencingNoteCount;
 import com.noteverso.core.model.entity.AttachmentRelation;
 import com.noteverso.core.model.entity.NoteLabelRelation;
+import com.noteverso.core.model.entity.NoteRelation;
 import com.noteverso.core.service.impl.RelationServiceImpl;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,10 +28,20 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RelationServiceTest {
+
+    @BeforeAll
+    static void initTableInfo() {
+        MapperBuilderAssistant assistant = new MapperBuilderAssistant(new MybatisConfiguration(), "");
+        TableInfoHelper.initTableInfo(assistant, NoteLabelRelation.class);
+        TableInfoHelper.initTableInfo(assistant, NoteRelation.class);
+        TableInfoHelper.initTableInfo(assistant, AttachmentRelation.class);
+    }
 
     @Mock
     private NoteLabelRelationMapper noteLabelRelationMapper;
@@ -408,7 +423,7 @@ class RelationServiceTest {
     }
 
     @Test
-    void should_updateNoteRelation_notCallMapper_whenEmptyList() {
+    void should_updateNoteRelation_clearExistingRelations_whenEmptyList() {
         // Arrange
         List<String> emptyLinkedNotes = List.of();
         String noteId = "note1";
@@ -419,6 +434,8 @@ class RelationServiceTest {
 
         // Assert
         assertThat(emptyLinkedNotes).isEmpty();
+        verify(noteRelationMapper).delete(any());
+        verify(noteRelationMapper, never()).batchInsert(any());
     }
 
     @Test
@@ -431,10 +448,12 @@ class RelationServiceTest {
         relationService.updateNoteRelation(null, noteId, userId);
 
         // Assert - no exception thrown
+        verify(noteRelationMapper, never()).delete(any());
+        verify(noteRelationMapper, never()).batchInsert(any());
     }
 
     @Test
-    void should_updateNoteLabelRelation_notCallMapper_whenEmptyList() {
+    void should_updateNoteLabelRelation_clearExistingRelations_whenEmptyList() {
         // Arrange
         List<String> emptyLabels = List.of();
         String noteId = "note1";
@@ -445,6 +464,8 @@ class RelationServiceTest {
 
         // Assert
         assertThat(emptyLabels).isEmpty();
+        verify(noteLabelRelationMapper).delete(any());
+        verify(noteLabelRelationMapper, never()).batchInsert(any());
     }
 
     @Test
@@ -457,10 +478,12 @@ class RelationServiceTest {
         relationService.updateNoteLabelRelation(null, noteId, userId);
 
         // Assert - no exception thrown
+        verify(noteLabelRelationMapper, never()).delete(any());
+        verify(noteLabelRelationMapper, never()).batchInsert(any());
     }
 
     @Test
-    void should_updateNoteAttachment_notCallMapper_whenEmptyList() {
+    void should_updateNoteAttachment_clearExistingRelations_whenEmptyList() {
         // Arrange
         List<String> emptyAttachments = List.of();
         String noteId = "note1";
@@ -471,6 +494,8 @@ class RelationServiceTest {
 
         // Assert
         assertThat(emptyAttachments).isEmpty();
+        verify(attachmentRelationMapper).delete(any());
+        verify(attachmentRelationMapper, never()).batchInsert(any());
     }
 
     @Test
@@ -483,5 +508,7 @@ class RelationServiceTest {
         relationService.updateNoteAttachment(null, noteId, userId);
 
         // Assert - no exception thrown
+        verify(attachmentRelationMapper, never()).delete(any());
+        verify(attachmentRelationMapper, never()).batchInsert(any());
     }
 }

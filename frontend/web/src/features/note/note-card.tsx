@@ -22,6 +22,9 @@ export interface NoteCardProps {
   attachmentCount?: number | null;
   referencedCount?: number | null;
   referencingCount?: number | null;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onFavorite?: () => void;
 }
 
 export function NoteCard(props: NoteCardProps) {
@@ -35,6 +38,9 @@ export function NoteCard(props: NoteCardProps) {
     attachmentCount,
     referencedCount,
     referencingCount,
+    onEdit,
+    onDelete,
+    onFavorite,
   } = props
 
   const htmlContent = generateHtmlFromJson(contentJson)
@@ -45,7 +51,7 @@ export function NoteCard(props: NoteCardProps) {
         <div className="text-gray-600 mb-2">
           <time dateTime={addedAt}>{dateFormat(addedAt)}</time>
         </div>
-        <NoteActions onDelete={() => {}} onEdit={() => {}} onFavorite={() => {}} className="" />
+        <NoteActions onDelete={onDelete || (() => {})} onEdit={onEdit || (() => {})} onFavorite={onFavorite} className="" />
       </div>
 
       <div className="flex flex-wrap gap-x-4">

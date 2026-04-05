@@ -29,7 +29,7 @@ agent-browser snapshot -i
 
 # Fill credentials
 agent-browser fill @e1 "user@example.com"
-agent-browser fill @e2 "password123"
+agent-browser fill @e2 "Admin123456"
 
 # Submit
 agent-browser click @e3
@@ -48,7 +48,7 @@ After logging in, save state for reuse:
 agent-browser open https://app.example.com/login
 agent-browser snapshot -i
 agent-browser fill @e1 "user@example.com"
-agent-browser fill @e2 "password123"
+agent-browser fill @e2 "Admin123456"
 agent-browser click @e3
 agent-browser wait --url "**/dashboard"
 
@@ -105,7 +105,7 @@ Handle 2FA with manual intervention:
 agent-browser open https://app.example.com/login --headed  # Show browser
 agent-browser snapshot -i
 agent-browser fill @e1 "user@example.com"
-agent-browser fill @e2 "password123"
+agent-browser fill @e2 "Admin123456"
 agent-browser click @e3
 
 # Wait for user to complete 2FA manually

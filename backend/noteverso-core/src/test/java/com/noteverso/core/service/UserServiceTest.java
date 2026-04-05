@@ -49,7 +49,7 @@ class UserServiceTest {
         // Arrange
         String email = "test@test.com";
         String username = "testuser";
-        String password = "password123";
+        String password = "Admin123456";
         
         Project inboxProject = new Project();
         inboxProject.setProjectId("project1");
