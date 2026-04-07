@@ -599,7 +599,7 @@ describe('SharedNotesPage component regressions', () => {
     expect(screen.getByTestId('note-list').querySelectorAll('span')).toHaveLength(1)
     expect(screen.getByTestId('note-list')).toHaveTextContent('existing-note')
     expect(sharedTestState.toast).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Note created in Project Two',
+      title: '笔记已创建在 Project Two',
     }))
   })
 
@@ -621,7 +621,7 @@ describe('SharedNotesPage component regressions', () => {
       contentClassName: 'min-w-0 flex-1',
       titleClassName: 'truncate whitespace-nowrap text-xs font-medium leading-none text-white',
       closeClassName: 'text-white/60 hover:text-white focus:text-white focus:ring-white/30 focus:ring-offset-slate-900',
-      title: 'Note created in Project Two',
+      title: '笔记已创建在 Project Two',
     }))
     expect(sharedTestState.refetchProjects).toHaveBeenCalledTimes(1)
 
@@ -721,7 +721,7 @@ describe('SharedNotesPage component regressions', () => {
       action: { props: { onClick: () => void } };
     } | undefined
 
-    expect(toastArgs?.title).toBe('Note created in 收件箱')
+    expect(toastArgs?.title).toBe('笔记已创建在 收件箱')
     await act(async () => {
       toastArgs?.action.props.onClick()
     })
@@ -755,7 +755,7 @@ describe('SharedNotesPage component regressions', () => {
     setFetcherIdleSuccess(view, 'saved-note-5')
 
     expect(sharedTestState.toast).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Note created in Inline Created Project',
+      title: '笔记已创建在 Inline Created Project',
     }))
   })
 

@@ -95,6 +95,7 @@ export type SidebarProprs = {
   projects: FullProject[];
   setProjects: React.Dispatch<React.SetStateAction<FullProject[]>>;
   refetchProjects: () => void;
+  onAddNote?: () => void;
   onToggle?: () => void;
 }
 
@@ -102,6 +103,7 @@ export function Nav({
   projects,
   setProjects,
   refetchProjects,
+  onAddNote,
   onToggle,
 }: SidebarProprs) {
   const navigate = useNavigate()
@@ -315,12 +317,12 @@ export function Nav({
     }
   }
 
-  function handleSearch(_arg0: string): void {
+  function handleSearch(): void {
     navigate('/app/search')
   }
 
-  function handleNoteAdd(_arg0: string): void {
-    throw new Error('Function not implemented.')
+  function handleNoteAdd() {
+    onAddNote?.()
   }
 
   return (
@@ -364,7 +366,7 @@ export function Nav({
             variant="ghost"
             size="lg"
             className="flex items-center justify-start gap-3 h-10 py-2 px-2 transition-all text-foreground hover:bg-gray-100"
-            onClick={() => handleNoteAdd('')}
+            onClick={handleNoteAdd}
           >
             <CirclePlus className="h-4 w-4" />
             <span className="">添加笔记</span>
@@ -379,7 +381,7 @@ export function Nav({
               variant="ghost"
               size="lg"
               className="flex items-center justify-start gap-3 h-10 py-2 px-2 transition-all text-foreground hover:bg-gray-100"
-              onClick={() => handleSearch('')}
+              onClick={handleSearch}
             >
               <Search className="h-4 w-4" />
               <span className="">搜索</span>

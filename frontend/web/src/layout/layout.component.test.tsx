@@ -40,6 +40,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useLoaderData: () => layoutTestState.loadedProjects,
+    useLocation: () => ({ pathname: '/app/inbox' }),
     useRevalidator: () => ({ revalidate: layoutTestState.revalidate }),
     Outlet: ({ context }: { context: { upsertProject: (project: typeof CREATED_PROJECT) => void } }) => (
       <button type="button" onClick={() => context.upsertProject(CREATED_PROJECT)}>
@@ -70,6 +71,10 @@ vi.mock('@/components/ui/button/button', () => ({
 
 vi.mock('@/components/ui/toast/toaster', () => ({
   Toaster: () => null,
+}))
+
+vi.mock('@/features/note/note-create-dialog', () => ({
+  NoteCreateDialog: () => null,
 }))
 
 describe('Layout project syncing', () => {

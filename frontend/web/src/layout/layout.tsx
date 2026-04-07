@@ -1,4 +1,4 @@
-import { Outlet, useLoaderData, useRevalidator } from 'react-router-dom'
+import { Outlet, useLoaderData, useLocation, useRevalidator } from 'react-router-dom'
 import { PanelLeft } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Nav } from './nav/nav'
@@ -7,6 +7,7 @@ import type { FullProject } from '@/types/project'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet/sheet'
 import { Button } from '@/components/ui/button/button'
 import { Toaster } from '@/components/ui/toast/toaster'
+import { NoteCreateDialog } from '@/features/note/note-create-dialog'
 
 export function getContentTopControlsClass() {
   return 'mb-2 flex h-10 items-center md:hidden'
@@ -26,8 +27,10 @@ export function upsertProjectList(projects: FullProject[], nextProject: FullProj
 
 export function Layout() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true)
+  const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false)
   const sidebarRef = useRef<HTMLDivElement>(null)
   const [sidebarWidth, setSidebarWidth] = useState(0)
+  const location = useLocation()
 
   const loadedProjects = useLoaderData() as FullProject[]
   const [projects, setProjects] = useState<FullProject[]>(loadedProjects)
@@ -81,6 +84,7 @@ export function Layout() {
           projects={projects}
           setProjects={setProjects}
           refetchProjects={refetchProjects}
+          onAddNote={() => setIsNoteDialogOpen(true)}
           onToggle={handleNavToggle}
         />
       </div>
@@ -112,6 +116,7 @@ export function Layout() {
                     projects={projects}
                     setProjects={setProjects}
                     refetchProjects={refetchProjects}
+                    onAddNote={() => setIsNoteDialogOpen(true)}
                   />
                 </SheetContent>
               </Sheet>
@@ -124,6 +129,15 @@ export function Layout() {
               isSidebarVisible,
               onToggleSidebar: handleNavToggle,
             }} />
+            <NoteCreateDialog
+              open={isNoteDialogOpen}
+              onOpenChange={setIsNoteDialogOpen}
+              projects={projects}
+              inboxProject={inboxProject}
+              pathname={location.pathname}
+              refetchProjects={refetchProjects}
+              upsertProject={upsertProject}
+            />
             <Toaster />
           </div>
         </div>

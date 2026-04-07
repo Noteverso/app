@@ -648,11 +648,11 @@ const TextEditor = forwardRef<EditorMethods, TextEditorProps>(({ className = '',
           </div>
         )}
 
-        <div className={`overflow-auto bg-white ${EDITOR_CONTENT_MAX_HEIGHT_CLASS}`}>
+        <div className={`overflow-auto ${EDITOR_CONTENT_MAX_HEIGHT_CLASS}`}>
           <EditorContent editor={editor} className="p-4 pt-2" />
         </div>
         {footer && (
-          <div className="sticky bottom-0 border-t border-slate-100 bg-white px-3 py-2">
+          <div className="sticky bottom-0 border-t border-slate-100 px-3 py-2">
             {footer}
           </div>
         )}

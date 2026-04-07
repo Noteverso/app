@@ -6,12 +6,12 @@ import {
   mergeSameRouteNoteRecords,
   nextEditorInstanceKeyOnSave,
   reconcileOptimisticNote,
-  resolveSharedNotesRouteContext,
   shouldFinalizeOptimisticNote,
   shouldInsertOptimisticNote,
   shouldKeepOptimisticNoteInCurrentList,
   shouldShowCreatedNoteNavigationHint,
 } from './shared-notes-page'
+import { resolveSharedNotesRouteContext } from '@/features/note/note-create-utils'
 
 function createNote(noteId: string) {
   return {
@@ -127,7 +127,7 @@ describe('shared notes optimistic save guards', () => {
   })
 
   it('builds global navigation toast copy for the destination project', () => {
-    expect(getCreatedNoteNavigationToastTitle('Project Two')).toBe('Note created in Project Two')
+    expect(getCreatedNoteNavigationToastTitle('Project Two')).toBe('笔记已创建在 Project Two')
   })
 
   it('merges same-route refresh data without dropping already loaded notes', () => {

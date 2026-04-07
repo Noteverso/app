@@ -278,4 +278,30 @@ describe('Nav delete behavior', () => {
 
     expect(setProjects).toHaveBeenCalled()
   })
+
+  it('opens the add-note flow when the sidebar add button is clicked', () => {
+    const onAddNote = vi.fn()
+
+    render(
+      <Nav
+        projects={[
+          {
+            projectId: 'inbox-1',
+            name: 'Inbox',
+            color: '#000000',
+            noteCount: 12,
+            isFavorite: 0,
+            inboxProject: true,
+          },
+        ]}
+        setProjects={vi.fn()}
+        refetchProjects={vi.fn()}
+        onAddNote={onAddNote}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '添加笔记' }))
+
+    expect(onAddNote).toHaveBeenCalledTimes(1)
+  })
 })

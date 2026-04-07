@@ -1,4 +1,4 @@
-import { json, useFetcher, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
+import { json, useFetcher, useLocation, useOutletContext, useParams } from 'react-router-dom'
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AtSign, HashIcon, PanelLeft, Plus } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
@@ -25,9 +25,18 @@ import { createLabelApi, getLabelSelectItemsApi } from '@/api/label/label'
 import type { SelectItem as LabelSelectItem } from '@/types/label'
 import { createProjectApi } from '@/api/project/project'
 import { PROJECT_COLORS } from '@/constants/project-constants'
-import { ToastAction } from '@/components/ui/toast/toast'
 import { useToast } from '@/components/ui/toast/use-toast'
 import type { QuickActionTokenAttrs } from '@/features/editor/quick-action-token'
+import {
+  buildCreatedNoteNavigationHint,
+  getApiErrorMessage,
+  resolveSharedNotesRouteContext,
+  shouldShowCreatedNoteNavigationHint,
+} from '@/features/note/note-create-utils'
+import {
+  useCreatedNoteNavigationHintToast,
+  getCreatedNoteNavigationToastTitle,
+} from '@/features/note/note-navigation-hint-toast'
 
 interface ProjectPageProps {
   title?: string;
@@ -65,8 +74,6 @@ type OptimisticSaveContext = {
 }
 
 const LABEL_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899']
-
-export type SharedNotesRouteKind = 'inbox' | 'project' | 'other'
 
 export function shouldInsertOptimisticNote(
   previousState: string,
@@ -109,10 +116,6 @@ export function shouldKeepOptimisticNoteInCurrentList(currentProjectId: string, 
   return !currentProjectId || currentProjectId === selectedProjectId
 }
 
-export function shouldShowCreatedNoteNavigationHint(currentProjectId: string, selectedProjectId: string) {
-  return Boolean(currentProjectId) && currentProjectId !== selectedProjectId
-}
-
 export function isCreateSubmitDisabled(fetcherState: string, hasEditorContent: boolean) {
   return fetcherState !== 'idle' || !hasEditorContent
 }
@@ -124,45 +127,6 @@ export function mergeSameRouteNoteRecords(
   const incomingIds = new Set(incomingRecords.map(note => note.noteId))
   const preservedExistingNotes = existingNotes.filter(note => !incomingIds.has(note.noteId))
   return [...incomingRecords, ...preservedExistingNotes]
-}
-
-export function resolveSharedNotesRouteContext(
-  pathname: string,
-  projectId: string | undefined,
-  projects: Array<{ projectId: string; name: string; inboxProject: boolean }>,
-  inboxProject: { projectId: string } | null | undefined,
-  title?: string,
-) {
-  if (pathname.includes(ROUTER_PATHS.INBOX.path)) {
-    return {
-      routeKind: 'inbox' as const,
-      actionPath: ROUTER_PATHS.INBOX.path,
-      projectName: ROUTER_PATHS.INBOX.name,
-      currentProjectId: inboxProject?.projectId || '',
-      defaultSelectedProjectId: inboxProject?.projectId || '',
-      supportsScopedCreateBehavior: true,
-    }
-  }
-
-  if (projectId) {
-    return {
-      routeKind: 'project' as const,
-      actionPath: `${ROUTER_PATHS.PROJECTS.path}/${projectId}`,
-      projectName: projects.find(project => project.projectId === projectId)?.name || '',
-      currentProjectId: projectId,
-      defaultSelectedProjectId: projectId,
-      supportsScopedCreateBehavior: true,
-    }
-  }
-
-  return {
-    routeKind: 'other' as const,
-    actionPath: pathname,
-    projectName: title || '',
-    currentProjectId: '',
-    defaultSelectedProjectId: inboxProject?.projectId || '',
-    supportsScopedCreateBehavior: false,
-  }
 }
 
 export function createSavedNoteListItem(
@@ -245,44 +209,14 @@ function getEmptyEditorContent() {
   return {}
 }
 
-function getApiErrorMessage(
-  response: { data?: { error?: { message?: string; payload?: unknown } } } | undefined,
-  fallbackMessage: string,
-) {
-  const payload = response?.data?.error?.payload
-  if (payload && typeof payload === 'object') {
-    if ('error' in payload) {
-      const payloadError = (payload as { error?: unknown }).error
-      if (payloadError && typeof payloadError === 'object' && 'message' in payloadError && typeof payloadError.message === 'string') {
-        return payloadError.message
-      }
-    }
-
-    if ('message' in payload && typeof payload.message === 'string') {
-      return payload.message
-    }
-  }
-
-  return response?.data?.error?.message || fallbackMessage
-}
-
-export function getCreatedNoteNavigationToastTitle(projectName: string) {
-  return `Note created in ${projectName}`
-}
-
-export const CREATED_NOTE_NAVIGATION_TOAST_DURATION = 10000
-export const CREATED_NOTE_NAVIGATION_TOAST_CLASS_NAME = 'w-auto max-w-[24rem] items-center gap-2 border-slate-900 bg-slate-900 p-3 pr-9 text-white shadow-lg'
-export const CREATED_NOTE_NAVIGATION_TOAST_CONTENT_CLASS_NAME = 'min-w-0 flex-1'
-export const CREATED_NOTE_NAVIGATION_TOAST_TITLE_CLASS_NAME = 'truncate whitespace-nowrap text-xs font-medium leading-none text-white'
-export const CREATED_NOTE_NAVIGATION_TOAST_ACTION_CLASS_NAME = 'h-7 shrink-0 border-white/15 px-2 text-xs text-white hover:bg-white/10 hover:text-white focus:ring-white/30 focus:ring-offset-slate-900'
-export const CREATED_NOTE_NAVIGATION_TOAST_CLOSE_CLASS_NAME = 'text-white/60 hover:text-white focus:text-white focus:ring-white/30 focus:ring-offset-slate-900'
+export { getCreatedNoteNavigationToastTitle }
+export { shouldShowCreatedNoteNavigationHint }
 
 export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
   const { projects, inboxProject, refetchProjects, upsertProject, isSidebarVisible, onToggleSidebar } = useOutletContext() as SharedNotesOutletContext
   const { toast } = useToast()
   const fetcher = useFetcher()
   const location = useLocation()
-  const navigate = useNavigate()
   const { projectId } = useParams() as { projectId: string }
   const routeContext = useMemo(
     () => resolveSharedNotesRouteContext(location.pathname, projectId, projects, inboxProject, title),
@@ -321,8 +255,8 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
   const editorRef = useRef<EditorMethods>(null)
   const previousFetcherStateRef = useRef(fetcher.state)
   const activeOptimisticSaveRef = useRef<OptimisticSaveContext | null>(null)
-  const activeNavigationToastDismissRef = useRef<(() => void) | null>(null)
   const previousRoutePathRef = useRef(location.pathname)
+  const { dismissNavigationHintToast, showNavigationHintToast } = useCreatedNoteNavigationHintToast(location.pathname, toast)
 
   // 避免执行多余请求
   const [hasMore, setHasMore] = useState(initialNotePage.total > initialNotePage.records.length)
@@ -380,49 +314,6 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     setHasMore(initialNotePage.total > nextNotes.length)
     previousRoutePathRef.current = location.pathname
   }, [initialNotePage, location.pathname])
-
-  const dismissNavigationHintToast = useCallback(() => {
-    activeNavigationToastDismissRef.current?.()
-    activeNavigationToastDismissRef.current = null
-  }, [])
-
-  const showNavigationHintToast = useCallback((hint: NoteNavigationHint | null) => {
-    dismissNavigationHintToast()
-    if (!hint) {
-      return
-    }
-
-    let dismissToast: (() => void) | null = null
-    const toastHandle = toast({
-      duration: CREATED_NOTE_NAVIGATION_TOAST_DURATION,
-      className: CREATED_NOTE_NAVIGATION_TOAST_CLASS_NAME,
-      contentClassName: CREATED_NOTE_NAVIGATION_TOAST_CONTENT_CLASS_NAME,
-      titleClassName: CREATED_NOTE_NAVIGATION_TOAST_TITLE_CLASS_NAME,
-      closeClassName: CREATED_NOTE_NAVIGATION_TOAST_CLOSE_CLASS_NAME,
-      title: getCreatedNoteNavigationToastTitle(hint.projectName),
-      action: (
-        <ToastAction
-          className={CREATED_NOTE_NAVIGATION_TOAST_ACTION_CLASS_NAME}
-          altText={`Open ${hint.projectName}`}
-          onClick={() => {
-            dismissToast?.()
-            navigate(hint.routePath)
-          }}
-        >
-          Open project
-        </ToastAction>
-      ),
-    })
-
-    dismissToast = toastHandle.dismiss
-    activeNavigationToastDismissRef.current = toastHandle.dismiss
-  }, [dismissNavigationHintToast, navigate, toast])
-
-  useEffect(() => {
-    dismissNavigationHintToast()
-  }, [dismissNavigationHintToast, location.pathname])
-
-  useEffect(() => dismissNavigationHintToast, [dismissNavigationHintToast])
 
   const availableProjects = useMemo(() => (
     inboxProject
@@ -537,14 +428,8 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
           projectId: targetProjectId,
           name: targetProject?.name || projectName || title || ROUTER_PATHS.INBOX.name,
         },
-        navigationHint: supportsScopedCreateBehavior && shouldShowCreatedNoteNavigationHint(curProjectId, targetProjectId)
-          ? {
-              projectId: targetProjectId,
-              projectName: projectLabel,
-              routePath: targetProject?.inboxProject
-                ? ROUTER_PATHS.INBOX.path
-                : `${ROUTER_PATHS.PROJECTS.path}/${targetProjectId}`,
-            }
+        navigationHint: supportsScopedCreateBehavior
+          ? buildCreatedNoteNavigationHint(curProjectId, targetProjectId, availableProjects, inboxProject, projectLabel)
           : null,
         shouldInsertOptimisticNote: shouldInsertNote,
       }
@@ -945,15 +830,17 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     const viewportHeight = window.innerHeight
     const viewportWidth = window.innerWidth
     const panelWidth = 320
-    const estimatedHeight = 280
+    const estimatedHeight = Math.min(280, Math.max(120, 40 + quickSuggestions.length * 40))
+    const availableBelow = viewportHeight - quickActionAnchor.bottom - 12
+    const availableAbove = quickActionAnchor.top - 12
     const left = Math.max(12, Math.min(quickActionAnchor.left, viewportWidth - panelWidth - 12))
-    const preferTop = quickActionAnchor.bottom + estimatedHeight > viewportHeight - 12
+    const preferTop = availableBelow < 120 && availableAbove > availableBelow
     const top = preferTop
-      ? Math.max(12, quickActionAnchor.top - estimatedHeight - 8)
-      : Math.min(viewportHeight - estimatedHeight - 12, quickActionAnchor.bottom + 8)
+      ? Math.max(12, quickActionAnchor.top - Math.min(estimatedHeight, availableAbove) - 8)
+      : Math.max(12, quickActionAnchor.bottom + 8)
     const maxHeight = preferTop
-      ? Math.max(120, quickActionAnchor.top - 24)
-      : Math.max(120, viewportHeight - quickActionAnchor.bottom - 24)
+      ? Math.max(96, availableAbove - 8)
+      : Math.max(96, availableBelow - 8)
 
     return {
       left,
