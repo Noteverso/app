@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { searchNotesApi, type SearchNotesParams } from '@/api/note/note'
 import type { FullNote } from '@/types/note'
@@ -6,87 +6,178 @@ import { NoteList } from '@/features/note'
 import { SearchBar, type SearchParams } from '@/components/search-bar/search-bar'
 import { useToast } from '@/components/ui/toast/use-toast'
 
+const PAGE_SIZE = 20
+
+function parseSearchFromUrl(searchParams: URLSearchParams): SearchParams {
+  return {
+    keyword: searchParams.get('keyword') || undefined,
+    labelIds: searchParams.get('labelIds')?.split(',').filter(Boolean) || undefined,
+    status: searchParams.get('status') ? parseInt(searchParams.get('status')!, 10) : undefined,
+    sortBy: searchParams.get('sortBy') || 'addedAt',
+    sortOrder: searchParams.get('sortOrder') || 'desc',
+  }
+}
+
+function buildUrlSearchParams(params: SearchParams) {
+  const nextSearchParams = new URLSearchParams()
+
+  if (params.keyword) nextSearchParams.set('keyword', params.keyword)
+  if (params.labelIds && params.labelIds.length > 0) nextSearchParams.set('labelIds', params.labelIds.join(','))
+  if (params.status !== undefined) nextSearchParams.set('status', params.status.toString())
+  if (params.sortBy) nextSearchParams.set('sortBy', params.sortBy)
+  if (params.sortOrder) nextSearchParams.set('sortOrder', params.sortOrder)
+
+  return nextSearchParams
+}
+
+function getSearchSignature(params: SearchParams) {
+  return JSON.stringify({
+    keyword: params.keyword ?? '',
+    labelIds: params.labelIds ?? [],
+    status: params.status ?? null,
+    sortBy: params.sortBy ?? 'addedAt',
+    sortOrder: params.sortOrder ?? 'desc',
+  })
+}
+
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [notes, setNotes] = useState<FullNote[]>([])
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(false)
-  const [currentSearch, setCurrentSearch] = useState<SearchParams>({})
+  const [currentSearch, setCurrentSearch] = useState<SearchParams>(() => parseSearchFromUrl(searchParams))
   const { toast } = useToast()
   const observer = useRef<IntersectionObserver>()
+  const requestIdRef = useRef(0)
+  const loadingRef = useRef(false)
+  const hasMoreRef = useRef(hasMore)
+  const currentSearchSignature = useMemo(() => getSearchSignature(currentSearch), [currentSearch])
 
   useEffect(() => {
-    // Initialize search from URL params
-    const keyword = searchParams.get('keyword') || undefined
-    const labelIds = searchParams.get('labelIds')?.split(',').filter(Boolean) || undefined
-    const status = searchParams.get('status') ? parseInt(searchParams.get('status')!) : undefined
-    const sortBy = searchParams.get('sortBy') || 'addedAt'
-    const sortOrder = searchParams.get('sortOrder') || 'desc'
+    hasMoreRef.current = hasMore
+  }, [hasMore])
 
-    const initialSearch: SearchParams = { keyword, labelIds, status, sortBy, sortOrder }
-    setCurrentSearch(initialSearch)
-    performSearch(initialSearch, 1)
-  }, [])
+  useEffect(() => {
+    const nextSearch = parseSearchFromUrl(searchParams)
+    const nextSignature = getSearchSignature(nextSearch)
 
-  const performSearch = async (params: SearchParams, pageIndex: number) => {
+    if (nextSignature === currentSearchSignature) {
+      return
+    }
+
+    if (observer.current) {
+      observer.current.disconnect()
+    }
+
+    loadingRef.current = true
+    setHasMore(false)
+    setPage(1)
+    setCurrentSearch(nextSearch)
+  }, [currentSearchSignature, searchParams])
+
+  useEffect(() => {
+    let isActive = true
+    const currentRequestId = ++requestIdRef.current
+
+    loadingRef.current = true
     setLoading(true)
 
-    const searchParams: SearchNotesParams = {
-      ...params,
-      pageIndex,
-      pageSize: 20,
-    }
+    const runSearch = async () => {
+      try {
+        const searchRequest: SearchNotesParams = {
+          ...currentSearch,
+          pageIndex: page,
+          pageSize: PAGE_SIZE,
+        }
 
-    const response = await searchNotesApi(searchParams)
+        const response = await searchNotesApi(searchRequest)
 
-    if (response.ok) {
-      const data = response.data
-      if (pageIndex === 1) {
-        setNotes(data.records)
-      } else {
-        setNotes(prev => [...prev, ...data.records])
+        if (!isActive || currentRequestId !== requestIdRef.current) {
+          return
+        }
+
+        if (response.ok) {
+          const data = response.data
+          if (page === 1) {
+            setNotes(data.records)
+          } else {
+            setNotes(prevNotes => [...prevNotes, ...data.records])
+          }
+
+          setHasMore(data.total > page * PAGE_SIZE)
+        } else {
+          toast({ title: 'Search failed', variant: 'destructive' })
+        }
+      } catch {
+        if (!isActive || currentRequestId !== requestIdRef.current) {
+          return
+        }
+
+        toast({ title: 'Search failed', variant: 'destructive' })
       }
-      setHasMore(data.total > pageIndex * 20)
-      setPage(pageIndex)
-    } else {
-      toast({ title: 'Search failed', variant: 'destructive' })
     }
 
-    setLoading(false)
-  }
+    runSearch().finally(() => {
+      if (!isActive || currentRequestId !== requestIdRef.current) {
+        return
+      }
+
+      loadingRef.current = false
+      setLoading(false)
+    })
+
+    return () => {
+      isActive = false
+    }
+  }, [currentSearch, page, toast])
 
   const handleSearch = (params: SearchParams) => {
-    // Update URL params
-    const urlParams = new URLSearchParams()
-    if (params.keyword) urlParams.set('keyword', params.keyword)
-    if (params.labelIds && params.labelIds.length > 0) urlParams.set('labelIds', params.labelIds.join(','))
-    if (params.status) urlParams.set('status', params.status.toString())
-    if (params.sortBy) urlParams.set('sortBy', params.sortBy)
-    if (params.sortOrder) urlParams.set('sortOrder', params.sortOrder)
-    setSearchParams(urlParams)
+    if (observer.current) {
+      observer.current.disconnect()
+    }
 
+    loadingRef.current = true
+    setHasMore(false)
+    setPage(1)
     setCurrentSearch(params)
-    performSearch(params, 1)
+    setSearchParams(buildUrlSearchParams(params), { preventScrollReset: true })
   }
 
   const lastNoteRef = useCallback((node: HTMLElement | null) => {
-    if (loading) return
-    if (observer.current) observer.current.disconnect()
+    if (observer.current) {
+      observer.current.disconnect()
+    }
+
+    if (loading || loadingRef.current || !hasMore) {
+      return
+    }
 
     observer.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasMore) {
-        performSearch(currentSearch, page + 1)
+      if (!entries[0]?.isIntersecting || loadingRef.current || !hasMoreRef.current) {
+        return
       }
+
+      loadingRef.current = true
+      setPage(currentPage => currentPage + 1)
     })
 
-    if (node) observer.current.observe(node)
-  }, [loading, hasMore, currentSearch, page])
+    if (node) {
+      observer.current.observe(node)
+    }
+  }, [hasMore, loading])
+
+  useEffect(() => () => {
+    observer.current?.disconnect()
+  }, [])
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-4">Search Notes</h1>
+    <div className="px-6 pb-6">
+      <div
+        data-testid="search-toolbar"
+        className="sticky top-0 z-10 -mx-6 mb-6 border-b bg-white px-6 pb-4 pt-6 shadow-sm"
+      >
+        <h1 className="mb-4 text-2xl font-bold">Search Notes</h1>
         <SearchBar onSearch={handleSearch} />
       </div>
 

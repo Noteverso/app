@@ -4,6 +4,8 @@ import type * as ReactRouterDom from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildEditorContentWithQuickBindings, SharedNotesPage } from './shared-notes-page'
 
+let intersectionCallback: IntersectionObserverCallback | undefined
+
 const PLAIN_CONTENT = {
   type: 'doc',
   content: [
@@ -244,11 +246,31 @@ vi.mock('@/features/editor', async () => {
           type="button"
           onClick={() => props.onQuickActionQuery?.({
             type: 'project',
+            keyword: '',
+            token: '#',
+          })}
+        >
+          Type bare project trigger
+        </button>
+        <button
+          type="button"
+          onClick={() => props.onQuickActionQuery?.({
+            type: 'project',
             keyword: 'Project',
             token: '#Project',
           })}
         >
           Open project suggestions
+        </button>
+        <button
+          type="button"
+          onClick={() => props.onQuickActionQuery?.({
+            type: 'label',
+            keyword: '',
+            token: '@',
+          })}
+        >
+          Type bare label trigger
         </button>
         <button
           type="button"
@@ -419,8 +441,15 @@ function setFetcherIdleSuccess(
   view.rerender(<SharedNotesPage title={title} initialNotePage={initialNotePage} />)
 }
 
+async function setHeadingSticky(isSticky: boolean) {
+  await act(async () => {
+    intersectionCallback?.([{ isIntersecting: !isSticky } as IntersectionObserverEntry], {} as IntersectionObserver)
+  })
+}
+
 describe('SharedNotesPage component regressions', () => {
   beforeEach(() => {
+    intersectionCallback = undefined
     sharedTestState.fetcher.state = 'idle'
     sharedTestState.fetcher.data = undefined
     sharedTestState.fetcher.formData = undefined
@@ -460,6 +489,25 @@ describe('SharedNotesPage component regressions', () => {
     sharedTestState.updateNoteApi.mockResolvedValue({ ok: true })
     sharedTestState.moveNoteToTrashApi.mockReset()
     sharedTestState.moveNoteToTrashApi.mockResolvedValue({ ok: true })
+
+    class MockIntersectionObserver implements IntersectionObserver {
+      readonly root = null
+      readonly rootMargin = ''
+      readonly thresholds = []
+
+      constructor(callback: IntersectionObserverCallback) {
+        intersectionCallback = callback
+      }
+
+      disconnect() {}
+      observe() {}
+      takeRecords() {
+        return []
+      }
+      unobserve() {}
+    }
+
+    vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
   })
 
   it('clears the composer immediately when create starts on the current route project', async () => {
@@ -533,6 +581,108 @@ describe('SharedNotesPage component regressions', () => {
 
     expect(getHiddenInput(view.container, 'projectId').value).toBe('315011398767874050')
     expect(getHiddenInput(view.container, 'contentJson').value).not.toContain('Numeric Runtime Project')
+  })
+
+  it('uses sticky heading behavior for every shared notes route', async () => {
+    const view = render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(screen.getByTestId('shared-notes-heading-bar')).toHaveAttribute('data-sticky-state', 'rest'))
+    expect(screen.getByTestId('shared-notes-heading-bar').className).toContain('sticky')
+    expect(screen.getByTestId('shared-notes-heading-title')).toHaveTextContent('收件箱')
+
+    sharedTestState.location.pathname = '/app/projects/project-1'
+    sharedTestState.params.projectId = 'project-1'
+    view.rerender(<SharedNotesPage initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(screen.getByTestId('shared-notes-heading-bar')).toHaveAttribute('data-sticky-state', 'rest'))
+    expect(screen.getByTestId('shared-notes-heading-bar').className).toContain('sticky')
+    expect(screen.getByTestId('shared-notes-heading-title')).toHaveTextContent('Project One')
+
+    sharedTestState.location.pathname = '/app/labels/label-1'
+    sharedTestState.params.projectId = undefined
+    view.rerender(<SharedNotesPage title="Important" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(screen.getByTestId('shared-notes-heading-bar')).toHaveAttribute('data-sticky-state', 'rest'))
+    expect(screen.getByTestId('shared-notes-heading-bar').className).toContain('sticky')
+    expect(screen.getByTestId('shared-notes-heading-title')).toHaveTextContent('Important')
+  })
+
+  it('centers the heading only after it becomes sticky and keeps the sidebar toggle usable', async () => {
+    sharedTestState.outletContext.isSidebarVisible = false
+
+    render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(intersectionCallback).toBeDefined())
+
+    const headingBar = screen.getByTestId('shared-notes-heading-bar')
+    const headingContent = screen.getByTestId('shared-notes-heading-content')
+    const headingTitle = screen.getByTestId('shared-notes-heading-title')
+    const toggleButton = screen.getByRole('button', { name: 'Toggle navigation menu' })
+
+    expect(headingBar).toHaveAttribute('data-sticky-state', 'rest')
+    expect(headingContent.className).toContain('gap-3')
+    expect(headingTitle.className).not.toContain('text-center')
+    expect(toggleButton.className).not.toContain('absolute left-0')
+
+    await setHeadingSticky(true)
+
+    expect(headingBar).toHaveAttribute('data-sticky-state', 'stuck')
+    expect(headingContent.className).toContain('justify-center')
+    expect(headingTitle.className).toContain('text-center')
+    expect(toggleButton.className).toContain('absolute left-0')
+
+    fireEvent.click(toggleButton)
+    expect(sharedTestState.onToggleSidebar).toHaveBeenCalledTimes(1)
+  })
+
+  it('lets section roots own layout spacing while the form stays structural', async () => {
+    const view = render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(screen.getByTestId('shared-notes-heading-bar')).toHaveAttribute('data-sticky-state', 'rest'))
+
+    const headingSection = screen.getByTestId('shared-notes-heading-section')
+    const headingBar = screen.getByTestId('shared-notes-heading-bar')
+    const composerSection = screen.getByTestId('shared-notes-composer-section')
+    const composerStack = screen.getByTestId('shared-notes-composer-stack')
+    const listSection = screen.getByTestId('shared-notes-list-section')
+    const form = view.container.querySelector('form')
+
+    expect(headingSection.className).toContain('w-full')
+    expect(headingSection.className).toContain('mx-auto')
+    expect(headingSection.className).toContain('max-w-[680px]')
+    expect(headingBar.className).toContain('w-full')
+    expect(headingBar.className).toContain('mb-5')
+
+    expect(composerSection.className).toContain('mb-5')
+    expect(composerSection.className).toContain('w-full')
+    expect(composerSection.className).toContain('mx-auto')
+    expect(composerSection.className).toContain('max-w-[680px]')
+    expect(form?.className).toBe('relative w-full')
+    expect(composerStack.className).toContain('gap-3')
+
+    expect(listSection.className).toContain('w-full')
+    expect(listSection.className).toContain('mx-auto')
+    expect(listSection.className).toContain('max-w-[680px]')
+  })
+
+  it('shows the project quick-action menu when a bare # trigger is typed in the editor', async () => {
+    render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByRole('button', { name: 'Type bare project trigger' }))
+
+    expect(await screen.findByRole('button', { name: 'Project One' })).toBeInTheDocument()
+    expect(screen.getByText('Projects')).toBeInTheDocument()
+  })
+
+  it('shows the label quick-action menu when a bare @ trigger is typed in the editor', async () => {
+    render(<SharedNotesPage title="Inbox" initialNotePage={createInitialNotePage()} />)
+
+    await waitFor(() => expect(sharedTestState.getLabelSelectItemsApi).toHaveBeenCalled())
+    fireEvent.click(screen.getByRole('button', { name: 'Type bare label trigger' }))
+
+    expect(await screen.findByRole('button', { name: 'Label One' })).toBeInTheDocument()
+    expect(screen.getByText('Labels')).toBeInTheDocument()
   })
 
   it('restores the exact draft project and labels when create fails after an immediate clear', async () => {

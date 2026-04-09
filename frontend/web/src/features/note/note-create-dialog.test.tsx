@@ -107,11 +107,31 @@ vi.mock('@/features/editor', async () => {
           type="button"
           onClick={() => props.onQuickActionQuery?.({
             type: 'project',
+            keyword: '',
+            token: '#',
+          })}
+        >
+          Type bare project trigger
+        </button>
+        <button
+          type="button"
+          onClick={() => props.onQuickActionQuery?.({
+            type: 'project',
             keyword: 'Project',
             token: '#Project',
           })}
         >
           Open project suggestions
+        </button>
+        <button
+          type="button"
+          onClick={() => props.onQuickActionQuery?.({
+            type: 'label',
+            keyword: '',
+            token: '@',
+          })}
+        >
+          Type bare label trigger
         </button>
       </div>
     )
@@ -252,6 +272,35 @@ describe('NoteCreateDialog', () => {
     })
     expect(quickActionMenu).toHaveClass('overflow-hidden')
     expect(screen.getByTestId('note-create-quick-action-menu-list')).toHaveClass('overflow-y-auto')
+  })
+
+  it('shows the project quick-action menu when a bare # trigger is typed in the modal editor', async () => {
+    renderDialog()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Type bare project trigger' }))
+
+    expect(await screen.findByTestId('note-create-quick-action-menu')).toBeInTheDocument()
+    expect(screen.getByText('Projects')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Project One' })).toBeInTheDocument()
+  })
+
+  it('shows the label quick-action menu when a bare @ trigger is typed in the modal editor', async () => {
+    dialogTestState.getLabelSelectItemsApi.mockResolvedValue({
+      ok: true,
+      status: 200,
+      data: [
+        { value: 'label-1', name: 'Label One', color: '#ff0000' },
+      ],
+    })
+
+    renderDialog()
+    await waitFor(() => expect(dialogTestState.getLabelSelectItemsApi).toHaveBeenCalledTimes(1))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Type bare label trigger' }))
+
+    expect(await screen.findByTestId('note-create-quick-action-menu')).toBeInTheDocument()
+    expect(screen.getByText('Labels')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Label One' })).toBeInTheDocument()
   })
 
   it('shows the navigation-hint toast for unscoped routes', async () => {

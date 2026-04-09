@@ -91,7 +91,7 @@ export function Layout() {
 
       <div id="app-layout__content" className="h-full flex-grow overflow-auto transition-all duration-300 ease-in-out">
         <div id="app-main" className="grid justify-items-center px-4 lg:px-6">
-          <div id="app-main__content" className="w-full max-w-[var(--main-content-max-width)]">
+          <div id="app-main__content" className="w-full">
             <div className={getContentTopControlsClass()}>
               <Sheet>
                 <SheetTrigger asChild>

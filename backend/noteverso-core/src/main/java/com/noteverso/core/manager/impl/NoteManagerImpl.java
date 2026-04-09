@@ -113,8 +113,10 @@ public class NoteManagerImpl implements NoteManager {
         noteItem.setReferencingCount(referencingCountMap.get(noteId) != null ? referencingCountMap.get(noteId) : null);
         noteItem.setReferencedCount(referencedCountMap.get(noteId) != null ? referencedCountMap.get(noteId) : null);
         ProjectItem projectItem = new ProjectItem();
-        projectItem.setProjectId(project.getProjectId());
-        projectItem.setName(project.getName());
+        if (project != null) {
+            projectItem.setProjectId(project.getProjectId());
+            projectItem.setName(project.getName());
+        }
         noteItem.setProject(projectItem);
         return noteItem;
     }

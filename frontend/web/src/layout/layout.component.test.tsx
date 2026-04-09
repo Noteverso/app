@@ -117,4 +117,14 @@ describe('Layout project syncing', () => {
       expect(nav).toHaveTextContent('Inline Created Project')
     }
   })
+
+  it('keeps app-main content full width without the old max-width constraint', () => {
+    const { container } = render(<Layout />)
+
+    const appMainContent = container.querySelector('#app-main__content')
+
+    expect(appMainContent).not.toBeNull()
+    expect(appMainContent).toHaveClass('w-full')
+    expect(appMainContent?.className).not.toContain('max-w-[var(--main-content-max-width)]')
+  })
 })

@@ -81,6 +81,16 @@ export interface QuickActionQuery {
 export const EDITOR_CONTENT_MAX_HEIGHT_CLASS = 'max-h-[280px]'
 
 export function parseQuickActionFromTextBefore(textBefore: string): QuickActionQuery | null {
+  const emptyTriggerMatch = textBefore.match(/(?:^|\s)([#@])$/)
+  if (emptyTriggerMatch) {
+    const token = emptyTriggerMatch[1]
+    return {
+      type: token === '#' ? 'project' : 'label',
+      keyword: '',
+      token,
+    }
+  }
+
   const match = textBefore.match(/(?:^|\s)([#@][^\s#@.,!?;:(){}\[\]"'`]+)$/)
 
   if (!match) {

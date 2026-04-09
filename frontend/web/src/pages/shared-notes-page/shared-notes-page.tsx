@@ -74,6 +74,7 @@ type OptimisticSaveContext = {
 }
 
 const LABEL_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899']
+const SHARED_NOTES_SECTION_WIDTH_CLASS = 'mx-auto w-full max-w-[680px]'
 
 export function shouldInsertOptimisticNote(
   previousState: string,
@@ -231,6 +232,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
     supportsScopedCreateBehavior,
   } = routeContext
   const isInbox = routeKind === 'inbox'
+  const shouldUseStickyHeading = true
 
   const [selectedProjectId, setSelectedProjectId] = useState(defaultSelectedProjectId)
   const [quickActionQuery, setQuickActionQuery] = useState<QuickActionQuery | null>(null)
@@ -252,6 +254,7 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
   const [isDeletingNote, setIsDeletingNote] = useState(false)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [isHeadingSticky, setIsHeadingSticky] = useState(false)
   const editorRef = useRef<EditorMethods>(null)
   const previousFetcherStateRef = useRef(fetcher.state)
   const activeOptimisticSaveRef = useRef<OptimisticSaveContext | null>(null)
@@ -261,6 +264,38 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
   // 避免执行多余请求
   const [hasMore, setHasMore] = useState(initialNotePage.total > initialNotePage.records.length)
   const observer = useRef<IntersectionObserver>()
+  const headingSentinelRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!shouldUseStickyHeading) {
+      setIsHeadingSticky(false)
+      return
+    }
+
+    setIsHeadingSticky(false)
+
+    const sentinel = headingSentinelRef.current
+    if (!sentinel) {
+      return
+    }
+
+    const root = document.querySelector('#app-layout__content')
+    const headingObserver = new IntersectionObserver(
+      ([entry]) => {
+        setIsHeadingSticky(!entry.isIntersecting)
+      },
+      {
+        root: root instanceof Element ? root : null,
+        threshold: 0,
+      },
+    )
+
+    headingObserver.observe(sentinel)
+
+    return () => {
+      headingObserver.disconnect()
+    }
+  }, [location.pathname, shouldUseStickyHeading])
 
   // Infinite scroll logic using IntersectionObserver
   const lastNoteElementRef = useCallback((node: HTMLElement | null) => {
@@ -850,101 +885,135 @@ export function SharedNotesPage({ title, initialNotePage }: ProjectPageProps) {
   }, [quickActionAnchor, quickActionQuery, quickSuggestions.length])
 
   return (
-    <div className="flex flex-col">
-      <div className="mt-2 mb-5 flex items-center gap-3">
-        {!isSidebarVisible && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="hidden h-8 w-8 md:inline-flex"
-            onClick={onToggleSidebar}
-            aria-label="Toggle navigation menu"
+    <div className="flex w-full flex-col">
+      {shouldUseStickyHeading && (
+        <div
+          ref={headingSentinelRef}
+          data-testid="shared-notes-heading-sentinel"
+          aria-hidden="true"
+          className="h-px"
+        />
+      )}
+      <div
+        data-testid="shared-notes-heading-bar"
+        data-sticky-state={shouldUseStickyHeading ? (isHeadingSticky ? 'stuck' : 'rest') : 'disabled'}
+        className={shouldUseStickyHeading
+          ? `sticky top-0 z-10 mb-5 w-full border-b bg-white ${isHeadingSticky ? 'border-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.06)]' : 'border-transparent'}`
+          : 'mb-5 w-full'}
+      >
+        <section data-testid="shared-notes-heading-section" className={SHARED_NOTES_SECTION_WIDTH_CLASS}>
+          <div
+            data-testid="shared-notes-heading-content"
+            className={shouldUseStickyHeading
+              ? `min-h-[4rem] w-full ${isHeadingSticky ? 'relative flex items-center justify-center' : 'flex items-center gap-3'}`
+              : 'flex min-h-[4rem] w-full items-center gap-3'}
           >
-            <PanelLeft className="h-4 w-4" />
-          </Button>
-        )}
-        <h1 className="text-2xl">{projectName ?? title}</h1>
-      </div>
-      <fetcher.Form method="post" action={actionPath} className="relative mb-5" onSubmit={handleCreateFormSubmit}>
-        {editingNote && (
-          <div className="mb-3 flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-            <span>Editing note</span>
-            <Button type="button" variant="ghost" size="sm" onClick={exitEditMode}>Cancel</Button>
-          </div>
-        )}
-        <input type="hidden" name="contentJson" value={JSON.stringify(sanitizedEditorContentJson)} />
-        <input type="hidden" name="labels" value={JSON.stringify(quickTokenBinding.labelIds)} />
-        <input type="hidden" name="projectId" value={quickTokenBinding.projectId || effectiveProjectId} />
-        <TextEditor
-          key={editorInstanceKey}
-          ref={editorRef}
-          className="mb-3"
-          onChange={handleContentChange}
-          onQuickActionQuery={handleEditorQuickActionQuery}
-          onQuickActionKeyDown={handleQuickActionKeyDown}
-          onQuickActionIconClick={handleQuickActionIconClick}
-          onQuickActionTokenClick={handleQuickActionTokenClick}
-          footer={(
-            <div className="flex items-center justify-end">
-              {editingNote && (
-                <Button type="button" variant="ghost" onClick={exitEditMode} disabled={isUpdatingNote}>
-                  Cancel
-                </Button>
-              )}
+            {!isSidebarVisible && (
               <Button
-                type={editingNote ? 'button' : 'submit'}
-                name="note-save"
-                value="save"
-                className="bg-slate-900 text-white hover:bg-slate-800"
-                onClick={editingNote ? () => { void handleUpdateNote() } : undefined}
-                disabled={editingNote ? (isUpdatingNote || !hasEditorContent) : isCreateSubmitDisabled(fetcher.state, hasEditorContent)}>
-                {editingNote ? '更新' : '保存'}
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={`${isHeadingSticky ? 'absolute left-0' : ''} hidden h-8 w-8 md:inline-flex`}
+                onClick={onToggleSidebar}
+                aria-label="Toggle navigation menu"
+              >
+                <PanelLeft className="h-4 w-4" />
               </Button>
+            )}
+            <h1
+              data-testid="shared-notes-heading-title"
+              className={`flex min-h-[2rem] items-center text-2xl leading-none ${shouldUseStickyHeading && isHeadingSticky ? 'text-center' : ''}`}
+            >
+              {projectName ?? title}
+            </h1>
+          </div>
+        </section>
+      </div>
+      <section data-testid="shared-notes-composer-section" className={`mb-5 ${SHARED_NOTES_SECTION_WIDTH_CLASS}`}>
+        <fetcher.Form method="post" action={actionPath} className="relative w-full" onSubmit={handleCreateFormSubmit}>
+          <div data-testid="shared-notes-composer-stack" className="flex w-full flex-col gap-3">
+            {editingNote && (
+              <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                <span>Editing note</span>
+                <Button type="button" variant="ghost" size="sm" onClick={exitEditMode}>Cancel</Button>
+              </div>
+            )}
+            <input type="hidden" name="contentJson" value={JSON.stringify(sanitizedEditorContentJson)} />
+            <input type="hidden" name="labels" value={JSON.stringify(quickTokenBinding.labelIds)} />
+            <input type="hidden" name="projectId" value={quickTokenBinding.projectId || effectiveProjectId} />
+            <TextEditor
+              key={editorInstanceKey}
+              ref={editorRef}
+              className="w-full"
+              onChange={handleContentChange}
+              onQuickActionQuery={handleEditorQuickActionQuery}
+              onQuickActionKeyDown={handleQuickActionKeyDown}
+              onQuickActionIconClick={handleQuickActionIconClick}
+              onQuickActionTokenClick={handleQuickActionTokenClick}
+              footer={(
+                <div className="flex items-center justify-end">
+                  {editingNote && (
+                    <Button type="button" variant="ghost" onClick={exitEditMode} disabled={isUpdatingNote}>
+                      Cancel
+                    </Button>
+                  )}
+                  <Button
+                    type={editingNote ? 'button' : 'submit'}
+                    name="note-save"
+                    value="save"
+                    className="bg-slate-900 text-white hover:bg-slate-800"
+                    onClick={editingNote ? () => { void handleUpdateNote() } : undefined}
+                    disabled={editingNote ? (isUpdatingNote || !hasEditorContent) : isCreateSubmitDisabled(fetcher.state, hasEditorContent)}>
+                    {editingNote ? '更新' : '保存'}
+                  </Button>
+                </div>
+              )}
+            />
+          </div>
+          {dropdownStyle && quickActionQuery && quickSuggestions.length > 0 && (
+            <div
+              className="fixed z-50 w-80 overflow-auto rounded-lg border border-slate-200 bg-white p-2 shadow-xl"
+              style={{ left: dropdownStyle.left, top: dropdownStyle.top, maxHeight: dropdownStyle.maxHeight }}
+            >
+              <div className="mb-2 px-2 text-xs font-medium text-slate-500">
+                {quickActionQuery.type === 'project' ? 'Projects' : 'Labels'}
+              </div>
+              <div className="space-y-1">
+                {quickSuggestions.map((suggestion, index) => (
+                  <button
+                    key={suggestion.id}
+                    type="button"
+                    className={`flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm transition-colors ${
+                      index === quickActionIndex ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                    onMouseDown={(event) => {
+                      event.preventDefault()
+                      triggerQuickSuggestionSelection(index)
+                    }}
+                  >
+                    <span className="flex items-center gap-2">
+                      {suggestion.actionType === 'project'
+                        ? <HashIcon className="h-4 w-4 text-slate-500" />
+                        : <AtSign className="h-4 w-4 text-slate-500" />
+                      }
+                      {suggestion.name}
+                    </span>
+                    {suggestion.type === 'create' && (
+                      <span className="flex items-center gap-1 text-xs text-slate-500">
+                        <Plus className="h-3 w-3" /> Create
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
-        />
-        {dropdownStyle && quickActionQuery && quickSuggestions.length > 0 && (
-          <div
-            className="fixed z-50 w-80 overflow-auto rounded-lg border border-slate-200 bg-white p-2 shadow-xl"
-            style={{ left: dropdownStyle.left, top: dropdownStyle.top, maxHeight: dropdownStyle.maxHeight }}
-          >
-            <div className="mb-2 px-2 text-xs font-medium text-slate-500">
-              {quickActionQuery.type === 'project' ? 'Projects' : 'Labels'}
-            </div>
-            <div className="space-y-1">
-              {quickSuggestions.map((suggestion, index) => (
-                <button
-                  key={suggestion.id}
-                  type="button"
-                  className={`flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm transition-colors ${
-                    index === quickActionIndex ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50'
-                  }`}
-                  onMouseDown={(event) => {
-                    event.preventDefault()
-                    triggerQuickSuggestionSelection(index)
-                  }}
-                >
-                  <span className="flex items-center gap-2">
-                    {suggestion.actionType === 'project'
-                      ? <HashIcon className="h-4 w-4 text-slate-500" />
-                      : <AtSign className="h-4 w-4 text-slate-500" />
-                    }
-                    {suggestion.name}
-                  </span>
-                  {suggestion.type === 'create' && (
-                    <span className="flex items-center gap-1 text-xs text-slate-500">
-                      <Plus className="h-3 w-3" /> Create
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </fetcher.Form>
+        </fetcher.Form>
+      </section>
 
-      <NoteList notes={notes} refFunc={lastNoteElementRef} onEdit={handleEditNote} onDelete={handleRequestDeleteNote} />
+      <section data-testid="shared-notes-list-section" className={SHARED_NOTES_SECTION_WIDTH_CLASS}>
+        <NoteList notes={notes} refFunc={lastNoteElementRef} onEdit={handleEditNote} onDelete={handleRequestDeleteNote} />
+      </section>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
