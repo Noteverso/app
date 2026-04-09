@@ -12,7 +12,7 @@ Reusable collaboration guide for AI coding agents.
 1. Before writing code, provide a short implementation approach and wait for approval.
 2. Before killing any process/port or running force-cleanup commands, check current state and wait for approval.
 3. If requirements are ambiguous, ask clarifying questions before implementation.
-4. After code changes, always list edge cases and suggest test cases.
+4. After code changes, always list edge cases and generate test cases covering those scenarios (happy path, failure path, and boundary/edge inputs).
 5. If a task needs changes in more than 3 files, split into smaller sub-tasks first.
 6. When corrected, reflect briefly on what failed and how to prevent recurrence.
 7. Test philosophy:
@@ -66,6 +66,7 @@ Do not stop before integration/e2e validation unless blocked by a real external 
 - Type/compile check frequency guidance:
   - small change: once after implementation + once before final response,
   - medium/large change: every logical sub-task + final full pass.
+- After UI/UX changes, run e2e tests via agent-browser to verify user-facing flows work correctly.
 
 ## 6) Browser Automation Lifecycle (agent-browser / Playwright-like tools)
 
